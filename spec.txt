@@ -1,0 +1,17 @@
+LIDPIX
+Specar / idéer
+--------------
+
+Uppladdning av foton
+  inkl filnamnsfix
+  
+Vising av galleri
+  tumnaglar
+  bildinfo
+  visa mappnamn
+  välja mapp
+  sorteringsalternativ
+  beskrivningsfält
+  sociala medier-uppladdning
+  
+Inlogg

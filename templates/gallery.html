@@ -1,0 +1,22 @@
+<!doctype HTML>
+<html>
+	<head>
+		<title>Lidpix thumbnails</title>
+	</head>
+	<body>
+		<!-- <div style="margin: 10px">
+			<p>{{ imagepath }}</p>
+		</div> -->
+		<div id="directory">
+			<form action="/gallery" method="POST">
+        <input type="text" name="directory" value="{{ directory }}"
+         size=50>
+      </form>
+		</div>
+		{% for item in images %}
+			<div style="margin: 10px">
+				<img src="{{ url_for('static', filename = 'thumbs/' + item) }}">
+			</div>
+		{% endfor %}
+	</body>
+</html>

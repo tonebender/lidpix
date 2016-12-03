@@ -19,7 +19,6 @@ app.debug = 1
 # imagedir = app.config['PIXDIR']
 imagedir = './static/'
 thumbdir = imagedir + 'thumbs/'
-print thumbdir
 
 
 def prep_images():
@@ -27,6 +26,7 @@ def prep_images():
 	""" Find all images in imagedir and make thumbnails """
 	
 	prepped = 0
+	global thumbdir, imagedir
 	
 	if not os.path.exists(thumbdir):
 		os.mkdir(thumbdir)
@@ -46,7 +46,7 @@ def prep_images():
 					img.transform(resize='200x')
 					img.save(filename = thumbdir + imagefile)
 			except Exception:
-				pass
+				print "Error making thumb: ", imagedir+imagefile
 			
 	return prepped
 	
@@ -64,20 +64,22 @@ def get_image_info(imagefile):
 	
 
 @app.route('/gallery', methods=['GET', 'POST'])
-@app.route('/', methods=['GET'])
+@app.route('/', methods=['GET', 'POST'])
 def index():
+	global thumbdir, imagedir
 	if request.method == 'POST':
-		if request.form['dictionary']:
-			imagedir = os.normpath(request.form['directory'])
-			thumbdir = imagedir + '/thumbs/'
-		return redirect(url_for(index))	
+		if request.form['directory']:
+			imagedir = os.path.normpath(request.form['directory']) + '/'
+			thumbdir = imagedir + 'thumbs/'
+		return redirect(url_for('index'))
 	if request.method == 'GET':
 		prep_images()
 		thumbs = os.listdir(thumbdir)
 		#get_image_info(imagedir + images[0])
-		return render_template('gallery.html', images=sorted(thumbs),
+		return render_template('gallery.html', images=sorted(thumbs), thumbdir=thumbdir,
 								directory=os.path.abspath(imagedir))
 								
-@app.route('/thumbs/<path:filename>')
+@app.route('/thumbs/<filename>')
 def download_file(filename):
+	print "TD: ", thumbdir
 	return send_from_directory(thumbdir, filename)

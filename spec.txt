@@ -7,11 +7,17 @@ Uppladdning av foton
   
 Vising av galleri
   tumnaglar
+    toggla tumnaglar/ikoner
   bildinfo
   visa mappnamn
-  välja mapp
+  välja mapp med både länkar och form
   sorteringsalternativ
   beskrivningsfält
   sociala medier-uppladdning
+  allmänna filoperationer
+    cp, mv, etc.
+  
+Uppvisningsgalleri
+  zip-länk
   
 Inlogg

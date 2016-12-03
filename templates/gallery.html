@@ -1,6 +1,6 @@
 <!doctype HTML>
 <html>
-	<head>
+  <head>
 		<title>Lidpix thumbnails</title>
 	</head>
 	<body>
@@ -12,10 +12,12 @@
         <input type="text" name="directory" value="{{ directory }}"
          size=50>
       </form>
+      {{ thumbdir }}
 		</div>
 		{% for item in images %}
 			<div style="margin: 10px">
-				<img src="{{ url_for('static', filename = 'thumbs/' + item) }}">
+				<!-- <img src="{{ url_for('static', filename = 'thumbs/' + item) }}"> -->
+        <img src="http://localhost:5000/thumbs/{{ item }}">
 			</div>
 		{% endfor %}
 	</body>

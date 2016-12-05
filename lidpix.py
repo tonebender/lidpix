@@ -104,4 +104,10 @@ def index():
 		#return render_template('gallery.html', images=sorted(thumbs), thumbdir=thumbdir,
 		#						directory=os.path.abspath(imagedir))
 								
-
+@app.route('/serveimage')
+def serveimage():
+	imagedir = request.args.get('directory', default=pixdirs[0])
+	response = make_response('')
+	response.headers['X-Accel-Redirect'] = imagedir
+	return response
+	

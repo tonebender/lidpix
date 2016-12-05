@@ -1,5 +1,5 @@
 from flask import Flask, request, session, redirect, url_for, abort, \
-  render_template, flash, send_from_directory
+  render_template, flash, send_from_directory, make_response
 from wand.image import Image
 import os, string
 
@@ -15,6 +15,7 @@ app.config.update(dict(
 ))
 app.config.from_envvar('LIDPIX_SETTINGS', silent=True)
 app.debug = 1
+app.use_x_sendfile = True
 
 # pixdirs becomes a list of all the paths in PIXDIRS
 pixdirs = [os.path.normpath(x) for x in string.split(app.config['PIXDIRS'], ';')]
@@ -22,7 +23,11 @@ pixdirs = [os.path.normpath(x) for x in string.split(app.config['PIXDIRS'], ';')
 
 def prep_images(directory):
 
-	""" Find all images in directory and make thumbnails """
+	""" Find all images in directory and make thumbnails.
+	    
+	    Args: Directory where the image files lay.
+	    Return: number of processed images (even if done before).
+	"""
 	
 	prepped = 0
 	directory = os.path.normpath(directory)
@@ -63,29 +68,40 @@ def get_image_info(imagefile):
 	return exif
 	
 
-# MÅSTE nog använda pathname som ?-parameter i urlen...
+#@app.route('/nginx')
+#def nginx():
+#	filename = '/lidpix/images/konrad.jpg'
+#	response = make_response("")
+#	response.headers['Cache-Control'] = 'no-cache'
+#	response.headers['X-Accel-Redirect'] = filename
+#	del response.headers['Content-Type']
+#	return response
+
+
 @app.route('/gallery', methods=['GET', 'POST'])
 @app.route('/', methods=['GET', 'POST'])
-def index():
-	imagedir = pixdirs[0]
-	thumbdir = pixdirs[0] + '/thumbs/'
+def index():	
+	
 	if request.method == 'POST':
 		if request.form['directory']:
 			imagedir = os.path.normpath(request.form['directory']) + '/'
 			thumbdir = imagedir + 'thumbs/'
 		return redirect(url_for('index'))
+		
 	if request.method == 'GET':
-		prep_images(imagedir)
-		thumbs = os.listdir(thumbdir)
+		imagedir = request.args.get('directory', default=pixdirs[0])
+		response = make_response('')
+		response.headers['X-Accel-Redirect'] = imagedir
+		del response.headers['Content-Type']
+		return response
+		#return redirect('http://localhost:5080' + imagedir)
+		# thumbdir = imagedir + '/thumbs/'
+		# print "imagedir: ", imagedir
+		# print "thumbs: ", thumbdir
+		# prep_images(imagedir)
+		# thumbs = os.listdir(thumbdir)
 		#get_image_info(imagedir + images[0])
-		return render_template('gallery.html', images=sorted(thumbs), thumbdir=thumbdir,
-								directory=os.path.abspath(imagedir))
+		#return render_template('gallery.html', images=sorted(thumbs), thumbdir=thumbdir,
+		#						directory=os.path.abspath(imagedir))
 								
-@app.route('/thumbs/<filename>')
-def download_file(filename):
-	thumbdir = pixdirs[0] + '/thumbs/'
-	return send_from_directory(thumbdir, filename)
 
-@app.route('/test/<pathname>')
-def testpath(pathname):
-	return pathname

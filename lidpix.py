@@ -71,15 +71,18 @@ def get_image_info(imagefile):
 	return exif
 	
 
-#@app.route('/nginx')
-#def nginx():
-#	filename = '/lidpix/images/konrad.jpg'
-#	response = make_response("")
-#	response.headers['Cache-Control'] = 'no-cache'
-#	response.headers['X-Accel-Redirect'] = filename
-#	del response.headers['Content-Type']
-#	return response
-
+def get_paths(pathname):
+	
+	""" If pathname is the string '/path/to/dir', this returns
+	the list ['/path', '/path/to', '/path/to/dir'] """
+	#functools.reduce(lambda a, b: a+[a[-1]+b+'/'], '/path/to/some/dir'.split('/'), [''])
+	#[dir.rsplit("/",n)[0] for n in range(dir.count("/")-1,0,-1)]
+	subpath = os.path.dirname(pathname)
+	if subpath != '/':
+		return get_paths(subpath) + [pathname]
+	else:
+		return [pathname]
+	
 
 @app.route('/gallery', methods=['GET', 'POST'])
 @app.route('/', methods=['GET', 'POST'])
@@ -110,7 +113,7 @@ def gallery():
 		return render_template('gallery.html', thumbs = sorted(thumbs), 
 								imagedir = os.path.abspath(imagedir),
 								showthumbs = showthumbs,
-								dirs = string.split(imagedir, '/')[1:])
+								dirs = get_paths(imagedir))
 
 								
 @app.route('/serveimage')

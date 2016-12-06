@@ -7,7 +7,7 @@
 	<body>
     <div id="imagedir">
       {% for d in dirs %}
-        <a href="{{ url_for('gallery', imagedir=imagedir) }}">
+        <a href="{{ url_for('gallery', imagedir=d) }}">
           <div class="dir_button">{{ d }}</div>
         </a>
       {% endfor %}

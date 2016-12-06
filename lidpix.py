@@ -71,21 +71,16 @@ def get_image_info(imagefile):
 	return exif
 	
 
-def get_paths(pathname):
+def get_paths(p):
 	
-	""" If pathname is the string '/path/to/dir', this returns
-	the list ['/path', '/path/to', '/path/to/dir'] """
-	#functools.reduce(lambda a, b: a+[a[-1]+b+'/'], '/path/to/some/dir'.split('/'), [''])
-	#[dir.rsplit("/",n)[0] for n in range(dir.count("/")-1,0,-1)]
-	subpath = os.path.dirname(pathname)
-	if subpath != '/':
-		return get_paths(subpath) + [pathname]
-	else:
-		return [pathname]
+	""" If p is the string '/path/to/dir', this returns
+		the list ['/path', '/path/to', '/path/to/dir'] """
+		
+	return [p.rsplit("/",n)[0] for n in range(p.count("/")-1,-1,-1)]
+
 	
 
 @app.route('/gallery', methods=['GET', 'POST'])
-@app.route('/', methods=['GET', 'POST'])
 def gallery():	
 	
 	""" 
@@ -109,11 +104,14 @@ def gallery():
 		thumbs = os.listdir(imagedir + '/thumbs/')
 		if not p or not thumbs:
 			return "Found no valid images at " + imagedir
+		dirs = get_paths(imagedir)
+		dirnames = [os.path.basename(x) for x in dirs]
 		#get_image_info(imagedir + images[0])
 		return render_template('gallery.html', thumbs = sorted(thumbs), 
 								imagedir = os.path.abspath(imagedir),
 								showthumbs = showthumbs,
-								dirs = get_paths(imagedir))
+								dirs = dirs,
+								dirnames = dirnames)
 
 								
 @app.route('/serveimage')

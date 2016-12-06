@@ -2,21 +2,32 @@
 <html>
   <head>
 		<title>Lidpix thumbnails</title>
+    <link rel="stylesheet" href="static/lidpix.css">
 	</head>
 	<body>
-		<!-- <div style="margin: 10px">
-			<p>{{ imagepath }}</p>
-		</div> -->
-		<div id="directory">
+    <div id="imagedir">
+      {% for d in dirs %}
+        <a href="{{ url_for('gallery', imagedir=imagedir) }}">
+          <div class="dir_button">{{ d }}</div>
+        </a>
+      {% endfor %}
+    </div>
+		<div id="directory_form">
 			<form action="/gallery" method="POST">
-        <input type="text" name="directory" value="{{ directory }}"
+        <input type="text" name="imagedir" value="{{ imagedir }}"
          size=50>
       </form>
 		</div>
-		{% for item in images %}
+		{% for item in thumbs %}
 			<div style="margin: 10px">
-				<!-- <img src="{{ url_for('static', filename = 'thumbs/' + item) }}"> -->
-        <img src="http://localhost:5000/thumbs/{{ item }}">
+        <a href="{{ url_for('serveimage', image=imagedir+'/'+item) }}">
+          {% if showthumbs %}
+            <img src="{{ url_for('serveimage', image=imagedir+'/thumbs/'+item) }}">
+          {% else %}
+            <div class="thumbnail">
+            </div>
+          {% endif %}
+        </a>
 			</div>
 		{% endfor %}
 	</body>

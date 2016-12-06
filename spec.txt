@@ -16,8 +16,20 @@ Vising av galleri
   sociala medier-uppladdning
   allmänna filoperationer
     cp, mv, etc.
+    
+Inlogg
   
 Uppvisningsgalleri
+  batadas (sql)
   zip-länk
-  
-Inlogg
+ 
+
+Tech:
+
+nginx
+flask
+  wand
+  flask-login
+css
+  sass, less?
+jquery

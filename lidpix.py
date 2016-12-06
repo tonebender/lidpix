@@ -21,20 +21,17 @@ app.config.from_object('conf.DevelopmentConfig')
 pixdirs = [os.path.normpath(x) for x in string.split(app.config['PIXDIRS'], ';')]
 
 
-def prep_images(directory):
+def prep_thumbs(directory):
 
 	""" Find all images in directory and make thumbnails.
 	    
-	    Args: Directory where the image files lay.
-	    Return: number of processed images (even if done before).
+	    Args: Directory where the image files are
+	    Return: number of thumbs, even if they already existed
 	"""
 	
 	prepped = 0
 	directory = os.path.normpath(directory) + '/'
 	thumbdir = directory + 'thumbs/'
-	
-	print "dir: -%s-" % directory
-	print "thumbdir: -%s-" % thumbdir
 	
 	if not os.path.exists(thumbdir):
 		os.mkdir(thumbdir)
@@ -74,14 +71,12 @@ def get_image_info(imagefile):
 def get_paths(pathname):
 	
 	""" If pathname is the string '/path/to/dir', this returns
-	the list ['/path', '/path/to', '/path/to/dir'] """
-	#functools.reduce(lambda a, b: a+[a[-1]+b+'/'], '/path/to/some/dir'.split('/'), [''])
-	#[dir.rsplit("/",n)[0] for n in range(dir.count("/")-1,0,-1)]
-	subpath = os.path.dirname(pathname)
-	if subpath != '/':
-		return get_paths(subpath) + [pathname]
-	else:
-		return [pathname]
+	[['/path', 'path'], ['/path/to', 'to'], ['/path/to/dir', 'dir]] """
+	
+	pathnames = [pathname.rsplit("/",n)[0]
+	     for n in range(pathname.count("/")-1,-1,-1)]
+	return [[d, os.path.basename(d)] for d in pathnames]
+	
 	
 
 @app.route('/gallery', methods=['GET', 'POST'])
@@ -102,17 +97,26 @@ def gallery():
 		return redirect(url_for('gallery', imagedir = imagedir))
 		
 	if request.method == 'GET':
+		
+		# Get url keywords
 		showthumbs = int(request.args.get('showthumbs', default='1'))
 		imagedir = request.args.get('imagedir', default=pixdirs[0])
-		imagedir = os.path.normpath(imagedir)
-		p = prep_images(imagedir)
+		imagedir = os.path.abspath(imagedir)
+		
+		# Create thumbnails and put their filenames in the list thumbs
+		p = prep_thumbs(imagedir)
 		thumbs = os.listdir(imagedir + '/thumbs/')
 		if not p or not thumbs:
 			return "Found no valid images at " + imagedir
-		dirs = [[d, os.path.basename(d)] for d in get_paths(imagedir)]
+		# SHOULD SHOW FOLDERS & SHIT INSTEAD
+		
+		# Create a list of directory paths & names	
+		dirs = get_paths(imagedir)
+		
 		#get_image_info(imagedir + images[0])
+		
 		return render_template('gallery.html', thumbs = sorted(thumbs), 
-								imagedir = os.path.abspath(imagedir),
+								imagedir = imagedir,
 								showthumbs = showthumbs,
 								dirs = dirs)
 

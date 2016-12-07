@@ -1,7 +1,7 @@
 from flask import Flask, request, session, redirect, url_for, abort, \
   render_template, flash, send_from_directory, make_response
 from wand.image import Image
-import os, string
+import os, string, threading, time
 import conf
 
 app = Flask(__name__)
@@ -20,26 +20,31 @@ app.config.from_object('conf.DevelopmentConfig')
 # pixdirs becomes a list of all the paths in PIXDIRS
 pixdirs = [os.path.normpath(x) for x in string.split(app.config['PIXDIRS'], ';')]
 
+thumbprepping = threading.Event()
+
 
 def prep_thumbs(directory):
 
-	""" Find all images in directory and make thumbnails.
-	    
-	    Args: Directory where the image files are
-	    Return: number of thumbs, even if they already existed
-	"""
+	""" Find all images in directory and make thumbnails in
+	    directory/thumbs (create subdir if needed).
+	    Args: Directory where the image files are """
 	
 	prepped = 0
+	thumbprepping.clear()
 	directory = os.path.normpath(directory) + '/'
 	thumbdir = directory + 'thumbs/'
-	
+		
 	if not os.path.exists(thumbdir):
 		os.mkdir(thumbdir)
 		
-	# Go through all instances in imagedir. First, check if file,
-	# then check existance as a thumb and if thumb is newer;
-	# if needed create thumbnails (sized 200*y px)
+	# Go through all instances in imagedir. First, see if file exists,
+	# then check if its thumb exists and is newer;
+	# if needed create thumbnails (sized 200x px):
+	# Since this can be run as a separate thread, set thumbprepping
+	# when 4 thumbnails are ready so main thread knows.
 	for imagefile in os.listdir(directory):
+		if prepped > 3:
+			thumbprepping.set()
 		if os.path.isfile(directory + imagefile):
 			prepped += 1
 			if os.path.isfile(thumbdir + imagefile):
@@ -52,8 +57,8 @@ def prep_thumbs(directory):
 					img.save(filename = thumbdir + imagefile)
 			except Exception:
 				pass
-			
-	return prepped
+	thumbprepping.set() # In case there were less than 4 thumbs
+	return		
 	
 
 def get_image_info(imagefile):
@@ -103,10 +108,16 @@ def gallery():
 		imagedir = request.args.get('imagedir', default=pixdirs[0])
 		imagedir = os.path.abspath(imagedir)
 		
-		# Create thumbnails and put their filenames in the list thumbs
-		p = prep_thumbs(imagedir)
+		# Create thumbnails
+		# This is done in a separate thread so creation can go on in
+		# the background while this page loads. Wait until Event 
+		# thumbprepping is set (at least 4 thumbs ready) or 8 seconds
+		# have passed, then continue.
+		thumbthread = threading.Thread(target=prep_thumbs, args=(imagedir,))
+		thumbthread.start()
+		thumbprepping.wait(8)
 		thumbs = os.listdir(imagedir + '/thumbs/')
-		if not p or not thumbs:
+		if not thumbs:
 			return "Found no valid images at " + imagedir
 		# SHOULD SHOW FOLDERS & SHIT INSTEAD
 		
@@ -130,6 +141,6 @@ def serveimage():
 	image = request.args.get('image', default=None) or abort(404)
 	response = make_response('')
 	response.headers['X-Accel-Redirect'] = image
-	del response.headers['Content-Type']
+	del response.headers['Content-Type'] # Webserver decides type later
 	return response
 	

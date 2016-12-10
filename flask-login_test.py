@@ -191,6 +191,3 @@ def index():
 		return render_template('index.html')
 	return redirect(login_url('login', url_for('index')))
 
-
-#if __name__ == "__main__":
-	#app.run()

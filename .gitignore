@@ -1,0 +1,7 @@
+# gitignore for lidpix
+
+__pycache__/
+*.py[cod]
+*.db
+venv
+static

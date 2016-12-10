@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% block body %}
+	<h1>Index</h1>
+	{% if error %}
+		<p class="error">Error: {{ error }}</p>
+	{% endif %}
+	<form method="GET" action="/logout">
+		<input type="submit" value="Logout" />
+	</form>
+{% endblock %}

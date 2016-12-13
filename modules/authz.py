@@ -26,6 +26,12 @@ import sqlite3
 
 authz = Blueprint('authz', __name__)
 
+login_manager = LoginManager()
+
+@authz.record_once
+def on_load(state):
+    login_manager.init_app(state.app)
+
 
 class LoginForm(Form):
     """The login form class, using WTForms."""
@@ -63,10 +69,10 @@ class UserDB(UserMixin):
             raise NotImplementedError('No `id` attribute - override `get_id`')
     #def get_id(self):
     #   return self.email
-
+    
 
 @login_manager.user_loader
-def get_username_in_db(username):
+def load_user(username):
     """Find username i database and return it.
     
     username is a string to be searched for in the db.
@@ -107,7 +113,7 @@ def login():
     error = None
     if request.method == 'POST':
         if myform.validate():
-            user = get_username_in_db(myform.username.data)
+            user = load_user(myform.username.data)
             if user:
                 if login_user(user, remember=myform.remember.data):
                     flash('Logged in!')

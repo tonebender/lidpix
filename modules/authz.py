@@ -16,18 +16,24 @@
 # http://prettyprinted.com/using-bcrypt-in-python/
 
 from flask import Flask, request, render_template, flash, redirect, \
-url_for, abort, Blueprint
+url_for, abort, Blueprint, current_app
 from wtforms import Form, StringField, PasswordField, BooleanField, validators
 from flask_login import (LoginManager, current_user, login_required, \
 login_user, logout_user, UserMixin, confirm_login, login_url, \
 fresh_login_required)
-import sqlite3
+import sqlite3, bcrypt
 
 
 authz = Blueprint('authz', __name__)
 
-login_manager = LoginManager()
 
+# Initialize the flask-login manager
+login_manager = LoginManager()
+login_manager.login_view = "authz.login"
+login_manager.login_message = u"Please log in to access this page."
+#login_manager.refresh_view = "reauth"
+
+# This will be run when this blueprint is first registered to the app
 @authz.record_once
 def on_load(state):
     login_manager.init_app(state.app)
@@ -36,7 +42,7 @@ def on_load(state):
 class LoginForm(Form):
     """The login form class, using WTForms."""
     username = StringField('Username', [validators.Required(), 
-                           validators.Length(min=4, max=25)])
+                           validators.Length(min=3, max=25)])
     password = PasswordField('Password', [validators.Required(),
                              validators.InputRequired()])
     remember = BooleanField('Remember me')
@@ -78,7 +84,7 @@ def load_user(username):
     username is a string to be searched for in the db.
     Returns an instance of UserDB with found user data; None if user not found.
     """
-    connection = sqlite3.connect('users_example.db')
+    connection = sqlite3.connect(current_app.config['USERDB'])
     c = connection.cursor()
     command = 'SELECT * FROM flaskusers WHERE username =?'
     c.execute(command, (username,))
@@ -91,36 +97,37 @@ def load_user(username):
         return None
 
 
-
-#def load_user(user_id):
-#    return USERS.get(int(user_id))  # <===========================
-
-
 # This login() function uses the simple USER_NAMES dictionary
 # (defined above) and no passwords to test flask-login
 @authz.route('/login', methods=['GET', 'POST'])
 def login():
     """Log the user in.
     
-    Get user's username and password through the WTForms form, find user 
+    GET: Show login form.
+    POST: Get user's username and password through the WTForms form, find user 
     in the sqlite3 db, check against password (bcrypted), then
     log in with flask-login!
     """
     if current_user.is_authenticated:
         flash('Already logged in')
-        return redirect(url_for('gallery'))
+        return redirect(request.args.get("next") or 
+                        url_for("gallery.gallery_view"))
     myform = LoginForm(request.form)
     error = None
     if request.method == 'POST':
         if myform.validate():
             user = load_user(myform.username.data)
             if user:
-                if login_user(user, remember=myform.remember.data):
-                    flash('Logged in!')
-                    return redirect(url_for('gallery'))
-                    #return redirect(request.args.get("next") or url_for("index"))
+                if user.password == bcrypt.hashpw(myform.password
+                .data.encode('utf-8'), user.password.encode('utf-8')):
+                    if login_user(user, remember=myform.remember.data):
+                        flash('Logged in!')
+                        return redirect(request.args.get("next") or 
+                               url_for("gallery.gallery_view"))
+                    else:
+                        flash('User found but login failed')
                 else:
-                    flash('User found but login failed')
+                    flash('Wrong password')
             else:
                 flash('User not found in database')
         else:
@@ -134,4 +141,4 @@ def logout():
     """Log the user out and then go to the login form page."""
     logout_user()
     flash("Logged out")
-    return redirect(url_for('login'))
+    return redirect(url_for('authz.login'))

@@ -1,34 +1,37 @@
-<!doctype HTML>
-<html>
-  <head>
-		<title>Lidpix thumbnails</title>
-    <link rel="stylesheet" href="static/lidpix.css">
-	</head>
-	<body>
-    <div id="imagedir">
-      {% for d in dirs %}
-        <a href="{{ url_for('gallery', imagedir=d[0]) }}">
-          <div class="dir_button">{{ d[1] }}</div>
-        </a>
-      {% endfor %}
+{% extends "layout.html" %}
+{% block body %}
+  <div id="loggedinas">
+    Logged in as {{ username }}.
+    <a href="{{ url_for('authz.logout') }}">Logout</a>
+  </div>
+  <div id="imagedir">
+    {% for d in dirs %}
+      <a href="{{ url_for('.gallery_view', imagedir=d[0]) }}">
+        <div class="dir_button">{{ d[1] }}</div>
+      </a>
+    {% endfor %}
+  </div>
+  <div id="directory_form">
+    <form action="/gallery" method="POST">
+      <input type="text" name="imagedir" value="{{ imagedir }}"
+       size=50>
+    </form>
+  </div>
+  {% for item in thumbs %}
+    <div style="margin: 10px">
+      <a href="{{ url_for('.serveimage', image=imagedir+'/'+item) }}">
+        {% if showthumbs %}
+          <img src="{{ url_for('.serveimage', image=imagedir+'/thumbs/'+item) }}">
+        {% else %}
+          <div class="thumbnail">
+          </div>
+        {% endif %}
+      </a>
     </div>
-		<div id="directory_form">
-			<form action="/gallery" method="POST">
-        <input type="text" name="imagedir" value="{{ imagedir }}"
-         size=50>
-      </form>
-		</div>
-		{% for item in thumbs %}
-			<div style="margin: 10px">
-        <a href="{{ url_for('serveimage', image=imagedir+'/'+item) }}">
-          {% if showthumbs %}
-            <img src="{{ url_for('serveimage', image=imagedir+'/thumbs/'+item) }}">
-          {% else %}
-            <div class="thumbnail">
-            </div>
-          {% endif %}
-        </a>
-			</div>
-		{% endfor %}
-	</body>
-</html>
+  {% endfor %}
+{% endblock %}
+
+
+<!-- In case blueprints are active you can shortcut references to the same 
+blueprint by prefixing the local endpoint with a dot (.). 
+http://flask.pocoo.org/docs/0.10/api/ -->

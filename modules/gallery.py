@@ -2,7 +2,8 @@ from flask import Flask, request, session, redirect, url_for, abort, \
   render_template, flash, make_response, Blueprint, current_app
 from wand.image import Image
 import os, string, threading, time
-
+from flask_login import login_required
+from modules import authz
 
 gallery = Blueprint('gallery', __name__)
 
@@ -15,14 +16,18 @@ def prep_thumbs(directory):
         directory/thumbs (create subdir if needed).
         Args: Directory where the image files are """
     
+    try:
+        directory = os.path.normpath(directory) + '/'
+        thumbdir = directory + 'thumbs/'
+        dirlisting = os.listdir(directory)
+        if not os.path.exists(thumbdir):
+            os.mkdir(thumbdir)
+    except OSError:
+        return
+        
     prepped = 0
     thumbprepping.clear()
-    directory = os.path.normpath(directory) + '/'
-    thumbdir = directory + 'thumbs/'
-        
-    if not os.path.exists(thumbdir):
-        os.mkdir(thumbdir)
-        
+    
     # Go through all instances in imagedir. First, see if file exists,
     # then check if its thumb exists and is newer;
     # if needed create thumbnails (sized 200x px):
@@ -66,12 +71,14 @@ def get_paths(pathname):
     
     pathnames = [pathname.rsplit("/",n)[0]
          for n in range(pathname.count("/")-1,-1,-1)]
-    return [[d, os.path.basename(d)] for d in pathnames]
+    return pathnames
+    #return [[d, os.path.basename(d)] for d in pathnames]
     
     
 
 @gallery.route('/gallery', methods=['GET', 'POST'])
 @gallery.route('/', methods=['GET', 'POST'])
+@login_required
 def gallery_view():
     
     """ 
@@ -85,38 +92,46 @@ def gallery_view():
     if request.method == 'POST':
         if request.form['imagedir']:
             imagedir = os.path.normpath(request.form['imagedir']) + '/'
-        return redirect(url_for('gallery_view', imagedir = imagedir))
+        return redirect(url_for('.gallery_view', imagedir = imagedir))
+        
         
     if request.method == 'GET':
         
         # pixdirs becomes a list of all the paths in PIXDIRS
-        pixdirs = [os.path.normpath(x) for x in string.split(current_app.config['PIXDIRS'], ';')]
+        pixdirs = [os.path.abspath(x) 
+                   for x in string.split(current_app.config['PIXDIRS'], ';')]
     
         # Get url keywords
         showthumbs = int(request.args.get('showthumbs', default='1'))
-        imagedir = request.args.get('imagedir', default=pixdirs[0])
-        imagedir = os.path.abspath(imagedir)
+        imagedir = os.path.abspath(request.args.get('imagedir', default=pixdirs[0]))
         
-        # Create thumbnails
-        # This is done in a separate thread so creation can go on in
-        # the background while this page loads. Wait until the Event 
-        # thumbprepping is set (at least 4 thumbs ready) or 8 seconds
-        # have passed, then continue.
-        thumbthread = threading.Thread(target=prep_thumbs, args=(imagedir,))
-        thumbthread.start()
-        thumbprepping.wait(8)
-        thumbs = os.listdir(imagedir + '/thumbs/')
-        if not thumbs:
-            return "Found no valid images at " + imagedir
-        # SHOULD SHOW FOLDERS & SHIT INSTEAD
+        # Only process pics if imagedir is a subdir one of the preset pixdirs
+        if any(imagedir.startswith(x) for x in pixdirs):
+            # Create thumbnails
+            # This is done in a separate thread so creation can go on in
+            # the background while this page loads. Wait until the Event 
+            # thumbprepping is set (== at least 4 thumbs done) or 8 seconds
+            # have passed, then continue.
+            thumbthread = threading.Thread(target=prep_thumbs, args=(imagedir,))
+            thumbthread.start()
+            thumbprepping.wait(8)
+            try:
+                thumbs = sorted(os.listdir(imagedir + '/thumbs/'))
+            except OSError:
+                thumbs = []
+        else:
+            flash('Forbidden. Directory not setup for use by lidpix.')
+            return redirect(url_for('.gallery_view', imagedir = pixdirs[0]))
         
-        # Create a list of directory paths & names 
-        # for the pathname buttons
+        # Create a list of directory paths & names for the pathname buttons
         dirs = get_paths(imagedir)
+        dirs = filter(lambda l: any(l.startswith(x) for x in pixdirs), dirs)
+        dirs = [[d, os.path.basename(d)] for d in dirs]
         
         #get_image_info(imagedir + images[0])
         
-        return render_template('gallery.html', thumbs = sorted(thumbs), 
+        return render_template('gallery.html', username=authz.current_user.username,
+                                thumbs = thumbs, 
                                 imagedir = imagedir,
                                 showthumbs = showthumbs,
                                 dirs = dirs)

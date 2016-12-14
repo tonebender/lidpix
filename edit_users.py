@@ -124,7 +124,7 @@ if __name__ == '__main__':
         if pw != pa:
             print "Passwords don't match"
             sys.exit(0)
-        hashed_pw = bcrypt.hashpw(pw, bcrypt.gensalt())
+        hashed_pw = bcrypt.hashpw(pw.encode('utf-8'), bcrypt.gensalt())
         f = raw_input("User's first name: ")
         l = raw_input("User's last name: ")
         j = time.asctime(time.localtime(time.time()))

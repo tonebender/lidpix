@@ -1,7 +1,12 @@
-from Flask import app, Blueprint
+from flask import Flask, request, session, redirect, url_for, abort, \
+  render_template, flash, make_response, Blueprint, current_app
+from wand.image import Image
 import os, string, threading, time
 
+
 gallery = Blueprint('gallery', __name__)
+
+thumbprepping = threading.Event()
 
 
 def prep_thumbs(directory):
@@ -67,7 +72,7 @@ def get_paths(pathname):
 
 @gallery.route('/gallery', methods=['GET', 'POST'])
 @gallery.route('/', methods=['GET', 'POST'])
-def gallery():  
+def gallery_view():
     
     """ 
     Show a gallery with thumbnails 
@@ -80,12 +85,12 @@ def gallery():
     if request.method == 'POST':
         if request.form['imagedir']:
             imagedir = os.path.normpath(request.form['imagedir']) + '/'
-        return redirect(url_for('gallery', imagedir = imagedir))
+        return redirect(url_for('gallery_view', imagedir = imagedir))
         
     if request.method == 'GET':
         
         # pixdirs becomes a list of all the paths in PIXDIRS
-        pixdirs = [os.path.normpath(x) for x in string.split(app.config['PIXDIRS'], ';')]
+        pixdirs = [os.path.normpath(x) for x in string.split(current_app.config['PIXDIRS'], ';')]
     
         # Get url keywords
         showthumbs = int(request.args.get('showthumbs', default='1'))
@@ -97,7 +102,6 @@ def gallery():
         # the background while this page loads. Wait until the Event 
         # thumbprepping is set (at least 4 thumbs ready) or 8 seconds
         # have passed, then continue.
-        thumbprepping = threading.Event()
         thumbthread = threading.Thread(target=prep_thumbs, args=(imagedir,))
         thumbthread.start()
         thumbprepping.wait(8)
@@ -117,7 +121,7 @@ def gallery():
                                 showthumbs = showthumbs,
                                 dirs = dirs)
 
-                                
+
 @gallery.route('/serveimage')
 def serveimage():
     

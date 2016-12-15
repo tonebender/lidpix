@@ -111,7 +111,7 @@ def login():
     if current_user.is_authenticated:
         flash('Already logged in')
         return redirect(request.args.get("next") or 
-                        url_for("gallery.gallery_view"))
+                        url_for("folder.folder_view"))
     myform = LoginForm(request.form)
     error = None
     if request.method == 'POST':
@@ -123,7 +123,7 @@ def login():
                     if login_user(user, remember=myform.remember.data):
                         flash('Logged in!')
                         return redirect(request.args.get("next") or 
-                               url_for("gallery.gallery_view"))
+                               url_for("folder.folder_view"))
                     else:
                         flash('User found but login failed')
                 else:

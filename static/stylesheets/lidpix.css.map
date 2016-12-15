@@ -1,0 +1,7 @@
+{
+"version": 3,
+"mappings": "AAAA,aAAc;EACZ,KAAK,EAAE,KAAK;EACZ,MAAM,EAAE,KAAK;EACb,gBAAgB,EAAE,IAAI;EACtB,MAAM,EAAE,cAAc;;AAGxB,cAAe;EACb,OAAO,EAAE,GAAG;EACZ,gBAAgB,EAAE,IAAI;EACtB,MAAM,EAAE,cAAc",
+"sources": ["../sass/lidpix.scss"],
+"names": [],
+"file": "lidpix.css"
+}

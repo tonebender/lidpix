@@ -1,22 +1,31 @@
 {% extends "layout.html" %}
 {% block body %}
+  
   <div id="loggedinas">
     Logged in as {{ username }}.
     <a href="{{ url_for('authz.logout') }}">Logout</a>
   </div>
+  
   <div id="imagedir">
     {% for d in dirs %}
-      <a href="{{ url_for('.gallery_view', imagedir=d[0]) }}">
+      <a href="{{ url_for('.folder_view', imagedir=d[0]) }}">
         <div class="dir_button">{{ d[1] }}</div>
       </a>
     {% endfor %}
   </div>
+  
   <div id="directory_form">
-    <form action="/gallery" method="POST">
+    <form action="/folder" method="POST">
       <input type="text" name="imagedir" value="{{ imagedir }}"
        size=50>
     </form>
   </div>
+  
+  <!-- Idea for showing non-thumbed files (any non-images etc.):
+       make folder() set their thumb items to e.g. 'icon' and check here
+       if icon and if so, show a div instead of thumbnail.
+       Perhaps iterate here over files in imagedir instead of thumbs and check for
+       each if there's a thumb with exact same name, otherwise show the div -->
   {% for item in thumbs %}
     <div style="margin: 10px">
       <a href="{{ url_for('.serveimage', image=imagedir+'/'+item) }}">
@@ -29,6 +38,7 @@
       </a>
     </div>
   {% endfor %}
+
 {% endblock %}
 
 

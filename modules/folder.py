@@ -134,15 +134,7 @@ def folder_view():
         except OSError:
             thumbs = []
         
-        # Get a list of all files (usually mostly images) in imagedir
-        #try:
-        #    files = sorted(os.listdir(imagedir))
-        #except OSError:
-        #    files = []
-            
-        #for f in range(len(files)):
-        #    files[f] = Folderfile(files[f], files[f] if files[f] in thumbs else 'icon', 0)
-        
+        # Traverse files in imagedir and create list of file objects
         try:
             files = []
             for n in sorted(os.listdir(imagedir)):
@@ -154,15 +146,6 @@ def folder_view():
         dirs = get_paths(imagedir)
         dirs = filter(lambda l: l.startswith(rootdir), dirs)
         dirs = [[d, os.path.basename(d)] for d in dirs]
-        
-        #for p in pixdirs:
-        #    if imagedir.startswith(p):
-        #        secondpath = imagedir.replace(p, '')
-        #        firstpath = p
-        #        break
-        #matches = filter(lambda p: imagedir.startswith(p), pixdirs)
-        #print "pixdirs with matches:", matches
-        #print "shortdir", shortdir
         
         #get_image_info(imagedir + images[0])
         

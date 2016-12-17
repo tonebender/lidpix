@@ -26,16 +26,18 @@
        if icon and if so, show a div instead of thumbnail.
        Perhaps iterate here over files in imagedir instead of thumbs and check for
        each if there's a thumb with exact same name, otherwise show the div -->
-  {% for item in thumbs %}
+
+  {% for item in files %}
     <div style="margin: 10px">
-      <a href="{{ url_for('.serveimage', image=imagedir+'/'+item) }}">
-        {% if showthumbs %}
-          <img src="{{ url_for('.serveimage', image=imagedir+'/thumbs/'+item) }}">
-        {% else %}
-          <div class="thumbnail">
-          </div>
-        {% endif %}
-      </a>
+      {% if item.thumb and showthumbs %}
+        <a href="{{ url_for('.serveimage', image=imagedir+'/'+item.name) }}">
+          <img src="{{ url_for('.serveimage', image=imagedir+'/thumbs/'+item.thumb) }}">
+        </a>
+      {% else %}
+        <div class="icon">
+          [{{ item.name }}]
+        </div>
+      {% endif %}
     </div>
   {% endfor %}
 

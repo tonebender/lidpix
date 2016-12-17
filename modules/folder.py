@@ -1,7 +1,7 @@
 from flask import Flask, request, session, redirect, url_for, abort, \
   render_template, flash, make_response, Blueprint, current_app
 from wand.image import Image
-import os, string, threading, time
+import os, string, threading, time, imghdr
 from flask_login import login_required
 from modules import authz
 
@@ -89,6 +89,13 @@ def folder_view():
     POST: Get new image directory from form and call this again
     """
     
+    class Folderfile:
+        def __init__(self, name, thumb):
+            self.name = name
+            self.thumb = thumb
+            # (Space for more file/image properties)
+
+    
     if request.method == 'POST':
         if request.form['imagedir']:
             imagedir = os.path.normpath(request.form['imagedir']) + '/'
@@ -120,22 +127,39 @@ def folder_view():
         thumbthread = threading.Thread(target=prep_thumbs, args=(imagedir,))
         thumbthread.start()
         thumbprepping.wait(8)
+        
+        # Get a list of available thumbnails
         try:
             thumbs = sorted(os.listdir(imagedir + '/thumbs/'))
         except OSError:
             thumbs = []
         
+        # Get a list of all files (usually mostly images) in imagedir
+        #try:
+        #    files = sorted(os.listdir(imagedir))
+        #except OSError:
+        #    files = []
+            
+        #for f in range(len(files)):
+        #    files[f] = Folderfile(files[f], files[f] if files[f] in thumbs else 'icon', 0)
+        
+        try:
+            files = []
+            for n in sorted(os.listdir(imagedir)):
+                files.append(Folderfile(n, n if n in thumbs else None))
+        except OSError:
+            pass                
+        
         # Create a list of directory paths & names for the pathname buttons
         dirs = get_paths(imagedir)
-        print "dirs:", dirs
         dirs = filter(lambda l: l.startswith(rootdir), dirs)
         dirs = [[d, os.path.basename(d)] for d in dirs]
         
-        for p in pixdirs:
-            if imagedir.startswith(p):
-                secondpath = imagedir.replace(p, '')
-                firstpath = p
-                break
+        #for p in pixdirs:
+        #    if imagedir.startswith(p):
+        #        secondpath = imagedir.replace(p, '')
+        #        firstpath = p
+        #        break
         #matches = filter(lambda p: imagedir.startswith(p), pixdirs)
         #print "pixdirs with matches:", matches
         #print "shortdir", shortdir
@@ -143,6 +167,7 @@ def folder_view():
         #get_image_info(imagedir + images[0])
         
         return render_template('folder.html', username=authz.current_user.username,
+                                files = files,
                                 thumbs = thumbs, 
                                 imagedir = imagedir,
                                 showthumbs = showthumbs,

@@ -97,8 +97,6 @@ def load_user(username):
         return None
 
 
-# This login() function uses the simple USER_NAMES dictionary
-# (defined above) and no passwords to test flask-login
 @authz.route('/login', methods=['GET', 'POST'])
 def login():
     """Log the user in.

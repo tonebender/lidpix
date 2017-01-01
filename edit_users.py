@@ -18,23 +18,15 @@ def connect_to_db(db_filename):
 
 
 def create_new_user_db(db_filename):
-    connection = connect_to_db('users_example.db')
+    connection = connect_to_db(db_filename)
     c = connection.cursor()
     
     # Delete existing
     c.execute("""DROP TABLE IF EXISTS flaskusers;""")
     
-    sql_command = """
-    CREATE TABLE flaskusers (
-    user_nr INTEGER PRIMARY KEY,
-    username VARCHAR(30),
-    password BINARY(60),
-    fname VARCHAR(30),
-    lname VARCHAR(30),
-    joining DATE,
-    active BOOLEAN DEFAULT TRUE);"""
-    
-    c.execute(sql_command)
+    # Create new database from schema file
+    with open('user_db_schema.sql', mode='r') as f:
+        c.executescript(f.read())
     connection.commit()
     connection.close()
     return True

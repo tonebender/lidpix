@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from flask import Flask, request, session, redirect, url_for, abort, \
   render_template, flash, make_response, Blueprint, current_app
 from wand.image import Image
@@ -10,7 +12,7 @@ folder = Blueprint('folder', __name__)
 thumbprepping = threading.Event()
 
 
-def prep_thumbs(directory):
+def prep_thumbs(directory, thumbnaildir):
 
     """ Find all images in directory and make thumbnails in
         directory/thumbs (create subdir if needed).
@@ -18,12 +20,20 @@ def prep_thumbs(directory):
     
     try:
         directory = os.path.normpath(directory) + '/'
-        thumbdir = directory + 'thumbs/'
-        dirlisting = os.listdir(directory)
+        thumbdir = os.path.normpath(directory + thumbnaildir) + '/'
         if not os.path.exists(thumbdir):
             os.mkdir(thumbdir)
     except OSError:
         return
+        
+    # Remove existing old thumbs which don't have corresponding images
+    try:
+        dirlisting = os.listdir(directory)
+        for f in os.listdir(thumbdir):
+            if f not in dirlisting:
+                os.remove(thumbdir + f)
+    except:
+        pass
         
     prepped = 0
     thumbprepping.clear()
@@ -49,7 +59,7 @@ def prep_thumbs(directory):
             except Exception:
                 pass
     thumbprepping.set() # In case there were less than 6 thumbs
-    return      
+    return
     
 
 def get_image_info(imagefile):
@@ -124,23 +134,24 @@ def folder_view():
         # the background while this page loads. Wait until the Event 
         # thumbprepping is set (== at least 4 thumbs done) or 8 seconds
         # have passed, then continue.
-        thumbthread = threading.Thread(target=prep_thumbs, args=(imagedir,))
+        thumbthread = threading.Thread(target=prep_thumbs, args=(imagedir,
+                                       'lidpixthumbs',))
         thumbthread.start()
         thumbprepping.wait(8)
         
         # Get a list of available thumbnails
         try:
-            thumbs = sorted(os.listdir(imagedir + '/thumbs/'))
+            thumbs = sorted(os.listdir((imagedir + '/lidpixthumbs/').decode('utf-8')))
         except OSError:
             thumbs = []
         
         # Traverse files in imagedir and create list of file objects
         try:
             files = []
-            for n in sorted(os.listdir(imagedir)):
+            for n in sorted(os.listdir(imagedir.decode('utf-8'))):
                 files.append(Folderfile(n, n if n in thumbs else None))
         except OSError:
-            pass                
+            pass
         
         # Create a list of directory paths & names for the pathname buttons
         dirs = get_paths(imagedir)

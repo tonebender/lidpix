@@ -97,6 +97,12 @@ def load_user(username):
         return None
 
 
+#@login_manager.unauthorized_handler
+#def handle_needs_login():
+#    flash("You have to be logged in to access this page.")
+#    return redirect(url_for('authz.login', next=request.endpoint))
+
+
 @authz.route('/login', methods=['GET', 'POST'])
 def login():
     """Log the user in.
@@ -120,8 +126,7 @@ def login():
                 .data.encode('utf-8'), user.password.encode('utf-8')):
                     if login_user(user, remember=myform.remember.data):
                         flash('Logged in!')
-                        return redirect(request.args.get("next") or 
-                               url_for("folder.folder_view"))
+                        return redirect(request.args.get("next") or url_for("folder.folder_view"))
                     else:
                         flash('User found but login failed')
                 else:

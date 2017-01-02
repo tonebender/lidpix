@@ -6,4 +6,5 @@ password BINARY(60),
 fname VARCHAR(30),
 lname VARCHAR(30),
 joining DATE,
-active BOOLEAN DEFAULT TRUE);
+active BOOLEAN DEFAULT TRUE,
+viewlayout INTEGER);

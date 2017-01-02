@@ -3,5 +3,8 @@
 __pycache__/
 *.py[cod]
 *.db
-venv
-.sass-cache
+venv/
+.sass-cache/
+static/.sass-cache/
+static/stylesheets/*.map
+static/javascript/jquery-*.js

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from flask import Flask
 
 import conf
@@ -15,7 +17,8 @@ app.config.update(dict(
     USERDB='/home/lidbjork/Develop/python/lidpix/users_example.db',
     SECRET_KEY='development key',
     USERNAME='admin',
-    PASSWORD='default'
+    PASSWORD='default',
+    VIEWLAYOUT=1
 ))
 app.config.from_object('conf.DevelopmentConfig')
 app.config.from_envvar('LIDPIX_SETTINGS', silent=True)
@@ -37,3 +40,7 @@ app.config['PIXDIRSLIST'] = pixdirs
 
 app.register_blueprint(authz)
 app.register_blueprint(folder)
+
+
+
+# http://nedbatchelder.com/text/unipain.html

@@ -4,7 +4,7 @@
   {% if error %}
     <p class="error">Error: {{ error }}</p>
   {% endif %}
-  <form method="POST" action="/login">
+  <form method="POST">
     <div>{{ form.username.label }}: {{ form.username() }}</div>
     <div>{{ form.password.label }}: {{ form.password() }}</div>
     <div>{{ form.remember.label }}: {{ form.remember() }}</div>

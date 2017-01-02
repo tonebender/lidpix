@@ -1,12 +1,30 @@
-div.thumbnail {
-  width: 200px;
-  height: 267px;
-  background-color: #8a4;
-  border: 4px #460 solid; }
+@import url("https://fonts.googleapis.com/css?family=Hind+Siliguri|Noto+Sans|Inconsolata");
+div {
+  /* font-family: 'Hind Siliguri', sans-serif; */
+  font-family: 'Noto Sans', sans-serif;
+  margin: 1em; }
+
+div#imagedir {
+  background-color: #cf8; }
 
 div.dir_button {
+  float: left;
   padding: 1em;
-  background-color: #f86;
-  border: 2px #a31 solid; }
+  margin: 0.5em 0em 0.5em 0.5em;
+  border: 1px #4c1 solid; }
+
+input {
+  font-family: 'Inconsolata', monospace;
+  font-size: 1em;
+  padding: 0.5em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  border: 1px #4c1 solid; }
+
+div.icon {
+  width: 200px;
+  height: 267px;
+  background-color: #cf8;
+  padding: 1em; }
 
 /*# sourceMappingURL=lidpix.css.map */

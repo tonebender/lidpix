@@ -20,16 +20,20 @@ div#imagedir {
   background-color: #df9; }
 
 div.dir_button {
-  float: left;
+  display: inline-block;
   padding: 1em;
   margin: 0.5em 0em 0.5em 0.5em;
   border: 1px #4b0 solid; }
 
-div.icon {
-  width: 200px;
-  height: 267px;
+div.file {
+  max-width: 200px;
   background-color: #df9;
-  padding: 1em; }
+  padding: 1em;
+  margin: 1em; }
+
+input[type='text'], input[type='password'] {
+  font-family: 'Inconsolata', monospace;
+  font-size: 1em; }
 
 /* Login form styles */
 div.loginform {
@@ -39,7 +43,8 @@ div.loginform {
   padding-top: 0.1em;
   background-color: #4b0;
   color: white;
-  /* This <i> tag is visible when checkbutton is checked */ }
+  /* Old browsers which don't understand "not(old)" shouldn't hide the checkbox */
+  /* The <i> tag is visible when checkbutton is checked */ }
   div.loginform h2 {
     margin-bottom: 0.4em; }
   div.loginform input {
@@ -48,14 +53,10 @@ div.loginform {
     margin-top: 0.5em;
     margin-bottom: 0.5em;
     background-color: #df9;
-    color: #290;
-    border: 0px #4b0 solid; }
-  div.loginform input[type='text'], div.loginform input[type='password'] {
-    font-family: 'Inconsolata', monospace;
-    font-size: 1em; }
-  div.loginform input[type='checkbox'] {
+    color: #290; }
+  div.loginform input[type='checkbox']:not(old) {
     display: none; }
-  div.loginform input[type='checkbox'] + label span#rembutton {
+  div.loginform input[type='checkbox'] + label span#rembutton:not(old) {
     display: inline-block;
     height: 1.5em;
     width: 1.3em;

@@ -84,7 +84,7 @@ def get_paths(pathname):
     return pathnames
     #return [[d, os.path.basename(d)] for d in pathnames]
     
-    
+
 
 @folder.route('/folder', methods=['GET', 'POST'])
 @folder.route('/', methods=['GET', 'POST'])
@@ -100,9 +100,10 @@ def folder_view():
     """
     
     class Folderfile:
-        def __init__(self, name, thumb):
+        def __init__(self, name, thumb, filetype):
             self.name = name
             self.thumb = thumb
+            self.filetype = filetype
             # (Space for more file/image properties)
 
     
@@ -134,10 +135,11 @@ def folder_view():
         # the background while this page loads. Wait until the Event 
         # thumbprepping is set (== at least 4 thumbs done) or 8 seconds
         # have passed, then continue.
-        thumbthread = threading.Thread(target=prep_thumbs, args=(imagedir,
-                                       'lidpixthumbs',))
-        thumbthread.start()
-        thumbprepping.wait(8)
+        if showthumbs:
+            thumbthread = threading.Thread(target=prep_thumbs, args=(imagedir,
+                                           'lidpixthumbs',))
+            thumbthread.start()
+            thumbprepping.wait(8)
         
         # Get a list of available thumbnails
         try:
@@ -149,7 +151,15 @@ def folder_view():
         try:
             files = []
             for n in sorted(os.listdir(imagedir.decode('utf-8'))):
-                files.append(Folderfile(n, n if n in thumbs else None))
+                if os.path.isdir(imagedir + '/' + n):
+                    filetype = 'DIR'
+                elif os.path.islink(imagedir + '/' + n):
+                    filetype = 'LNK'
+                elif os.path.ismount(imagedir + '/' + n):
+                    filetype = 'MNT'
+                else:
+                    filetype = os.path.splitext(n)[1][1:]
+                files.append(Folderfile(n, n if n in thumbs else None, filetype))
         except OSError:
             pass
         

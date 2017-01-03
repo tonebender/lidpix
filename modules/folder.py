@@ -137,13 +137,13 @@ def folder_view():
         # have passed, then continue.
         if showthumbs:
             thumbthread = threading.Thread(target=prep_thumbs, args=(imagedir,
-                                           'lidpixthumbs',))
+                                           '.lidpixthumbs',))
             thumbthread.start()
             thumbprepping.wait(8)
         
         # Get a list of available thumbnails
         try:
-            thumbs = sorted(os.listdir((imagedir + '/lidpixthumbs/').decode('utf-8')))
+            thumbs = sorted(os.listdir((imagedir + '/.lidpixthumbs/').decode('utf-8')))
         except OSError:
             thumbs = []
         
@@ -151,17 +151,20 @@ def folder_view():
         try:
             files = []
             for n in sorted(os.listdir(imagedir.decode('utf-8'))):
-                if os.path.isdir(imagedir + '/' + n):
-                    filetype = 'DIR'
-                elif os.path.islink(imagedir + '/' + n):
-                    filetype = 'LNK'
-                elif os.path.ismount(imagedir + '/' + n):
-                    filetype = 'MNT'
-                else:
-                    filetype = os.path.splitext(n)[1][1:]
-                files.append(Folderfile(n, n if n in thumbs else None, filetype))
+                if n[0] != '.':
+                    if os.path.isdir(imagedir + '/' + n):
+                        filetype = 'DIR'
+                    elif os.path.ismount(imagedir + '/' + n):
+                        filetype = 'MNT'
+                    else:
+                        filetype = os.path.splitext(n)[1][1:] # Get file extension
+                    files.append(Folderfile(n, n if n in thumbs else None, filetype))
         except OSError:
             pass
+        except UnicodeError:
+            flash('Unicode error. Directory reading aborted. Encoding: ' + 
+                  err.encoding + '. Reason: ' + err.reason + '. Object: ' + 
+                  err.object + '.')
         
         # Create a list of directory paths & names for the pathname buttons
         dirs = get_paths(imagedir)

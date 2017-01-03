@@ -1,6 +1,9 @@
 @import url("https://fonts.googleapis.com/css?family=Hind+Siliguri|Noto+Sans|Inconsolata|Bitter");
+/* General stuff */
 * {
-  box-sizing: border-box; }
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box; }
 
 div {
   /* font-family: 'Hind Siliguri', sans-serif; */
@@ -16,24 +19,88 @@ h1, h2 {
 h2 {
   font-size: 1.8em; }
 
-div#imagedir {
-  background-color: #df9; }
+a {
+  text-decoration: none;
+  color: #290; }
 
-div.dir_button {
-  display: inline-block;
-  padding: 1em;
-  margin: 0.5em 0em 0.5em 0.5em;
-  border: 1px #4b0 solid; }
+/* Toolbar with directory buttons, user logout button etc. */
+div#toolbar {
+  background-color: #4b0;
+  padding: 0.8em;
+  color: #ffb;
+  margin-bottom: 0.5em; }
+  div#toolbar a {
+    color: #050; }
+  div#toolbar div {
+    display: inline-block; }
+  div#toolbar div#dir_buttons {
+    width: 33%; }
+    div#toolbar div#dir_buttons div {
+      display: inline-block;
+      padding: 0.5em;
+      margin-right: 0.5em;
+      background-color: #df9; }
+  div#toolbar div#layout_buttons {
+    width: 33%;
+    font-size: 1.5em; }
+    div#toolbar div#layout_buttons span {
+      margin-left: 0.5em; }
+    div#toolbar div#layout_buttons span.adjust_square {
+      font-size: 0.9em;
+      position: relative;
+      top: -2px; }
+  div#toolbar div#user_buttons {
+    width: 33%;
+    text-align: right; }
+    div#toolbar div#user_buttons span {
+      margin-left: 1em; }
 
-div.file {
-  max-width: 200px;
-  background-color: #df9;
-  padding: 1em;
-  margin: 1em; }
+/* Image & file grid, based on
+   http://alijafarian.com/responsive-image-grids-using-css */
+ul.rig {
+  list-style: none;
+  font-size: 0px;
+  margin-top: 3rem;
+  margin-left: -2.5%;
+  /* should match li left margin */
+  color: #290;
+  /* This + margin 2.5% is 10% of the whole */ }
+  ul.rig li {
+    display: inline-block;
+    font-size: 16px;
+    font-size: 1rem;
+    vertical-align: top;
+    margin: 0 0 2.5% 2.5%; }
+    ul.rig li img {
+      max-width: 100%;
+      height: auto;
+      margin: 0; }
+  ul.rig li.icon {
+    background-color: #df9;
+    padding: 10px; }
+  ul.rig ul.columns-10 li {
+    width: 7.5%; }
 
+/* Turn the grid into a one-column Instagramish layout for mobiles UNTESTED */
+@media (max-width: 480px) {
+  ul.rig {
+    margin-left: 0; }
+    ul.rig li {
+      width: 100% !important;
+      /* over-ride all li styles */
+      margin: 0 0 20px; } }
+/* General form styles */
 input[type='text'], input[type='password'] {
   font-family: 'Inconsolata', monospace;
-  font-size: 1em; }
+  font-size: 1em;
+  padding: 0.5em;
+  background-color: #df9;
+  color: #290;
+  border: 0; }
+
+/* Directory form styles */
+form#directory_form {
+  margin-top: 0.5em; }
 
 /* Login form styles */
 div.loginform {
@@ -43,7 +110,10 @@ div.loginform {
   padding-top: 0.1em;
   background-color: #4b0;
   color: white;
-  /* Old browsers which don't understand "not(old)" shouldn't hide the checkbox */
+  /* For the checkbox, we remove the actual checkbox and use/style the label.
+   * #rembutton is the button and #remlabel is the actual label.
+   * A Fontawesome icon is used for the check inside #rembutton.
+   * Old browsers which don't understand "not(old)" shouldn't hide the checkbox. */
   /* The <i> tag is visible when checkbutton is checked */ }
   div.loginform h2 {
     margin-bottom: 0.4em; }
@@ -80,12 +150,6 @@ div.loginform {
     margin-top: 1.2em;
     height: 3.5em;
     font-size: 1.2em;
-    color: #4b0;
-    /*
-    border-top: 2px white solid;
-    border-left: 2px white solid;
-    border-right: 2px $dark_color solid;
-    border-bottom: 2px $dark_color solid;
-    */ }
+    color: #4b0; }
 
 /*# sourceMappingURL=lidpix.css.map */

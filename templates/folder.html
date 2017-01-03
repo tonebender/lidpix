@@ -1,76 +1,64 @@
 {% extends "layout.html" %}
 {% block body %}
   
-  <!-- Upper toolbar -->
-  <div id="loggedinas">
-    Logged in as {{ username }}.
-    <a href="{{ url_for('authz.logout') }}">Logout</a>
-  </div>
-  
-  <!-- Directory buttons -->
-  <div id="imagedir">
-    {% for d in dirs %}
-      <a href="{{ url_for('.folder_view', imagedir=d[0]) }}">
-        <div class="dir_button">{{ d[1] }}</div>
-      </a>
-    {% endfor %}
-    <div style="clear: both"></div>
-  </div>
+  {% include "toolbar.html" %}
   
   <!-- Directory form -->
-  <div id="directory_form">
-    <form action="/folder" method="POST">
-      <input type="text" name="imagedir" value="{{ imagedir }}"
-       size=50>
-    </form>
-  </div>
+  <form id="directory_form" action="/folder" method="POST">
+    <input type="text" name="imagedir" value="{{ imagedir }}"
+     size=50>
+  </form>
 
   <!-- Actual images and files -->
-  {% for item in files %}
-    <div class="file">
+  <ul class="rig columns-10">
+    {% for item in files %}
       {% if item.thumb and showthumbs %}
-        <div class="thumb">
+        <li>
           <a href="{{ url_for('.serveimage', image=imagedir+'/'+item.name) }}">
-            <img src="{{ url_for('.serveimage', image=imagedir+'/lidpixthumbs/'+item.thumb) }}"
+            <img src="{{ url_for('.serveimage', image=imagedir+'/.lidpixthumbs/'+item.thumb) }}"
                  width=150>
           </a>
-        </div>
+        </li>
       {% else %}
-        <div class="icon">
-          {# These are Font Awesome icons #}
-          {% if item.filetype == 'DIR' %}
-            <span class="fa fa-folder-o"></span>
-          {% elif item.filetype == 'LNK' %}
-            <span class="fa fa-link"></span>
-          {% elif item.filetype == 'MNT' %}
-            <span class="fa fa-hdd-o"></span>
-          {% elif item.filetype|lower in 'jpeg jpg gif gifv png tiff bmp xcf 
-            psd pcx' %}
-            <span class="fa fa-file-image-o"></span>
-          {% elif item.filetype|lower in 'mov avi mpg mpeg mp4 flv wmv mkv
-            ogv vob dv' %}
-            <span class="fa fa-file-video-o"></span>
-          {% elif item.filetype|lower in 'mp3 ogg flac wma wav sid mod xm aiff 
-            ra ram rm mid midi m4a shn ape' %}
-            <span class="fa fa-file-audio-o"></span>
-          {% elif item.filetype|lower in 'pdf' %}
-            <span class="fa fa-file-pdf-o"></span>
-          {% elif item.filetype|lower in 'zip tar gz tgz tbz2 bz2 lhz arj xz 7z
-            iso sit sitx lz sz z rar sfark' %}
-            <span class="fa fa-file-archive-o"></span>
-          {% elif item.filetype|lower in 'txt text tex doc docx odt sxw xls 
-            xlsx ods rtf rtfd mdb accdb ppt pptx' %}
-            <span class="fa fa-file-text-o"></span>
-          {% else %}
-            <span class="fa fa-file-o"></span>
-          {% endif %}
-          {{ item.name }}
-        </div>
+        <li class="icon">
+          <a href="{{ url_for('.folder_view', imagedir=imagedir+'/'+item.name, showthumbs=showthumbs) }}">
+            <div>
+              {# Font Awesome icons used for certain filetypes #}
+              {# Could be moved to some kind of database in the future #}
+              {% if item.filetype == 'DIR' %}
+                <span class="fa fa-folder-o"></span>
+              {% elif item.filetype == 'MNT' %}
+                <span class="fa fa-hdd-o"></span>
+              {% elif item.filetype|lower in 'jpeg jpg gif gifv png tiff bmp xcf 
+                psd pcx' %}
+                <span class="fa fa-file-image-o"></span>
+              {% elif item.filetype|lower in 'mov avi mpg mpeg mp4 flv wmv mkv
+                ogv vob dv' %}
+                <span class="fa fa-file-video-o"></span>
+              {% elif item.filetype|lower in 'mp3 ogg flac wma wav sid mod xm aiff 
+                ra ram rm mid midi m4a shn ape' %}
+                <span class="fa fa-file-audio-o"></span>
+              {% elif item.filetype|lower in 'pdf' %}
+                <span class="fa fa-file-pdf-o"></span>
+              {% elif item.filetype|lower in 'zip tar gz tgz tbz2 bz2 lhz arj xz 7z
+                iso sit sitx lz sz z rar sfark' %}
+                <span class="fa fa-file-archive-o"></span>
+              {% elif item.filetype|lower in 'txt text tex doc docx odt sxw xls 
+                xlsx ods rtf rtfd mdb accdb ppt pptx' %}
+                <span class="fa fa-file-text-o"></span>
+              {% else %}
+                <span class="fa fa-file-o"></span>
+              {% endif %}
+              
+              {{ item.name }}
+            </div>
+          </a>
+        </li>
       {% endif %}
-    </div>
-  {% endfor %}
+    {% endfor %}
+  </ul>
 
-{% endblock %}
+{% endblock body %}
 
 
 <!-- In case blueprints are active you can shortcut references to the same 

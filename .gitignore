@@ -4,7 +4,6 @@ __pycache__/
 *.py[cod]
 *.db
 venv/
-.sass-cache/
-static/.sass-cache/
-static/stylesheets/*.map
-static/javascript/jquery-*.js
+*.scssc
+*.map
+jquery*.js

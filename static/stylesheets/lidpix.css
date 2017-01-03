@@ -1,30 +1,90 @@
-@import url("https://fonts.googleapis.com/css?family=Hind+Siliguri|Noto+Sans|Inconsolata");
+@import url("https://fonts.googleapis.com/css?family=Hind+Siliguri|Noto+Sans|Inconsolata|Bitter");
+* {
+  box-sizing: border-box; }
+
 div {
   /* font-family: 'Hind Siliguri', sans-serif; */
-  font-family: 'Noto Sans', sans-serif;
-  margin: 1em; }
+  font-family: 'Noto Sans', sans-serif; }
+
+body {
+  padding: 1em;
+  padding-top: 0; }
+
+h1, h2 {
+  font-family: 'Bitter', serif; }
+
+h2 {
+  font-size: 1.8em; }
 
 div#imagedir {
-  background-color: #cf8; }
+  background-color: #df9; }
 
 div.dir_button {
   float: left;
   padding: 1em;
   margin: 0.5em 0em 0.5em 0.5em;
-  border: 1px #4c1 solid; }
-
-input {
-  font-family: 'Inconsolata', monospace;
-  font-size: 1em;
-  padding: 0.5em;
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-  border: 1px #4c1 solid; }
+  border: 1px #4b0 solid; }
 
 div.icon {
   width: 200px;
   height: 267px;
-  background-color: #cf8;
+  background-color: #df9;
   padding: 1em; }
+
+/* Login form styles */
+div.loginform {
+  width: 400px;
+  margin: auto;
+  padding: 1em;
+  padding-top: 0.1em;
+  background-color: #4b0;
+  color: white;
+  /* This <i> tag is visible when checkbutton is checked */ }
+  div.loginform h2 {
+    margin-bottom: 0.4em; }
+  div.loginform input {
+    width: 100%;
+    padding: 0.5em;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    background-color: #df9;
+    color: #290;
+    border: 0px #4b0 solid; }
+  div.loginform input[type='text'], div.loginform input[type='password'] {
+    font-family: 'Inconsolata', monospace;
+    font-size: 1em; }
+  div.loginform input[type='checkbox'] {
+    display: none; }
+  div.loginform input[type='checkbox'] + label span#rembutton {
+    display: inline-block;
+    height: 1.5em;
+    width: 1.3em;
+    padding: 2px;
+    margin-top: 0.5em;
+    background-color: #df9;
+    color: #4b0;
+    vertical-align: bottom; }
+  div.loginform input[type='checkbox'] + label span#remlabel {
+    display: inline-block;
+    height: 1.5em;
+    margin: 0.5em 0 0 0.5em;
+    color: #df9;
+    vertical-align: bottom;
+    font-size: 0.9em; }
+  div.loginform input[type='checkbox'] + label i {
+    display: none; }
+  div.loginform input[type='checkbox']:checked + label span#rembutton i {
+    display: inline-block; }
+  div.loginform input[type='submit'] {
+    margin-top: 1.2em;
+    height: 3.5em;
+    font-size: 1.2em;
+    color: #4b0;
+    /*
+    border-top: 2px white solid;
+    border-left: 2px white solid;
+    border-right: 2px $dark_color solid;
+    border-bottom: 2px $dark_color solid;
+    */ }
 
 /*# sourceMappingURL=lidpix.css.map */

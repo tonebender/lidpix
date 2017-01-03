@@ -42,9 +42,9 @@ def on_load(state):
 class LoginForm(Form):
     """The login form class, using WTForms."""
     username = StringField('Username', [validators.Required(), 
-                           validators.Length(min=3, max=25)])
+                           validators.Length(min=3)], render_kw={"placeholder": "username"})
     password = PasswordField('Password', [validators.Required(),
-                             validators.InputRequired()])
+                             validators.InputRequired()], render_kw={"placeholder": "password"})
     remember = BooleanField('Remember me')
 
 
@@ -125,7 +125,6 @@ def login():
                 if user.password == bcrypt.hashpw(myform.password
                 .data.encode('utf-8'), user.password.encode('utf-8')):
                     if login_user(user, remember=myform.remember.data):
-                        flash('Logged in!')
                         return redirect(request.args.get("next") or url_for("folder.folder_view"))
                     else:
                         flash('User found but login failed')

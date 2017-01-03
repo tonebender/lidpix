@@ -1,40 +1,126 @@
-@import url('https://fonts.googleapis.com/css?family=Hind+Siliguri|Noto+Sans|Inconsolata');
+@import url('https://fonts.googleapis.com/css?family=Hind+Siliguri|Noto+Sans|Inconsolata|Bitter');
 
-$std_border_color: #4c1;
-$std_bg_color: #cf8;
+$bright_color: #df9;
+$dark_color: #4b0;
+$darker_color: #290;
 
 $thumb_width: 200px;
 $thumb_height: 267px;
 
+* {
+  box-sizing: border-box;
+}
+
 div {
   /* font-family: 'Hind Siliguri', sans-serif; */
   font-family: 'Noto Sans', sans-serif;
-  margin: 1em;
+}
+
+body {
+  padding: 1em;
+  padding-top: 0;
+}
+
+h1, h2 {
+  font-family: 'Bitter', serif;
+}
+
+h2 {
+  font-size: 1.8em;
 }
 
 div#imagedir {
-  background-color: $std_bg_color;
+  background-color: $bright_color;
 }
 
 div.dir_button {
   float: left;
   padding: 1em;
   margin: 0.5em 0em 0.5em 0.5em;
-  border: 1px $std_border_color solid;
-}
-
-input {
-  font-family: 'Inconsolata', monospace;
-  font-size: 1em;
-  padding: 0.5em;
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-  border: 1px $std_border_color solid;
+  border: 1px $dark_color solid;
 }
 
 div.icon {
   width: $thumb_width;
   height: $thumb_height;
-  background-color: $std_bg_color;
+  background-color: $bright_color;
   padding: 1em;
+}
+
+
+
+/* Login form styles */
+
+div.loginform {
+  width: 400px;
+  margin: auto;
+  padding: 1em;
+  padding-top: 0.1em;
+  background-color: $dark_color;
+  color: white;
+  
+  h2 {
+    margin-bottom: 0.4em;
+  }
+  
+  input {
+    width: 100%;
+    padding: 0.5em;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    background-color: $bright_color;
+    color: $darker_color;
+    border: 0px $dark_color solid;
+  }
+  
+  input[type='text'], input[type='password'] {
+    font-family: 'Inconsolata', monospace;
+    font-size: 1em;
+  }
+  
+  input[type='checkbox'] {
+    display: none;
+  }
+  
+  input[type='checkbox'] + label {
+    span#rembutton {
+      display: inline-block;
+      height: 1.5em;
+      width: 1.3em;
+      padding: 2px;
+      margin-top: 0.5em;
+      background-color: $bright_color;
+      color: $dark_color;
+      vertical-align: bottom;
+    }
+    span#remlabel {
+      display: inline-block;
+      height: 1.5em;
+      margin: 0.5em 0 0 0.5em;
+      color: $bright_color;
+      vertical-align: bottom;
+      font-size: 0.9em;
+    }
+    i {
+      display: none
+    }
+  }
+  
+  /* This <i> tag is visible when checkbutton is checked */
+  input[type='checkbox']:checked + label span#rembutton i {
+    display: inline-block;
+  }
+  
+  input[type='submit'] {
+    margin-top: 1.2em;  
+    height: 3.5em;
+    font-size: 1.2em;
+    color: $dark_color;
+    /*
+    border-top: 2px white solid;
+    border-left: 2px white solid;
+    border-right: 2px $dark_color solid;
+    border-bottom: 2px $dark_color solid;
+    */
+  }
 }

@@ -1,13 +1,16 @@
 {% extends "layout.html" %}
 {% block body %}
-  <h1>Login</h1>
   {% if error %}
     <p class="error">Error: {{ error }}</p>
   {% endif %}
-  <form method="POST">
-    <div>{{ form.username.label }}: {{ form.username() }}</div>
-    <div>{{ form.password.label }}: {{ form.password() }}</div>
-    <div>{{ form.remember.label }}: {{ form.remember() }}</div>
-    <input type="submit" value="Login" />
-  </form>
+  <div class="loginform">
+    <h2>Login</h2>
+    <form method="POST">
+      {{ form.username() }}
+      {{ form.password() }}
+      {{ form.remember() }}<label for="remember"><span id="rembutton"><i class="fa fa-check"></i></span><span id="remlabel">Remember me</span></label>
+      <!-- {{ form.remember.label }} -->
+      <input type="submit" value="Login" />
+    </form>
+  </div>
 {% endblock %}

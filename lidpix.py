@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# http://nedbatchelder.com/text/unipain.html
 
 from flask import Flask
 
@@ -42,5 +43,8 @@ app.register_blueprint(authz)
 app.register_blueprint(folder)
 
 
+if __name__ == '__main__':
+    app.run()
 
-# http://nedbatchelder.com/text/unipain.html
+
+

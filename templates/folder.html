@@ -2,12 +2,6 @@
 {% block body %}
   
   {% include "toolbar.html" %}
-  
-  <!-- Directory form -->
-  <form id="directory_form" action="/folder" method="POST">
-    <input type="text" name="imagedir" value="{{ imagedir }}"
-     size=50>
-  </form>
 
   <!-- Actual images and files -->
   <ul class="rig columns-10">
@@ -15,8 +9,7 @@
       {% if item.thumb and showthumbs %}
         <li>
           <a href="{{ url_for('.serveimage', image=imagedir+'/'+item.name) }}">
-            <img src="{{ url_for('.serveimage', image=imagedir+'/.lidpixthumbs/'+item.thumb) }}"
-                 width=150>
+            <img src="{{ url_for('.serveimage', image=imagedir+'/.lidpixthumbs/'+item.thumb) }}">
           </a>
         </li>
       {% else %}

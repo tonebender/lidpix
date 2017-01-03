@@ -27,33 +27,34 @@ a {
 div#toolbar {
   background-color: #4b0;
   padding: 0.8em;
-  color: #ffb;
-  margin-bottom: 0.5em; }
+  color: #ffb; }
   div#toolbar a {
     color: #050; }
   div#toolbar div {
     display: inline-block; }
   div#toolbar div#dir_buttons {
-    width: 33%; }
+    width: 49%; }
+    div#toolbar div#dir_buttons span {
+      margin: 0 1em 0 0.5em;
+      font-size: 1.2em; }
     div#toolbar div#dir_buttons div {
       display: inline-block;
       padding: 0.5em;
       margin-right: 0.5em;
       background-color: #df9; }
-  div#toolbar div#layout_buttons {
-    width: 33%;
-    font-size: 1.5em; }
-    div#toolbar div#layout_buttons span {
-      margin-left: 0.5em; }
-    div#toolbar div#layout_buttons span.adjust_square {
-      font-size: 0.9em;
-      position: relative;
-      top: -2px; }
   div#toolbar div#user_buttons {
-    width: 33%;
+    width: 50%;
     text-align: right; }
+    div#toolbar div#user_buttons div#grid_buttons {
+      margin-right: 4em; }
     div#toolbar div#user_buttons span {
       margin-left: 1em; }
+    div#toolbar div#user_buttons span.user_btn {
+      font-size: 1.2em; }
+    div#toolbar div#user_buttons span.adjust_square {
+      font-size: 1.1em;
+      position: relative;
+      top: -1px; }
 
 /* Image & file grid, based on
    http://alijafarian.com/responsive-image-grids-using-css */
@@ -63,8 +64,7 @@ ul.rig {
   margin-top: 3rem;
   margin-left: -2.5%;
   /* should match li left margin */
-  color: #290;
-  /* This + margin 2.5% is 10% of the whole */ }
+  color: #290; }
   ul.rig li {
     display: inline-block;
     font-size: 16px;
@@ -78,9 +78,19 @@ ul.rig {
   ul.rig li.icon {
     background-color: #df9;
     padding: 10px; }
-  ul.rig ul.columns-10 li {
-    width: 7.5%; }
 
+ul.columns-10 li {
+  width: 7.5%; }
+
+/* This + li margin 2.5% is 10% of space */
+ul.columns-4 li {
+  width: 22.5%; }
+
+/* This + li margin 2.5% is 25% of space */
+ul.columns-1 li {
+  width: 97.5%; }
+
+/* This + li margin 2.5% is 100% of space */
 /* Turn the grid into a one-column Instagramish layout for mobiles UNTESTED */
 @media (max-width: 480px) {
   ul.rig {
@@ -100,7 +110,8 @@ input[type='text'], input[type='password'] {
 
 /* Directory form styles */
 form#directory_form {
-  margin-top: 0.5em; }
+  display: none;
+  margin-top: 2px; }
 
 /* Login form styles */
 div.loginform {

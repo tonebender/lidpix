@@ -48,12 +48,16 @@ div#toolbar {
   padding: 0.8em;
   color: $brighter_color;
   a {color: $darkest_color;}
-  margin-bottom: 0.5em;
   
   div {display: inline-block;}
   
   div#dir_buttons {
-    width: 33%;
+    width: 49%;
+    
+    span { 
+      margin: 0 1em 0 0.5em;
+      font-size: 1.2em;
+    }
     
     div {
       display: inline-block;
@@ -63,26 +67,27 @@ div#toolbar {
     }
   }
   
-  div#layout_buttons {
-    width: 33%;
-    font-size: 1.5em;
+  div#user_buttons {
+    width: 50%;
+    text-align: right;
+    
+    div#grid_buttons {
+      margin-right: 4em;
+    }
     
     span {
-      margin-left: 0.5em;
+      margin-left: 1em;
+    }
+    
+    span.user_btn {
+      font-size: 1.2em;
     }
     
     span.adjust_square {
-      font-size: 0.9em;
+      font-size: 1.1em;
       position: relative;
-      top: -2px;
+      top: -1px;
     }
-  }
-  
-  div#user_buttons {
-    width: 33%;
-    text-align: right;
-    
-    span {margin-left: 1em};
   }
 }
 
@@ -113,8 +118,12 @@ ul.rig {
     background-color: $bright_color;
     padding: 10px;
   }
-  ul.columns-10 li {width: 7.5%;}  /* This + margin 2.5% is 10% of the whole */
 }
+ul.columns-10 li {width: 7.5%;}  /* This + li margin 2.5% is 10% of space */
+ul.columns-4 li {width: 22.5%;}  /* This + li margin 2.5% is 25% of space */
+ul.columns-1 li {width: 97.5%;}  /* This + li margin 2.5% is 100% of space */
+
+
 
 /* Turn the grid into a one-column Instagramish layout for mobiles UNTESTED */
 @media (max-width: 480px) {
@@ -142,7 +151,8 @@ input[type='text'], input[type='password'] {
 /* Directory form styles */
 
 form#directory_form {
-  margin-top: 0.5em;
+  display: none;
+  margin-top: 2px;
 }
 
 

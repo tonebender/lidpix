@@ -4,6 +4,7 @@
   
   <!-- Directory buttons -->
   <div id="dir_buttons">
+    <a href="#"><span id="dir_dropdown_btn" class="fa fa-caret-down"></span></a>
     {% for d in dirs %}
       <a href="{{ url_for('.folder_view', imagedir=d[0]) }}">
         <div>{{ d[1] }}</div>
@@ -11,21 +12,29 @@
     {% endfor %}
   </div>
   
-  <div id="layout_buttons">
-    <span class="fa fa-square adjust_square"></span>
-    <span class="fa fa-th-large"></span>
-    <span class="fa fa-th"></span>
-  </div>
   
-  <!-- User buttons (logout, settings, etc.) -->
   <div id="user_buttons">
-    Logged in as {{ username }}&nbsp;
-    <a href="">
-      <span class="fa fa-gear"></span>
-    </a>
+    
+    <!-- Buttons for controlling grid layout -->
+    <div id="grid_buttons">
+      <a href="#"><span id="gridbutton1" class="user_btn fa fa-square adjust_square"></span></a>
+      <a href="#"><span id="gridbutton4" class="user_btn fa fa-th-large"></span></a>
+      <a href="#"><span id="gridbutton10" class="user_btn fa fa-th"></span></a>
+    </div>
+    
+    <!-- Buttons for logout, settings, etc. -->
+    <span>Logged in as {{ username }}&nbsp;</span>
+    <a href=""><span class="user_btn fa fa-gear"></span></a>
     <a href="{{ url_for('authz.logout') }}">
-      <span class="fa fa-sign-out"></span>
+      <span class="user_btn fa fa-sign-out"></span>
     </a>
+    
   </div>
   
 </div>
+
+<!-- Directory form -->
+<form id="directory_form" action="/folder" method="POST">
+  <input type="text" name="imagedir" value="{{ imagedir }}"
+   size=75>
+</form>

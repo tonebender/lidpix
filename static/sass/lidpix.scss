@@ -18,23 +18,17 @@ $thumb_height: 200px;
   -webkit-box-sizing: border-box;
 }
 
-div {
-  /* font-family: 'Hind Siliguri', sans-serif; */
+/* This is the base font-size, which all em and rem are based on */
+html {
+  font-size: 16px;
   font-family: 'Noto Sans', sans-serif;
+  /* font-family: 'Hind Siliguri', sans-serif; */
 }
 
-body {
-  padding: 1em;
-  padding-top: 0;
-}
-
-h1, h2 {
-  font-family: 'Bitter', serif;
-}
-
-h2 {
-  font-size: 1.8em;
-}
+h1, h2, h3 { font-family: 'Bitter', serif; }
+h1 { font-size: 3.125em; }
+h2 { font-size: 2.3125em; }
+h3 { font-size: 1.75em; margin: 0;}
 
 a {
   text-decoration: none;
@@ -42,54 +36,81 @@ a {
 }
 
 
-/* Toolbar with directory buttons, user logout button etc. */
+/* Toolbar with directory buttons, grid and user buttons etc. */
 div#toolbar {
+  * { border: 0px pink solid; }
   background-color: $dark_color;
   padding: 0.8em;
   color: $brighter_color;
-  a {color: $darkest_color;}
+  a { color: $darkest_color; }
   
-  div {display: inline-block;}
+  div, span { display: inline-block; }
+  span { font-size: 1.2em; }
   
-  div#dir_buttons {
-    width: 49%;
+  h3 { color: white; }
+  
+  div#title {
+    width: 5.5%;
+  }
+  
+  div#folder_button {
+    width: 3.5%;
+    padding-left: 2.5em;
+  }
+  
+  /* This directory chooser shows up when the folder button is pressed */
+  div#dir_field {
+    width: 40%;
+    visibility: hidden;
+    * { display: inline-block; }
+    padding-left: 0.5em;
+    position: relative;
+    top: -3px;
     
-    span { 
-      margin: 0 1em 0 0.5em;
-      font-size: 1.2em;
+    div#dir_buttons div {
+      padding: 0.5em;
+      background-color: $bright_color;
+      font-size: 0.9em;
+      border-radius: 3px;
     }
     
-    div {
-      display: inline-block;
-      padding: 0.5em;
-      margin-right: 0.5em;
+    span.fa {
+      margin-left: 1em;
+      position: relative;
+      top: 1px;
+    }
+    
+    form#directory_form {  /* Also see general form styles below */ 
+      padding: 0.3em;
+      max-width: 50%;
+      margin-left: 0.2em;
       background-color: $bright_color;
+      input[type='text'] {
+        max-width: 100%;
+        width: 100%;
+        font-size: 0.9em;
+      }
     }
   }
   
-  div#user_buttons {
-    width: 50%;
+  div#grid_buttons, div#user_buttons {
+    width: 25%;
     text-align: right;
     
-    div#grid_buttons {
-      margin-right: 4em;
-    }
-    
-    span {
-      margin-left: 1em;
-    }
-    
-    span.user_btn {
-      font-size: 1.2em;
-    }
-    
-    span.adjust_square {
-      font-size: 1.1em;
-      position: relative;
-      top: -1px;
-    }
+    span { margin-left: 1.2em; }
   }
-}
+  
+  div#grid_buttons span.adjust_square { /* The single square needs a lil' nudge */
+    font-size: 1.1em;
+    position: relative;
+    top: -1px;
+  }
+  
+  div#user_buttons span#logged_in_as {
+    font-size: 1em;
+  }
+} /* end of #toolbar */
+
 
 
 /* Image & file grid, based on
@@ -113,6 +134,8 @@ ul.rig {
       height: auto;
       margin: 0;
     }
+    
+    p { font-size: 0.8em; }
   }
   li.icon {
     background-color: $bright_color;
@@ -139,20 +162,12 @@ ul.columns-1 li {width: 97.5%;}  /* This + li margin 2.5% is 100% of space */
 
 /* General form styles */
 
-input[type='text'], input[type='password'] {
-  font-family: 'Inconsolata', monospace;
+input[type='text'],
+input[type='password'] {
   font-size: 1em;
-  padding: 0.5em;
   background-color: $bright_color;
   color: $darker_color;
   border: 0;
-}
-
-/* Directory form styles */
-
-form#directory_form {
-  display: none;
-  margin-top: 2px;
 }
 
 
@@ -179,8 +194,13 @@ div.loginform {
     color: $darker_color;
   }
   
-  /* For the checkbox, we remove the actual checkbox and use/style the label.
-   * #rembutton is the button and #remlabel is the actual label.
+  input[type='text'],
+  input[type='password'] {
+    font-family: 'Inconsolata', monospace;
+  }
+  
+  /* For the checkbox, we remove the actual checkbox and use the label.
+   * #rembutton becomes the button and #remlabel is the actual label.
    * A Fontawesome icon is used for the check inside #rembutton.
    * Old browsers which don't understand "not(old)" shouldn't hide the checkbox. */
   input[type='checkbox']:not(old) {
@@ -219,5 +239,6 @@ div.loginform {
     height: 3.5em;
     font-size: 1.2em;
     color: $dark_color;
+    border: 0;
   }
 }

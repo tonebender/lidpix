@@ -1,8 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
   
-  {% include "toolbar.html" %}
-
   <!-- Actual images and files -->
   <ul class="rig columns-10">
     {% for item in files %}
@@ -11,6 +9,7 @@
           <a href="{{ url_for('.serveimage', image=imagedir+'/'+item.name) }}">
             <img src="{{ url_for('.serveimage', image=imagedir+'/.lidpixthumbs/'+item.thumb) }}">
           </a>
+          <p>Image description</p>
         </li>
       {% else %}
         <li class="icon">
@@ -43,7 +42,7 @@
                 <span class="fa fa-file-o"></span>
               {% endif %}
               
-              {{ item.name }}
+              <p>{{ item.name }}</p>
             </div>
           </a>
         </li>

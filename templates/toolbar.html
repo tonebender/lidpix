@@ -2,39 +2,58 @@
 
 <div id="toolbar">
   
-  <!-- Directory buttons -->
-  <div id="dir_buttons">
-    <a href="#"><span id="dir_dropdown_btn" class="fa fa-caret-down"></span></a>
-    {% for d in dirs %}
-      <a href="{{ url_for('.folder_view', imagedir=d[0]) }}">
-        <div>{{ d[1] }}</div>
-      </a>
-    {% endfor %}
+  <div id="title">
+    <h3>Lidpix</h3>
   </div>
   
+  {% if username %}  {# This block only visible if a user is logged in #}
   
-  <div id="user_buttons">
+    <!-- This button shows the directory field -->
+    <div id="folder_button">
+      <a href="#"><span id="folder_icon" class="fa fa-folder-o"></span></a>
+    </div>
+    
+    <!-- General directory field with buttons, form, etc. -->
+    <div id="dir_field">
+      
+      <!-- One dir button for each available parent dir -->
+      <div id="dir_buttons">
+        {% for d in dirs %}
+          <a href="{{ url_for('.folder_view', imagedir=d[0]) }}">
+            <div>{{ d[1] }}</div>
+          </a>
+        {% endfor %}
+      </div>
+    
+      {#
+      <a href="{{ url_for('.folder_view', imagedir=dirs[0][0]) }}">
+        <span class="fa fa-arrow-up"></span>
+      </a>
+      #}
+
+      <!-- Form for entering directory manually -->
+      <form id="directory_form" action="/folder" method="POST">
+        <input type="text" name="imagedir" value="{{ imagedir }}"
+          size=750 >
+      </form>
+    </div>
     
     <!-- Buttons for controlling grid layout -->
     <div id="grid_buttons">
-      <a href="#"><span id="gridbutton1" class="user_btn fa fa-square adjust_square"></span></a>
-      <a href="#"><span id="gridbutton4" class="user_btn fa fa-th-large"></span></a>
-      <a href="#"><span id="gridbutton10" class="user_btn fa fa-th"></span></a>
+      <a href="#"><span id="gridbutton1" class="fa fa-square adjust_square"></span></a>
+      <a href="#"><span id="gridbutton4" class="fa fa-th-large"></span></a>
+      <a href="#"><span id="gridbutton10" class="fa fa-th"></span></a>
     </div>
     
-    <!-- Buttons for logout, settings, etc. -->
-    <span>Logged in as {{ username }}&nbsp;</span>
-    <a href=""><span class="user_btn fa fa-gear"></span></a>
-    <a href="{{ url_for('authz.logout') }}">
-      <span class="user_btn fa fa-sign-out"></span>
-    </a>
+    <!-- User control, logout, settings, etc. -->
+    <div id="user_buttons">
+      <span id="logged_in_as">Logged in as {{ username }}&nbsp;</span>
+      <a href=""><span class="fa fa-gear"></span></a>
+      <a href="{{ url_for('authz.logout') }}">
+        <span class="fa fa-sign-out"></span>
+      </a>
+    </div>
     
-  </div>
+  {% endif %}
   
 </div>
-
-<!-- Directory form -->
-<form id="directory_form" action="/folder" method="POST">
-  <input type="text" name="imagedir" value="{{ imagedir }}"
-   size=75>
-</form>

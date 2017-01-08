@@ -1,8 +1,12 @@
 {% extends "layout.html" %}
 {% block body %}
-  {% if error %}
-    <p class="error">Error: {{ error }}</p>
-  {% endif %}
+
+  {#
+    {% if error %}
+      <p class="error">Error: {{ error }}</p>
+    {% endif %}
+  #}
+  
   <div class="loginform">
     <h2>Login</h2>
     <form method="POST">

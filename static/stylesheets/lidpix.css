@@ -5,57 +5,91 @@
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box; }
 
-div {
-  /* font-family: 'Hind Siliguri', sans-serif; */
-  font-family: 'Noto Sans', sans-serif; }
+/* This is the base font-size, which all em and rem are based on */
+html {
+  font-size: 16px;
+  font-family: 'Noto Sans', sans-serif;
+  /* font-family: 'Hind Siliguri', sans-serif; */ }
 
-body {
-  padding: 1em;
-  padding-top: 0; }
-
-h1, h2 {
+h1, h2, h3 {
   font-family: 'Bitter', serif; }
 
+h1 {
+  font-size: 3.125em; }
+
 h2 {
-  font-size: 1.8em; }
+  font-size: 2.3125em; }
+
+h3 {
+  font-size: 1.75em;
+  margin: 0; }
 
 a {
   text-decoration: none;
   color: #290; }
 
-/* Toolbar with directory buttons, user logout button etc. */
+/* Toolbar with directory buttons, grid and user buttons etc. */
 div#toolbar {
   background-color: #4b0;
   padding: 0.8em;
-  color: #ffb; }
+  color: #ffb;
+  /* This directory chooser shows up when the folder button is pressed */ }
+  div#toolbar * {
+    border: 0px pink solid; }
   div#toolbar a {
     color: #050; }
-  div#toolbar div {
+  div#toolbar div, div#toolbar span {
     display: inline-block; }
-  div#toolbar div#dir_buttons {
-    width: 49%; }
-    div#toolbar div#dir_buttons span {
-      margin: 0 1em 0 0.5em;
-      font-size: 1.2em; }
-    div#toolbar div#dir_buttons div {
-      display: inline-block;
+  div#toolbar span {
+    font-size: 1.2em; }
+  div#toolbar h3 {
+    color: white; }
+  div#toolbar div#title {
+    width: 5.5%; }
+  div#toolbar div#folder_button {
+    width: 3.5%;
+    padding-left: 2.5em; }
+  div#toolbar div#dir_field {
+    width: 40%;
+    visibility: hidden;
+    padding-left: 0.5em;
+    position: relative;
+    top: -3px; }
+    div#toolbar div#dir_field * {
+      display: inline-block; }
+    div#toolbar div#dir_field div#dir_buttons div {
       padding: 0.5em;
-      margin-right: 0.5em;
-      background-color: #df9; }
-  div#toolbar div#user_buttons {
-    width: 50%;
-    text-align: right; }
-    div#toolbar div#user_buttons div#grid_buttons {
-      margin-right: 4em; }
-    div#toolbar div#user_buttons span {
-      margin-left: 1em; }
-    div#toolbar div#user_buttons span.user_btn {
-      font-size: 1.2em; }
-    div#toolbar div#user_buttons span.adjust_square {
-      font-size: 1.1em;
+      background-color: #df9;
+      font-size: 0.9em;
+      border-radius: 3px; }
+    div#toolbar div#dir_field span.fa {
+      margin-left: 1em;
       position: relative;
-      top: -1px; }
+      top: 1px; }
+    div#toolbar div#dir_field form#directory_form {
+      /* Also see general form styles below */
+      padding: 0.3em;
+      max-width: 50%;
+      margin-left: 0.2em;
+      background-color: #df9; }
+      div#toolbar div#dir_field form#directory_form input[type='text'] {
+        max-width: 100%;
+        width: 100%;
+        font-size: 0.9em; }
+  div#toolbar div#grid_buttons, div#toolbar div#user_buttons {
+    width: 25%;
+    text-align: right; }
+    div#toolbar div#grid_buttons span, div#toolbar div#user_buttons span {
+      margin-left: 1.2em; }
+  div#toolbar div#grid_buttons span.adjust_square {
+    /* The single square needs a lil' nudge */
+    font-size: 1.1em;
+    position: relative;
+    top: -1px; }
+  div#toolbar div#user_buttons span#logged_in_as {
+    font-size: 1em; }
 
+/* end of #toolbar */
 /* Image & file grid, based on
    http://alijafarian.com/responsive-image-grids-using-css */
 ul.rig {
@@ -75,6 +109,8 @@ ul.rig {
       max-width: 100%;
       height: auto;
       margin: 0; }
+    ul.rig li p {
+      font-size: 0.8em; }
   ul.rig li.icon {
     background-color: #df9;
     padding: 10px; }
@@ -100,18 +136,12 @@ ul.columns-1 li {
       /* over-ride all li styles */
       margin: 0 0 20px; } }
 /* General form styles */
-input[type='text'], input[type='password'] {
-  font-family: 'Inconsolata', monospace;
+input[type='text'],
+input[type='password'] {
   font-size: 1em;
-  padding: 0.5em;
   background-color: #df9;
   color: #290;
   border: 0; }
-
-/* Directory form styles */
-form#directory_form {
-  display: none;
-  margin-top: 2px; }
 
 /* Login form styles */
 div.loginform {
@@ -121,8 +151,8 @@ div.loginform {
   padding-top: 0.1em;
   background-color: #4b0;
   color: white;
-  /* For the checkbox, we remove the actual checkbox and use/style the label.
-   * #rembutton is the button and #remlabel is the actual label.
+  /* For the checkbox, we remove the actual checkbox and use the label.
+   * #rembutton becomes the button and #remlabel is the actual label.
    * A Fontawesome icon is used for the check inside #rembutton.
    * Old browsers which don't understand "not(old)" shouldn't hide the checkbox. */
   /* The <i> tag is visible when checkbutton is checked */ }
@@ -135,6 +165,9 @@ div.loginform {
     margin-bottom: 0.5em;
     background-color: #df9;
     color: #290; }
+  div.loginform input[type='text'],
+  div.loginform input[type='password'] {
+    font-family: 'Inconsolata', monospace; }
   div.loginform input[type='checkbox']:not(old) {
     display: none; }
   div.loginform input[type='checkbox'] + label span#rembutton:not(old) {
@@ -161,6 +194,7 @@ div.loginform {
     margin-top: 1.2em;
     height: 3.5em;
     font-size: 1.2em;
-    color: #4b0; }
+    color: #4b0;
+    border: 0; }
 
 /*# sourceMappingURL=lidpix.css.map */

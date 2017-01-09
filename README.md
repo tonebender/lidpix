@@ -13,12 +13,12 @@ Specar / idéer
 Uppladdning av foton
   inkl filnamnsfix
   
-Vising av galleri
+Vising av mapp
   tumnaglar
     toggla tumnaglar/ikoner
   bildinfo
-  visa mappnamn
-  välja mapp med både länkar och form
+  visa mappnamn X
+  välja mapp med både länkar och form X
   sorteringsalternativ
   beskrivningsfält
   sociala medier-uppladdning
@@ -26,10 +26,16 @@ Vising av galleri
     cp, mv, etc.
     
 Inlogg
-  
-Uppvisningsgalleri
+  olika rättigheter för olika användare
+  spara inställningar?
+    
+Galleri för uppvisning
   batadas (sql)
   zip-länk
+  
+Inställningar
+  färgteman
+  spara i användar-db
  
 
 Tech:
@@ -39,5 +45,5 @@ flask
   wand
   flask-login
 css
-  sass, less?
+  sass
 jquery

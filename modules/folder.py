@@ -12,10 +12,11 @@ folder = Blueprint('folder', __name__)
 thumbprepping = threading.Event()
 
 class Folderfile:
-    def __init__(self, name, thumb, filetype):
+    def __init__(self, name, thumb, filetype, datetime):
         self.name = name
         self.thumb = thumb
         self.filetype = filetype
+        self.datetime = datetime
         # (Space for more file/image properties)
 
 
@@ -137,9 +138,9 @@ def create_img_objects(imagedir, thumbs):
     """
     
     # Get image info /////////////////////////////////
-    i = get_image_info(imagedir + '/' + sorted(os.listdir(imagedir.decode('utf-8')))[1])
-    for k, v in i.iteritems():
-        print k, '--', v
+    #i = get_image_info(imagedir + '/' + sorted(os.listdir(imagedir.decode('utf-8')))[1])
+    #for k, v in i.iteritems():
+    #    print k, '--', v
         
     try:
         files = []
@@ -151,7 +152,9 @@ def create_img_objects(imagedir, thumbs):
                     filetype = 'MNT'
                 else:
                     filetype = os.path.splitext(n)[1][1:] # Get file extension
-                files.append(Folderfile(n, n if n in thumbs else None, filetype))
+                exif = get_image_info(imagedir + '/' + n)
+                files.append(Folderfile(n, n if n in thumbs else None, 
+                                        filetype, exif['DateTimeOriginal']))
     except OSError:
         pass
     except UnicodeError:

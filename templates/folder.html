@@ -5,12 +5,13 @@
   <ul class="rig columns-10">
     {% for item in files %}
       {% if item.thumb and showthumbs %}
-        <li>
-          <a href="{{ url_for('.serveimage', image=imagedir+'/'+item.name) }}">
+        <a href="{{ url_for('.serveimage', image=imagedir+'/'+item.name) }}">
+          <li>
             <img src="{{ url_for('.serveimage', image=imagedir+'/.lidpixthumbs/'+item.thumb) }}">
-          </a>
-          <p>Image description</p>
-        </li>
+            <p>{{ item.name }}</p>
+            <p>{{ item.datetime }}</p>
+          </li>
+        </a>
       {% else %}
         <li class="icon">
           <a href="{{ url_for('.folder_view', imagedir=imagedir+'/'+item.name, showthumbs=showthumbs) }}">

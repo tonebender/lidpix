@@ -20,7 +20,7 @@
       <div id="dir_buttons">
         {% for d in dirs %}
           <a href="{{ url_for('.folder_view', imagedir=d[0]) }}">
-            <div>{{ d[1] }}</div>
+            <div>/{{ d[1] }}</div>
           </a>
         {% endfor %}
       </div>

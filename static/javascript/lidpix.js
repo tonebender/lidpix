@@ -25,7 +25,48 @@ $(document).ready(function() {
         $('ul.rig').addClass('columns-10');
     });
     
-    /*
+    
+    $.urlParam = function(name) {
+        var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+        if (results == null) {
+           return null;
+        }
+        else {
+           return results[1] || 0;
+        }
+    }
+    
+    
+    var imagedir = $.urlParam('imagedir');
+    
+    // When user clicks "Load images", get the thumbs urls (as json)
+    $('#loadimages').click(function() {
+        load_thumbs(imagedir);
+    });
+    
+    
+
+});
+
+function load_thumbs(imagedir) {
+    // Show progress message
+    $('#loadimages').html('Loading images ...');
+    console.log(imagedir);
+
+    $.ajax({
+        type: 'GET',
+        url: 'http://localhost:5080/supplythumbs',
+        data: 'imagedir=' + imagedir,
+        success:function(feed) {
+            console.log(feed);
+            $('#testdiv').html('BLA');
+        },
+        dataType: 'json'
+    });
+}
+
+
+/*
     function resizeInput() {
         $(this).attr('size', $(this).val().length);
     }
@@ -36,5 +77,4 @@ $(document).ready(function() {
         .keyup(resizeInput)
         // resize on page load
         .each(resizeInput);
-    */
-});
+*/

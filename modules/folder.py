@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from flask import Flask, request, session, redirect, url_for, abort, \
-  render_template, flash, make_response, Blueprint, current_app
+  render_template, flash, make_response, Blueprint, current_app, json
 from wand.image import Image
 import os, string, threading, time, imghdr
 from flask_login import login_required
@@ -11,6 +11,7 @@ folder = Blueprint('folder', __name__)
 
 thumbprepping = threading.Event()
 
+
 class Folderfile:
     def __init__(self, name, thumb, filetype, datetime):
         self.name = name
@@ -18,9 +19,13 @@ class Folderfile:
         self.filetype = filetype
         self.datetime = datetime
         # (Space for more file/image properties)
+    
+    def to_json(self):
+        return {'Images': {'name': self.name, 'thumb': self.thumb, 
+                'filetype': self.filetype, 'datetime': self.datetime}}
 
 
-def prep_thumbs(directory, thumbdir):
+def prep_thumbs(directory, thumbdir, thumbsize):
     
     """ This wrapper for make_thumbs() runs that function as its
     own thread in the background so the webpage won't be held up (too much),
@@ -29,7 +34,8 @@ def prep_thumbs(directory, thumbdir):
     Args: same as make_thumbs() below.
     Return: list of available thumbnails."""
     
-    tthread = threading.Thread(target=make_thumbs, args=(directory, thumbdir,))
+    tthread = threading.Thread(target=make_thumbs, 
+                               args=(directory, thumbdir, thumbsize,))
     tthread.start()
     thumbprepping.wait(8)  # Wait until thumbprepping is done, or 8 seconds
     
@@ -43,13 +49,15 @@ def prep_thumbs(directory, thumbdir):
     return thumbs
 
 
-def make_thumbs(directory, thumbdir):
+def make_thumbs(directory, thumbdir, thumbsize):
 
     """ Find all images in directory and make thumbnails in directory/thumbs 
     (create subdir if needed).
     
     directory: the directory with the main images.
-    thumbdir: the directory inside directory where thumbs (should) reside."""
+    thumbdir: the directory inside directory where thumbs (should) reside.
+    thumbsize: a string (e.g. '200') specifying the width of the thumbs
+    Return: nothing """
         
     prepped = 0
     thumbprepping.clear()
@@ -87,7 +95,7 @@ def make_thumbs(directory, thumbdir):
                     continue
             try:
                 with Image(filename = directory + imagefile) as img:
-                    img.transform(resize='200x')
+                    img.transform(resize = thumbsize + 'x')
                     img.save(filename = thumbdir + imagefile)
             except Exception:
                 pass
@@ -97,19 +105,30 @@ def make_thumbs(directory, thumbdir):
 
 def get_image_info(imagefile):
     
-    """ Read the exif info in the image and return it as a dict """
+    """ Read the exif info in the image and return it as a dict.
+    
+    imagefile: the image file with full path
+    Return: dict containing all exif info from image."""
+    
     # http://docs.wand-py.org/en/0.4.4/guide/exif.html
     
-    exif = {}
-    with Image(filename = imagefile) as img:
-        exif.update((k[5:], v) for k, v in img.metadata.items()
-                                    if k.startswith('exif:'))
+    try:
+        exif = {}
+        with Image(filename = imagefile) as img:
+            exif.update((k[5:], v) for k, v in img.metadata.items()
+                                        if k.startswith('exif:'))
+    except:
+        return None
     return exif
     
 
 def get_rootdir(imagedir, pixdirs):
     
-    """ Find which folder in pixdirs is the parent of imagedir, return it """
+    """ Find which path in pixdirs is the parent of imagedir, return it.
+    
+    imagedir: the path to where the images are
+    pixdirs: list of paths
+    Return: a string containing the rootdir, or None if none was found """
     
     rootdir = filter(lambda d: imagedir.startswith(d), pixdirs)
     return(rootdir[0] if rootdir else None)
@@ -119,7 +138,11 @@ def get_paths(pathname, rootdir):
     
     """ If pathname is the string '/path/to/dir', this returns
     [['/path', 'path'], ['/path/to', 'to'], ['/path/to/dir', 'dir']] 
-    Only pathnames which are children of rootdir are kept."""
+    Only pathnames which are children of rootdir are kept.
+    
+    pathname: string containing a pathname to process
+    rootdir: string with pathname that should be a subset of pathname
+    Return: list with lists (see above) """
     
     pathnames = [pathname.rsplit("/",n)[0]
          for n in range(pathname.count("/")-1,-1,-1)]
@@ -130,11 +153,12 @@ def get_paths(pathname, rootdir):
 
 def create_img_objects(imagedir, thumbs):
     
-    """ Create FolderFile objects of all the files in imagedir and return
+    """ Create Folderfile objects of all the files in imagedir and return
     them in a list.
     
     imagedir: Directory containing the images/files
     thumbs: A list of thumbnail names which hopefully matches the images
+    Return: list of Folderfile objects
     """
     
     # Get image info /////////////////////////////////
@@ -154,7 +178,7 @@ def create_img_objects(imagedir, thumbs):
                     filetype = os.path.splitext(n)[1][1:] # Get file extension
                 exif = get_image_info(imagedir + '/' + n)
                 files.append(Folderfile(n, n if n in thumbs else None, 
-                                        filetype, exif['DateTimeOriginal']))
+                                        filetype, exif['DateTimeOriginal'] if exif else None))
     except OSError:
         pass
     except UnicodeError:
@@ -165,7 +189,6 @@ def create_img_objects(imagedir, thumbs):
               
 
 @folder.route('/folder', methods=['GET', 'POST'])
-@folder.route('/', methods=['GET', 'POST'])
 @login_required
 def folder_view():
     
@@ -189,6 +212,7 @@ def folder_view():
     
         # Get url keywords
         showthumbs = int(request.args.get('showthumbs', default='1'))
+        thumbsize = request.args.get('thumbsize', default='200')
         imagedir = os.path.abspath(request.args.get('imagedir', default=pixdirs[0]))
         
         # Find the root dir of the image dir, abort if it's not valid
@@ -201,7 +225,7 @@ def folder_view():
         dirs = get_paths(imagedir, rootdir)
             
         # Create thumbnails if needed and get a list of them
-        thumbs = prep_thumbs(imagedir, '.lidpixthumbs')
+        thumbs = prep_thumbs(imagedir, '.lidpixthumbs', thumbsize)
         
         # Create a list of FolderFile objects from all the files in imagedir
         files = create_img_objects(imagedir, thumbs)
@@ -212,6 +236,85 @@ def folder_view():
                                 imagedir = imagedir,
                                 showthumbs = showthumbs,
                                 dirs = dirs)
+
+
+@folder.route('/folderjs', methods=['GET', 'POST'])
+@login_required
+def folder_view_js():
+    
+    """ 
+    Show a folder with thumbnails 
+    This produces a page that JS can fill with thumbnails
+    
+    GET: Get image directory from URL keyword; prep thumbnails;
+         show folder.html with thumbnails
+    POST: Get new image directory from form and call this again
+    """
+    
+    if request.method == 'POST':
+        if request.form['imagedir']:
+            imagedir = os.path.normpath(request.form['imagedir']) + '/'
+        return redirect(url_for('.folder_view', imagedir = imagedir))
+        
+        
+    if request.method == 'GET':
+        
+        pixdirs = current_app.config['PIXDIRSLIST']
+    
+        # Get url keywords
+        showthumbs = int(request.args.get('showthumbs', default='1'))
+        thumbsize = request.args.get('thumbsize', default='200')
+        imagedir = os.path.abspath(request.args.get('imagedir', default=pixdirs[0]))
+        
+        # Find valid root dir of the image dir, redirect to default if none
+        rootdir = get_rootdir(imagedir, pixdirs)
+        if not rootdir:
+            flash('Forbidden. Directory not setup for access to lidpix.')
+            return redirect(url_for('.folder_view', imagedir = pixdirs[0]))
+            
+        # Create a list of directory paths & names for the pathname buttons
+        dirs = get_paths(imagedir, rootdir)
+            
+        # Create thumbnails if needed and get a list of them
+        thumbs = prep_thumbs(imagedir, '.lidpixthumbs', thumbsize)
+        
+        # Create a list of FolderFile objects from all the files in imagedir
+        files = create_img_objects(imagedir, thumbs)
+        
+        return render_template('folderjs.html', username=authz.current_user.username,
+                                files = files,
+                                thumbs = thumbs, 
+                                imagedir = imagedir,
+                                showthumbs = showthumbs,
+                                dirs = dirs)
+
+
+@folder.route('/supplythumbs', methods=['GET'])
+@login_required
+def supply_thumbs():
+    
+    pixdirs = current_app.config['PIXDIRSLIST']
+
+    # Get url keywords
+    thumbsize = request.args.get('thumbsize', default='200')
+    imagedir = os.path.abspath(request.args.get('imagedir', default=pixdirs[0]))
+    
+    # Find the root dir of the image dir, abort if it's not valid
+    rootdir = get_rootdir(imagedir, pixdirs)
+    if not rootdir:
+        flash('Forbidden. Directory not setup for access to lidpix.')
+        return redirect(url_for('.folder_view', imagedir = pixdirs[0]))
+        
+    # Create thumbnails if needed and get a list of them
+    thumbs = prep_thumbs(imagedir, '.lidpixthumbs', thumbsize)
+    
+    # Create a list of FolderFile objects from all the files in imagedir
+    files = create_img_objects(imagedir, thumbs)
+    
+    # Convert the files list to json format
+    json_files = json.dumps([f.to_json() for f in files])
+    print "Supplying thumbs ..."
+    return json_files
 
 
 @folder.route('/serveimage')

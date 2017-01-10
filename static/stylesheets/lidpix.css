@@ -101,6 +101,12 @@ div#toolbar {
     font-size: 1em; }
 
 /* end of #toolbar */
+div#loadimages {
+  background-color: #4b0;
+  color: #efb;
+  width: 200px;
+  margin: auto; }
+
 /* Image & file grid, based on
    http://alijafarian.com/responsive-image-grids-using-css */
 ul.rig {

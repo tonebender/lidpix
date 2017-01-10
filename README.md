@@ -16,6 +16,7 @@ Uppladdning av foton
 Vising av mapp
   tumnaglar
     toggla tumnaglar/ikoner
+  visa mer när man scrollar
   bildinfo
   visa mappnamn X
   välja mapp med både länkar och form X

@@ -134,6 +134,13 @@ div#toolbar {
 } /* end of #toolbar */
 
 
+div#loadimages {
+  background-color: $dark_color;
+  color: $brighter_color;
+  width: 200px;
+  margin: auto;
+}
+
 
 /* Image & file grid, based on
    http://alijafarian.com/responsive-image-grids-using-css */

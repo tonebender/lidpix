@@ -1,0 +1,51 @@
+<div id="toolbar">
+  
+  <div id="title">
+    <h3>Lidpix</h3>
+  </div>
+  
+  {% if username %}  {# This block only visible if a user is logged in #}
+    
+    <!-- This button shows the directory field -->
+    <div id="folder_button">
+      <a href="#"><span id="folder_icon" class="fa fa-folder-o"></span></a>
+    </div>
+    
+    <!-- General directory field with buttons, form, etc. -->
+    <div id="dir_field">
+      
+      <!-- One dir button for each available parent dir -->
+      <div id="dir_buttons">
+        <!-- Insert this with javascript:
+          <a href="{{ url_for('.folder_view', imagedir=d[0]) }}">
+            <div>/{{ d[1] }}</div>
+          </a>
+        -->
+      </div>
+
+      <!-- Form for entering directory manually -->
+      <form id="directory_form" action="/folder" method="POST">
+        <input type="text" name="imagedir" value="{{ imagedir }}"
+          size=750>
+      </form>
+    </div>
+    
+    <!-- Buttons for controlling grid layout -->
+    <div id="grid_buttons">
+      <a href="#"><span id="gridbutton1" class="fa fa-square adjust_square"></span></a>
+      <a href="#"><span id="gridbutton4" class="fa fa-th-large"></span></a>
+      <a href="#"><span id="gridbutton10" class="fa fa-th"></span></a>
+    </div>
+    
+    <!-- User control, logout, settings, etc. -->
+    <div id="user_buttons">
+      <span id="logged_in_as">Logged in as {{ username }}&nbsp;</span>
+      <a href=""><span class="fa fa-gear"></span></a>
+      <a href="{{ url_for('authz.logout') }}">
+        <span class="fa fa-sign-out"></span>
+      </a>
+    </div>
+    
+  {% endif %}
+  
+</div>

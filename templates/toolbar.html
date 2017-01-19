@@ -25,11 +25,11 @@
         {% endfor %}
       </div>
     
-      {#
+      {# <!--
       <a href="{{ url_for('.folder_view', imagedir=dirs[0][0]) }}">
         <span class="fa fa-arrow-up"></span>
       </a>
-      #}
+      --> #}
 
       <!-- Form for entering directory manually -->
       <form id="directory_form" action="/folder" method="POST">
@@ -57,3 +57,5 @@
   {% endif %}
   
 </div>
+
+<div id="status_field">&nbsp;</div>

@@ -134,6 +134,12 @@ div#toolbar {
 } /* end of #toolbar */
 
 
+div#status_field {
+  padding: 0.5em;
+  color: $dark_color;
+}
+
+
 div#loadimages {
   background-color: $dark_color;
   color: $brighter_color;

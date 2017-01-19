@@ -101,6 +101,10 @@ div#toolbar {
     font-size: 1em; }
 
 /* end of #toolbar */
+div#status_field {
+  padding: 0.5em;
+  color: #4b0; }
+
 div#loadimages {
   background-color: #4b0;
   color: #efb;

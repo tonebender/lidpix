@@ -21,8 +21,8 @@ class Folderfile:
         # (Space for more file/image properties)
     
     def to_json(self):
-        return {'Images': {'name': self.name, 'thumb': self.thumb, 
-                'filetype': self.filetype, 'datetime': self.datetime}}
+        return {'name': self.name, 'thumb': self.thumb, 
+                'filetype': self.filetype, 'datetime': self.datetime}
 
 
 def prep_thumbs(directory, thumbdir, thumbsize):
@@ -313,7 +313,7 @@ def supply_thumbs():
     
     # Convert the files list to json format
     json_files = json.dumps([f.to_json() for f in files])
-    print "Supplying thumbs ..."
+
     return json_files
 
 

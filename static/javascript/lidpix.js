@@ -1,5 +1,48 @@
 $(document).ready(function() {
+
+    var base_url = 'http://localhost:5080';
+    var serveimage_url = base_url + '/serveimage?image=';
+    var thumbs_dir = '/.lidpixthumbs/';
     
+    $.urlParam = function(name) {
+        var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+        if (results == null) {
+           return null;
+        }
+        else {
+           return results[1] || 0;
+        }
+    }
+    
+    function load_thumbs(imagedir, showthumbs) {
+        
+        /* Get thumbnails for the images in imagedir and add them to the page */
+        
+        // $('#loadimages').html('Loading images ...'); // Show progress message
+    
+        $.getJSON({
+            type: 'GET',
+            url: 'http://localhost:5080/supplythumbs',
+            data: 'imagedir=' + imagedir,
+            success:function(feed) {
+                feed.forEach(function(entry) {
+                    $('#thumbs_area').append(
+                        '<a href="' + serveimage_url +
+                            imagedir + entry.name + '">' +
+                        '<li>' +
+                            '<img src="' + serveimage_url + imagedir +
+                                thumbs_dir + entry.name +
+                            '">' +
+                            '<p>' + entry.name + '</p>' +
+                            '<p>' + entry.datetime + '</p>' +
+                        '</li>'
+                    );
+                });
+                $('#status_field').html('');
+            },
+        });
+    }
+
     // When the folder button next to 'Lidpix' is clicked, show the directory 
     // field and change the folder button itself
     $('#folder_button').click(function() {
@@ -26,44 +69,18 @@ $(document).ready(function() {
     });
     
     
-    $.urlParam = function(name) {
-        var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
-        if (results == null) {
-           return null;
-        }
-        else {
-           return results[1] || 0;
-        }
-    }
-    
-    
     var imagedir = $.urlParam('imagedir');
+    var showthumbs = $.urlParam('showthumbs');
     
     // When user clicks "Load images", get the thumbs urls (as json)
-    $('#loadimages').click(function() {
-        load_thumbs(imagedir);
-    });
+    /* $('#loadimages').click(function() {
+        load_thumbs(imagedir, showthumbs);
+    }); */
     
+    $('#status_field').html('Loading directory ...');
+    load_thumbs(imagedir, showthumbs);
     
-
 });
-
-function load_thumbs(imagedir) {
-    // Show progress message
-    $('#loadimages').html('Loading images ...');
-    console.log(imagedir);
-
-    $.ajax({
-        type: 'GET',
-        url: 'http://localhost:5080/supplythumbs',
-        data: 'imagedir=' + imagedir,
-        success:function(feed) {
-            console.log(feed);
-            $('#testdiv').html('BLA');
-        },
-        dataType: 'json'
-    });
-}
 
 
 /*

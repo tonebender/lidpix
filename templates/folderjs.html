@@ -8,6 +8,10 @@
 
 {% endblock body %}
 
+{% block javascr %}
+  <script src="{{ url_for('static', filename='javascript/lidpix.js') }}"></script>
+{% endblock javascr %}
+
 
 <!-- In case blueprints are active you can shortcut references to the same 
 blueprint by prefixing the local endpoint with a dot (.). 

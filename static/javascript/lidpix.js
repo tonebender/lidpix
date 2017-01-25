@@ -18,14 +18,14 @@ $(document).ready(function() {
         
         /* Get thumbnails for the images in imagedir and add them to the page */
         
-        // $('#loadimages').html('Loading images ...'); // Show progress message
+        $('#status_field').html('Loading directory ...');
     
         $.getJSON({
             type: 'GET',
             url: 'http://localhost:5080/supplythumbs',
             data: 'imagedir=' + imagedir,
             success:function(feed) {
-                feed.forEach(function(entry) {
+                feed.forEach(function(entry) {  // Put thumbs on page
                     $('#thumbs_area').append(
                         '<a href="' + serveimage_url +
                             imagedir + entry.name + '">' +
@@ -38,12 +38,12 @@ $(document).ready(function() {
                         '</li>'
                     );
                 });
-                $('#status_field').html('');
+                $('#status_field').html(''); // Remove "loading" message
             },
         });
     }
 
-    // When the folder button next to 'Lidpix' is clicked, show the directory 
+    // When the folder button right of 'Lidpix' is clicked, show the directory 
     // field and change the folder button itself
     $('#folder_button').click(function() {
         if ( $('#dir_field').css('visibility') == 'hidden' )
@@ -55,16 +55,20 @@ $(document).ready(function() {
     });
     
     // Buttons for choosing the grid format of the thumbnails
+    $('#grid_buttons a').click(function() {
+        $('#grid_buttons a').removeClass('grid_btn_selected');
+        $('ul.rig').removeClass('columns-1 columns-4 columns-10');
+    });
     $('#gridbutton1').click(function() {
-        $('ul.rig').removeClass('columns-4 columns-10');
+        $('#gridbutton1').addClass('grid_btn_selected');
         $('ul.rig').addClass('columns-1');
     });
     $('#gridbutton4').click(function() {
-        $('ul.rig').removeClass('columns-1 columns-10');
+        $('#gridbutton4').addClass('grid_btn_selected');
         $('ul.rig').addClass('columns-4');
     });
     $('#gridbutton10').click(function() {
-        $('ul.rig').removeClass('columns-1 columns-4');
+        $('#gridbutton10').addClass('grid_btn_selected');
         $('ul.rig').addClass('columns-10');
     });
     
@@ -72,12 +76,6 @@ $(document).ready(function() {
     var imagedir = $.urlParam('imagedir');
     var showthumbs = $.urlParam('showthumbs');
     
-    // When user clicks "Load images", get the thumbs urls (as json)
-    /* $('#loadimages').click(function() {
-        load_thumbs(imagedir, showthumbs);
-    }); */
-    
-    $('#status_field').html('Loading directory ...');
     load_thumbs(imagedir, showthumbs);
     
 });

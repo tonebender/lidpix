@@ -84,7 +84,8 @@ div#toolbar {
         font-size: 0.9em;
         padding: 0.3em;
         padding-left: 0.5em;
-        background-color: #df9; }
+        background-color: #df9;
+        color: #050; }
       div#toolbar div#dir_field form#directory_form input[type='text']:focus {
         background-color: #efb; }
   div#toolbar div#grid_buttons, div#toolbar div#user_buttons {
@@ -92,6 +93,9 @@ div#toolbar {
     text-align: right; }
     div#toolbar div#grid_buttons span, div#toolbar div#user_buttons span {
       margin-left: 1.2em; }
+  div#toolbar a.grid_btn_selected {
+    color: #290;
+    /* Brighter than normal unselected color */ }
   div#toolbar div#grid_buttons span.adjust_square {
     /* The single square needs a lil' nudge */
     font-size: 1.1em;
@@ -104,12 +108,6 @@ div#toolbar {
 div#status_field {
   padding: 0.5em;
   color: #4b0; }
-
-div#loadimages {
-  background-color: #4b0;
-  color: #efb;
-  width: 200px;
-  margin: auto; }
 
 /* Image & file grid, based on
    http://alijafarian.com/responsive-image-grids-using-css */

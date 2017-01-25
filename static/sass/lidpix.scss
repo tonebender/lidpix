@@ -107,6 +107,7 @@ div#toolbar {
         padding: 0.3em;
         padding-left: 0.5em;
         background-color: $bright_color;
+        color: $darkest_color;
       }
       input[type='text']:focus {
         background-color: $brighter_color;
@@ -120,6 +121,10 @@ div#toolbar {
     text-align: right;
     
     span { margin-left: 1.2em; }
+  }
+  
+  a.grid_btn_selected {
+    color: $darker_color;    /* Brighter than normal unselected color */
   }
   
   div#grid_buttons span.adjust_square { /* The single square needs a lil' nudge */
@@ -137,14 +142,6 @@ div#toolbar {
 div#status_field {
   padding: 0.5em;
   color: $dark_color;
-}
-
-
-div#loadimages {
-  background-color: $dark_color;
-  color: $brighter_color;
-  width: 200px;
-  margin: auto;
 }
 
 

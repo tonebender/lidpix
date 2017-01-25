@@ -29,7 +29,10 @@
           window.jQuery || document.write('<script src="{{ url_for('static', filename='javascript/jquery-3.1.1.js') }}">\x3C/script>')
           $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
       </script>
-      <script src="{{ url_for('static', filename='javascript/lidpix.js') }}"></script>
+      
+      <!-- Here's where our own 'local' javascript file is inserted -->
+      {% block javascr %}{% endblock javascr %}
+
     </div>
   </body>
 </html>

@@ -38,14 +38,12 @@
     </div>
     
     <!-- Buttons for controlling grid layout -->
-    <div id="grid_buttons">
-      <a id="gridbutton1" href="#"><span class="fa fa-square adjust_square"></span></a>
-      <a id="gridbutton4" href="#"><span class="fa fa-th-large"></span></a>
-      <a id="gridbutton10" class="grid_btn_selected" href="#"><span class="fa fa-th"></span></a>
-    </div>
+    <div id="user_buttons">
+      <a class="gb" id="gridbutton1" href="#"><span class="fa fa-square adjust_square"></span></a>
+      <a class="gb" id="gridbutton4" href="#"><span class="fa fa-th-large"></span></a>
+      <a class="gb grid_btn_selected" id="gridbutton10" href="#"><span class="fa fa-th"></span></a>
     
     <!-- User control, logout, settings, etc. -->
-    <div id="user_buttons">
       <span id="logged_in_as">Logged in as {{ username }}&nbsp;</span>
       <a href=""><span class="fa fa-gear"></span></a>
       <a href="{{ url_for('authz.logout') }}">

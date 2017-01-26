@@ -108,17 +108,17 @@ def get_image_info(imagefile):
     """ Read the exif info in the image and return it as a dict.
     
     imagefile: the image file with full path
-    Return: dict containing all exif info from image."""
+    Return: dict containing all exif info from image, or empty dict"""
     
     # http://docs.wand-py.org/en/0.4.4/guide/exif.html
     
+    exif = {}
     try:
-        exif = {}
         with Image(filename = imagefile) as img:
             exif.update((k[5:], v) for k, v in img.metadata.items()
                                         if k.startswith('exif:'))
     except:
-        return None
+        pass
     return exif
     
 
@@ -172,10 +172,7 @@ def create_img_objects(imagedir, thumbs):
                 else:
                     filetype = os.path.splitext(n)[1][1:] # Get file extension
                 exif = get_image_info(imagedir + '/' + n)
-                try:
-                    datetime = exif['DateTimeOriginal']
-                except KeyError:
-                    datetime = '(no time)'
+                datetime = exif.get('DateTimeOriginal', '(no time)')
                 files.append(Folderfile(n, n if n in thumbs else None, 
                                         filetype, datetime))
     except OSError:

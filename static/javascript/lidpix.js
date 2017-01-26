@@ -115,8 +115,8 @@ $(document).ready(function() {
     });
     
     // Buttons for choosing the grid format of the thumbnails
-    $('#grid_buttons a').click(function() {
-        $('#grid_buttons a').removeClass('grid_btn_selected');
+    $('.gb').click(function() {
+        $('.gb').removeClass('grid_btn_selected');
         $('ul.rig').removeClass('columns-1 columns-4 columns-10');
     });
     $('#gridbutton1').click(function() {

@@ -13,8 +13,8 @@
           </li>
         </a>
       {% else %}
-        <li class="icon">
-          <a href="{{ url_for('.folder_view', imagedir=imagedir+'/'+item.name, showthumbs=showthumbs) }}">
+        <a href="{{ url_for('.folder_view', imagedir=imagedir+'/'+item.name, showthumbs=showthumbs) }}">
+          <li class="icon">
             <div>
               {# Font Awesome icons used for certain filetypes #}
               {# Could be moved to some kind of database in the future #}
@@ -42,11 +42,10 @@
               {% else %}
                 <span class="fa fa-file-o"></span>
               {% endif %}
-              
-              <p>{{ item.name }}</p>
             </div>
-          </a>
-        </li>
+            <p>{{ item.name }}</p>
+          </li>
+        </a>
       {% endif %}
     {% endfor %}
   </ul>

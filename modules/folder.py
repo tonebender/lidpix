@@ -160,11 +160,6 @@ def create_img_objects(imagedir, thumbs):
     thumbs: A list of thumbnail names which hopefully matches the images
     Return: list of Folderfile objects
     """
-    
-    # Get image info /////////////////////////////////
-    #i = get_image_info(imagedir + '/' + sorted(os.listdir(imagedir.decode('utf-8')))[1])
-    #for k, v in i.iteritems():
-    #    print k, '--', v
         
     try:
         files = []
@@ -177,8 +172,12 @@ def create_img_objects(imagedir, thumbs):
                 else:
                     filetype = os.path.splitext(n)[1][1:] # Get file extension
                 exif = get_image_info(imagedir + '/' + n)
+                try:
+                    datetime = exif['DateTimeOriginal']
+                except KeyError:
+                    datetime = '(no time)'
                 files.append(Folderfile(n, n if n in thumbs else None, 
-                                        filetype, exif['DateTimeOriginal'] if exif else None))
+                                        filetype, datetime))
     except OSError:
         pass
     except UnicodeError:

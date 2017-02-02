@@ -2,19 +2,20 @@ $(document).ready(function() {
 
     var base_url = 'http://localhost:5080';
     var serveimage_url = base_url + '/serveimage?image=';
+    var servethumb_url = base_url + '/servethumb?image=';
     var thumbs_dir = '/.lidpixthumbs/';
     
     /**
      * Get the value of the URL parameter 'name'
      * 
      * @param name The name of the parameter
+     * @param defaultvalue This is returned if no value is found
      */
-    $.urlParam = function(name) {
+    $.urlParam = function(name, defaultvalue) {
         var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
         if (results == null) {
-           return null;
-        }
-        else {
+           return defaultvalue;
+        } else {
            return results[1] || 0;
         }
     }
@@ -31,7 +32,7 @@ $(document).ready(function() {
             return 'fa fa-folder-o';
         else if (ft == 'mnt')
             return 'fa fa-hdd-o';
-        else if ('jpeg jpg gif gifv png tiff bmp xcf psd pcx'.indexOf(ft) > -1)
+        else if (is_image(ft))
             return 'fa fa-file-image-o';
         else if ('mov avi mpg mpeg mp4 flv wmv mkv ogv vob dv'.indexOf(ft) > -1)
             return 'fa fa-file-video-o';
@@ -49,44 +50,60 @@ $(document).ready(function() {
     
     
     /**
-     * Get thumbnails for the images in imagedir and add them to the page
+     * Return true if extension is one of predefined image extensions,
+     * otherwise false
+     */
+    function is_image(extension) {
+        return ('jpeg jpg gif gifv png tiff bmp xcf psd pcx'.indexOf(extension) > -1);
+    }
+    
+    
+    /**
+     * Return an image tag, given three parameters
+     */
+    function thumb_imgsrc(imagedir, filename, thumbsize) {
+        return '<img src="' + servethumb_url + imagedir + '/' + filename + 
+               '&thumbsize=' + thumbsize +
+               '">';
+    }
+    
+    
+    /**
+     * Get content and add to the page. Create thumbnails if applicable.
      * 
      * @param imagedir (string) The path for the files
-     * @param showthumbs Whether to show thumbnails or just icons for images
+     * @param thumbsize (string) Geometry for thumbnails (e.g. "200x")
      */
-    function load_thumbs(imagedir, showthumbs) {
+    function get_dir(imagedir, thumbsize) {
         
         $('#status_field').html('Loading directory ...');
-    
+        
         $.getJSON({
             type: 'GET',
-            url: 'http://localhost:5080/supplythumbs',
+            url: 'http://localhost:5080/getdir',
             data: 'imagedir=' + imagedir,
             success:function(feed) {
-                var address = '';
+                var real_file_url = '';
                 feed.forEach(function(entry) {  // Put thumbs on page
-                    address = serveimage_url + imagedir + '/' + entry.name;
-                    if (entry.thumb) { // Thumb exists
+                    real_file_url = serveimage_url + imagedir + '/' + entry.name;
+                    if (is_image(entry.filetype)) {
                         $('#thumbs_area').append(
                             '<li>' +
-                                '<a href="' + address + '">' +
-                                    '<img src="' + 
-                                        serveimage_url + imagedir +
-                                        thumbs_dir + entry.name +
-                                    '">' +
+                                '<a href="' + real_file_url + '">' +
+                                    thumb_imgsrc(imagedir, entry.name, thumbsize) +
                                     '<p>' + entry.name + '</p>' +
                                     '<p>' + entry.datetime + '</p>' + 
                                 '</a>' +
                             '</li>'
                         );
-                    } else { // Thumb does not exist - use icon
+                    } else { // Not an image, use icon
                         if (entry.filetype == 'DIR') {
-                            address = base_url + '/folderjs?imagedir=' +
-                                      imagedir + '/' + entry.name;
+                            real_file_url = base_url + '/folder?imagedir=' +
+                                            imagedir + '/' + entry.name;
                         }
                         $('#thumbs_area').append(
                             '<li class="icon">' +
-                                '<a href="' + address + '">' +
+                                '<a href="' + real_file_url + '">' +
                                     '<div>' +
                                         '<span class="' + fa_icon(entry.filetype) +
                                         '"></span>' +
@@ -101,7 +118,7 @@ $(document).ready(function() {
             },
         });
     }
-    
+
 
     // When the folder button right of 'Lidpix' is clicked, show the directory 
     // field and change the folder button itself
@@ -133,10 +150,10 @@ $(document).ready(function() {
     });
     
     
-    var imagedir = $.urlParam('imagedir');
-    var showthumbs = $.urlParam('showthumbs');
+    var imagedir = $.urlParam('imagedir', null);
+    var thumbsize = $.urlParam('thumbsize', '200x');
     
-    load_thumbs(imagedir, showthumbs);
+    get_dir(imagedir, thumbsize);
     
 });
 

@@ -15,6 +15,7 @@ app.config.from_object(__name__)
 # Load default config and override this config from file in env var
 app.config.update(dict(
     PIXDIRS='/home/lidbjork/Bilder/Foton;/home/lidbjork/public_html/photos',
+    THUMBDIR_BASE='.lidpixthumbs',
     USERDB='/home/lidbjork/Develop/python/lidpix/users_example.db',
     SECRET_KEY='development key',
     USERNAME='admin',

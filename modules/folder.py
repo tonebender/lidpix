@@ -13,16 +13,15 @@ thumbprepping = threading.Event()
 
 
 class Folderfile:
-    def __init__(self, name, thumb, filetype, datetime):
+    def __init__(self, name, filetype, datetime):
         self.name = name
-        self.thumb = thumb
         self.filetype = filetype
         self.datetime = datetime
         # (Space for more file/image properties)
     
     def to_json(self):
-        return {'name': self.name, 'thumb': self.thumb, 
-                'filetype': self.filetype, 'datetime': self.datetime}
+        return {'name': self.name, 'filetype': self.filetype,
+                'datetime': self.datetime}
 
 
 def prep_thumbs(imgdir, thumbdir, thumbsize):
@@ -123,7 +122,6 @@ def create_thumb(imgdir, thumbdir, imagefile, thumbsize):
     thumbsize: string such as "200x" or "175x100" 
     Return: number of thumbnails done (1 or 0) """
     
-    print "create_thumb: " + imgdir + imagefile
     if os.path.isfile(imgdir + imagefile): # Image exists?
         if os.path.isfile(thumbdir + imagefile): # Thumb already exists?
             if (os.stat(thumbdir + imagefile).st_mtime > # Thumb newer than img?
@@ -187,13 +185,12 @@ def get_paths(pathname, rootdir):
     return pathnames
 
 
-def create_img_objects(imagedir, thumbs):
+def create_img_objects(imagedir):
     
     """ Create Folderfile objects of all the files in imagedir and return
     them in a list.
     
     imagedir: Directory containing the images/files
-    thumbs: A list of thumbnail names which hopefully matches the images
     Return: list of Folderfile objects
     """
         
@@ -209,8 +206,7 @@ def create_img_objects(imagedir, thumbs):
                     filetype = os.path.splitext(n)[1][1:] # Get file extension
                 exif = get_image_info(imagedir + '/' + n)
                 datetime = exif.get('DateTimeOriginal', '(no time)')
-                files.append(Folderfile(n, n if n in thumbs else None, 
-                                        filetype, datetime))
+                files.append(Folderfile(n, filetype, datetime))
     except OSError:
         pass
     except UnicodeError:
@@ -221,7 +217,6 @@ def create_img_objects(imagedir, thumbs):
               
 
 @folder.route('/folder', methods=['GET', 'POST'])
-@folder.route('/folderjs', methods=['GET', 'POST'])
 @login_required
 def folder_view():
     
@@ -244,7 +239,6 @@ def folder_view():
         pixdirs = current_app.config['PIXDIRSLIST']
     
         # Get url keywords
-        #showthumbs = int(request.args.get('showthumbs', default='1'))
         thumbsize = request.args.get('thumbsize', default='200x')
         imagedir = os.path.abspath(request.args.get('imagedir', default=pixdirs[0]))
         
@@ -256,23 +250,20 @@ def folder_view():
             
         # Create a list of directory paths & names for the pathname buttons
         dirs = get_paths(imagedir, rootdir)
-            
-        # Create thumbnails if needed and get a list of them
-        thumbs = prep_thumbs(imagedir, '.lidpixthumbs', thumbsize)
         
         # Create a list of FolderFile objects from all the files in imagedir
-        files = create_img_objects(imagedir, thumbs)
+        # (Only used by non-javascript browsers)
+        files = create_img_objects(imagedir)
         
         return render_template('folder.html', username=authz.current_user.username,
                                 files = files,
-                                thumbs = thumbs, 
                                 imagedir = imagedir,
                                 dirs = dirs)
 
 
-@folder.route('/supplythumbs', methods=['GET'])
+@folder.route('/getdir', methods=['GET'])
 @login_required
-def supply_thumbs():
+def supply_dir():
     
     pixdirs = current_app.config['PIXDIRSLIST']
 
@@ -285,12 +276,9 @@ def supply_thumbs():
     if not rootdir:
         flash('Forbidden. Directory not setup for access to lidpix.')
         return redirect(url_for('.folder_view', imagedir = pixdirs[0]))
-        
-    # Create thumbnails if needed and get a list of them
-    thumbs = prep_thumbs(imagedir, '.lidpixthumbs', thumbsize)
     
     # Create a list of FolderFile objects from all the files in imagedir
-    files = create_img_objects(imagedir, thumbs)
+    files = create_img_objects(imagedir)
     
     # Convert the files list to json format
     json_files = json.dumps([f.to_json() for f in files])
@@ -316,15 +304,16 @@ def servethumb():
     
     """ Create & serve thumbnail on the fly!
     
-    Takes three url keys: image (required), thumbdir, thumbsize
+    Takes two url keys: image (required), thumbsize
     'image' key should have full /path/with/imagefilename """
     
     image = request.args.get('image', default=None) or abort(404)
     (imgdir, imagefile) = os.path.split(image)
-    thumbdir = request.args.get('thumbdir', default='.lidpixthumbs')
     thumbsize = request.args.get('thumbsize', default='200x')
     
-    (imgdir, thumbdir) = prep_thumbdir(imgdir, thumbdir)
+    # thumbdir is based on config and thumbsize, e.g. '.lidpixthumbs_200x'
+    thumbdir = current_app.config['THUMBDIR_BASE']
+    (imgdir, thumbdir) = prep_thumbdir(imgdir, thumbdir + '_' + thumbsize)
     
     if create_thumb(imgdir, thumbdir, imagefile, thumbsize):
         return redirect(url_for('.serveimage', image=thumbdir+'/'+imagefile))

@@ -6,6 +6,7 @@ $dark_color: #4b0;
 $darker_color: #290;
 $darkest_color: #050;
 $grey: #999;
+$bg_color: #ffc;
 
 $thumb_width: 150px;
 $thumb_height: 200px;
@@ -37,9 +38,12 @@ html {
 body { 
   margin: 0;
   padding: 0;
+  background-color: $bg_color;
 }
 
-div#outer_container { width: 100%; }
+div#outer_container { 
+  width: 100%;
+}
 
 h1, h2, h3 { font-family: 'Slackey', serif; }
 h1 { font-size: 3.125em; }
@@ -154,6 +158,7 @@ ul.rig {
   font-size: 0px;
   margin-top: 3rem;
   margin-left: -2.5%; /* should match li left margin */
+  margin-right: 2%;
   color: black;
   a { color: black; }
   

@@ -25,7 +25,7 @@ class Folderfile:
                 'filetype': self.filetype, 'datetime': self.datetime}
 
 
-def prep_thumbs(directory, thumbdir, thumbsize):
+def prep_thumbs(imgdir, thumbdir, thumbsize):
     
     """ This wrapper for make_thumbs() runs that function as its
     own thread in the background so the webpage won't be held up (too much),
@@ -35,13 +35,13 @@ def prep_thumbs(directory, thumbdir, thumbsize):
     Return: list of available thumbnails."""
     
     tthread = threading.Thread(target=make_thumbs, 
-                               args=(directory, thumbdir, thumbsize,))
+                               args=(imgdir, thumbdir, thumbsize,))
     tthread.start()
     thumbprepping.wait(8)  # Wait until thumbprepping is done, or 8 seconds
     
     # Get a list of available thumbnails
     try:
-        thumbs = sorted(os.listdir((os.path.abspath(directory) + '/' + 
+        thumbs = sorted(os.listdir((os.path.abspath(imgdir) + '/' + 
                         thumbdir).decode('utf-8')))
     except OSError:
         thumbs = []
@@ -49,59 +49,95 @@ def prep_thumbs(directory, thumbdir, thumbsize):
     return thumbs
 
 
-def make_thumbs(directory, thumbdir, thumbsize):
+def make_thumbs(imgdir, thumbdir, thumbsize):
 
-    """ Find all images in directory and make thumbnails in directory/thumbs 
+    """ Find all images in imgdir and make thumbnails in imgdir/thumbs 
     (create subdir if needed).
     
-    directory: the directory with the main images.
-    thumbdir: the directory inside directory where thumbs (should) reside.
-    thumbsize: a string (e.g. '200') specifying the width of the thumbs
+    imgdir: the directory with the main images.
+    thumbdir: the directory inside imgdir where thumbs (should) reside.
+    thumbsize: geometry string (e.g. '200x') specifying the thumb size
     Return: nothing """
         
     prepped = 0
     thumbprepping.clear()
     
-    # Check/prepare directories
+    # Prepare directories and get absolute paths
+    (imgdir, thumbdir) = prep_thumbdir(imgdir, thumbdir)
+    if imgdir == None:
+        thumbprepping.set()
+        return
+        
+    purge_thumbs(imgdir, thumbdir)
+    
+    # Go through all instances in imagedir and create thumbs.
+    # Since this can be run as a separate thread, set the thumbprepping state 
+    # when 6 thumbnails are ready so main thread knows.
+    for imagefile in os.listdir(imgdir):
+        if prepped > 5:
+            thumbprepping.set()
+        prepped += create_thumb(imgdir, thumbdir, imagefile, thumbsize)
+    
+    thumbprepping.set() # In case there were less than 6 thumbs
+    return
+
+
+def prep_thumbdir(imgdir, thumbdir):
+    
+    """Create thumbdir inside of imgdir if thumbdir ain't already there.
+       Return a tuple with the normalized absolute paths of imgdir and
+       thumbdir if successful; (None, None) if unsuccessful."""
+    
     try:
-        directory = os.path.normpath(directory) + '/'
-        thumbdir = os.path.normpath(directory + thumbdir) + '/'
+        imgdir = os.path.normpath(imgdir) + '/'
+        thumbdir = os.path.normpath(imgdir + thumbdir) + '/'
         if not os.path.exists(thumbdir):
             os.mkdir(thumbdir)
     except OSError:
-        return
-        
-    # Remove existing old thumbs which don't have corresponding images
+        return (None, None)
+    return (imgdir, thumbdir)
+
+
+def purge_thumbs(imgdir, thumbdir):
+    
+    """Remove existing old thumbs in thumbdir which don't have corresponding 
+       images in imgdir."""
+       
     try:
-        dirlisting = os.listdir(directory)
+        dirlisting = os.listdir(imgdir)
         for f in os.listdir(thumbdir):
             if f not in dirlisting:
                 os.remove(thumbdir + f)
     except:
         pass
+
+
+def create_thumb(imgdir, thumbdir, imagefile, thumbsize):
     
-    # Go through all instances in imagedir. First see if it's a valid file,
-    # then check if its thumb exists and is newer; if needed create thumbnails 
-    # (sized 200x px). Since this can be run as a separate thread, set the
-    # thumbprepping state when 6 thumbnails are ready so main thread knows.
-    for imagefile in os.listdir(directory):
-        if prepped > 5:
-            thumbprepping.set()
-        if os.path.isfile(directory + imagefile):
-            prepped += 1
-            if os.path.isfile(thumbdir + imagefile):
-                if (os.stat(thumbdir + imagefile).st_mtime >
-                    os.stat(directory + imagefile).st_mtime):
-                    continue
-            try:
-                with Image(filename = directory + imagefile) as img:
-                    img.transform(resize = thumbsize + 'x')
-                    img.save(filename = thumbdir + imagefile)
-            except Exception:
-                pass
-    thumbprepping.set() # In case there were less than 6 thumbs
-    return
+    """Create a thumbnail from the imagefile.
+       If a matching & fresh thumbnail already exists, just return 1.
     
+    imgdir: directory where image resides (/abs/path/)
+    thumbdir: directory where thumb should be placed (/abs/path/)
+    imagefile: name of imagefile in imgdir
+    thumbsize: string such as "200x" or "175x100" 
+    Return: number of thumbnails done (1 or 0) """
+    
+    print "create_thumb: " + imgdir + imagefile
+    if os.path.isfile(imgdir + imagefile): # Image exists?
+        if os.path.isfile(thumbdir + imagefile): # Thumb already exists?
+            if (os.stat(thumbdir + imagefile).st_mtime > # Thumb newer than img?
+                os.stat(imgdir + imagefile).st_mtime):
+                return 1                                 # No need to create
+        try:
+            with Image(filename = imgdir + imagefile) as img:  # Create thumb
+                img.transform(resize = thumbsize)
+                img.save(filename = thumbdir + imagefile)
+            return 1
+        except Exception:
+            pass
+    return 0       # If we got this far, thumb creation failed
+
 
 def get_image_info(imagefile):
     
@@ -185,6 +221,7 @@ def create_img_objects(imagedir, thumbs):
               
 
 @folder.route('/folder', methods=['GET', 'POST'])
+@folder.route('/folderjs', methods=['GET', 'POST'])
 @login_required
 def folder_view():
     
@@ -207,8 +244,8 @@ def folder_view():
         pixdirs = current_app.config['PIXDIRSLIST']
     
         # Get url keywords
-        showthumbs = int(request.args.get('showthumbs', default='1'))
-        thumbsize = request.args.get('thumbsize', default='200')
+        #showthumbs = int(request.args.get('showthumbs', default='1'))
+        thumbsize = request.args.get('thumbsize', default='200x')
         imagedir = os.path.abspath(request.args.get('imagedir', default=pixdirs[0]))
         
         # Find the root dir of the image dir, abort if it's not valid
@@ -230,58 +267,6 @@ def folder_view():
                                 files = files,
                                 thumbs = thumbs, 
                                 imagedir = imagedir,
-                                showthumbs = showthumbs,
-                                dirs = dirs)
-
-
-@folder.route('/folderjs', methods=['GET', 'POST'])
-@login_required
-def folder_view_js():
-    
-    """ 
-    Show a folder with thumbnails 
-    This produces a page that JS can fill with thumbnails
-    
-    GET: Get image directory from URL keyword; prep thumbnails;
-         show folder.html with thumbnails
-    POST: Get new image directory from form and call this again
-    """
-    
-    if request.method == 'POST':
-        if request.form['imagedir']:
-            imagedir = os.path.normpath(request.form['imagedir']) + '/'
-        return redirect(url_for('.folder_view', imagedir = imagedir))
-        
-        
-    if request.method == 'GET':
-        
-        pixdirs = current_app.config['PIXDIRSLIST']
-    
-        # Get url keywords
-        showthumbs = int(request.args.get('showthumbs', default='1'))
-        thumbsize = request.args.get('thumbsize', default='200')
-        imagedir = os.path.abspath(request.args.get('imagedir', default=pixdirs[0]))
-        
-        # Find valid root dir of the image dir, redirect to default if none
-        rootdir = get_rootdir(imagedir, pixdirs)
-        if not rootdir:
-            flash('Forbidden. Directory not setup for access to lidpix.')
-            return redirect(url_for('.folder_view', imagedir = pixdirs[0]))
-            
-        # Create a list of directory paths & names for the pathname buttons
-        dirs = get_paths(imagedir, rootdir)
-            
-        # Create thumbnails if needed and get a list of them
-        thumbs = prep_thumbs(imagedir, '.lidpixthumbs', thumbsize)
-        
-        # Create a list of FolderFile objects from all the files in imagedir
-        files = create_img_objects(imagedir, thumbs)
-        
-        return render_template('folderjs.html', username=authz.current_user.username,
-                                files = files,
-                                thumbs = thumbs, 
-                                imagedir = imagedir,
-                                showthumbs = showthumbs,
                                 dirs = dirs)
 
 
@@ -292,7 +277,7 @@ def supply_thumbs():
     pixdirs = current_app.config['PIXDIRSLIST']
 
     # Get url keywords
-    thumbsize = request.args.get('thumbsize', default='200')
+    thumbsize = request.args.get('thumbsize', default='200x')
     imagedir = os.path.abspath(request.args.get('imagedir', default=pixdirs[0]))
     
     # Find the root dir of the image dir, abort if it's not valid
@@ -324,4 +309,24 @@ def serveimage():
     response.headers['X-Accel-Redirect'] = image
     del response.headers['Content-Type'] # Webserver decides type later
     return response
+
+
+@folder.route('/servethumb')
+def servethumb():
     
+    """ Create & serve thumbnail on the fly!
+    
+    Takes three url keys: image (required), thumbdir, thumbsize
+    'image' key should have full /path/with/imagefilename """
+    
+    image = request.args.get('image', default=None) or abort(404)
+    (imgdir, imagefile) = os.path.split(image)
+    thumbdir = request.args.get('thumbdir', default='.lidpixthumbs')
+    thumbsize = request.args.get('thumbsize', default='200x')
+    
+    (imgdir, thumbdir) = prep_thumbdir(imgdir, thumbdir)
+    
+    if create_thumb(imgdir, thumbdir, imagefile, thumbsize):
+        return redirect(url_for('.serveimage', image=thumbdir+'/'+imagefile))
+    else:
+        abort(404)

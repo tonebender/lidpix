@@ -57,16 +57,38 @@ $(document).ready(function() {
         return ('jpeg jpg gif gifv png tiff bmp xcf psd pcx'.indexOf(extension) > -1);
     }
     
-    
     /**
-     * Return an image tag, given three parameters
+     * Return HTML for a thumbnail, based on a bunch of variables ...
      */
-    function thumb_imgsrc(imagedir, filename, thumbsize) {
-        return '<img src="' + servethumb_url + imagedir + '/' + filename + 
-               '&thumbsize=' + thumbsize +
-               '">';
+    function render_thumb(imagedir, filename, filetype, datetime, thumbsize) {
+        var real_file_url = serveimage_url + imagedir + '/' + filename;
+        return '<li>' +
+                    '<a href="' + real_file_url + '">' +
+                        '<img src="' + servethumb_url + imagedir + '/' + filename + 
+                            '&thumbsize=' + thumbsize + '">' +
+                        '<p>' + filename + '</p>' +
+                        '<p>' + datetime + '</p>' + 
+                    '</a>' +
+               '</li>';
     }
     
+    /**
+     * Return HTML for an icon, based on a bunch of variables ...
+     */
+    function render_icon(imagedir, filename, filetype, datetime) {
+        var real_file_url = '#';
+        if (filetype == 'DIR') {
+            real_file_url = base_url + '/folder?imagedir=' + imagedir + '/' + filename;
+        }
+        return '<li class="icon">' +
+                    '<a href="' + real_file_url + '">' +
+                        '<div>' +
+                            '<span class="' + fa_icon(filetype) +'"></span>' +
+                        '</div>' +
+                        '<p>' + filename + '</p>' +
+                    '</a>' +
+                '</li>';
+    }
     
     /**
      * Get content and add to the page. Create thumbnails if applicable.
@@ -85,37 +107,26 @@ $(document).ready(function() {
             success:function(feed) {
                 var real_file_url = '';
                 feed.forEach(function(entry) {  // Put thumbs on page
-                    real_file_url = serveimage_url + imagedir + '/' + entry.name;
-                    if (is_image(entry.filetype)) {
-                        $('#thumbs_area').append(
-                            '<li>' +
-                                '<a href="' + real_file_url + '">' +
-                                    thumb_imgsrc(imagedir, entry.name, thumbsize) +
-                                    '<p>' + entry.name + '</p>' +
-                                    '<p>' + entry.datetime + '</p>' + 
-                                '</a>' +
-                            '</li>'
-                        );
-                    } else { // Not an image, use icon
-                        if (entry.filetype == 'DIR') {
-                            real_file_url = base_url + '/folder?imagedir=' +
-                                            imagedir + '/' + entry.name;
-                        }
-                        $('#thumbs_area').append(
-                            '<li class="icon">' +
-                                '<a href="' + real_file_url + '">' +
-                                    '<div>' +
-                                        '<span class="' + fa_icon(entry.filetype) +
-                                        '"></span>' +
-                                    '</div>' +
-                                    '<p>' + entry.name + '</p>' +
-                                '</a>' +
-                            '</li>'
-                        );
+                    if (is_image(entry.filetype)) {              // Thumb
+                        $('#thumbs_area').append(render_thumb(imagedir, 
+                        entry.name, entry.filetype, entry.datetime, thumbsize));
+                    } else {                                     // or Icon
+                        $('#thumbs_area').append(render_icon(imagedir, 
+                        entry.name, entry.filetype, entry.datetime));
                     }
                 });
                 $('#status_field').html(''); // Remove "loading" message
             },
+        });
+    }
+    
+    
+    function change_thumbs(thumbsize) {
+        var src, new_src;
+        $('#thumbs_area img').each(function(index, elem) {
+            src = $(elem).attr('src');
+            new_src = src.replace(/&thumbsize=[x\d]+/, '&thumbsize=' + thumbsize);
+            $(elem).attr('src', new_src);
         });
     }
 
@@ -139,10 +150,12 @@ $(document).ready(function() {
     $('#gridbutton1').click(function() {
         $('#gridbutton1').addClass('grid_btn_selected');
         $('ul.rig').addClass('columns-1');
+        change_thumbs('200x');
     });
     $('#gridbutton4').click(function() {
         $('#gridbutton4').addClass('grid_btn_selected');
         $('ul.rig').addClass('columns-4');
+        change_thumbs('400x');
     });
     $('#gridbutton10').click(function() {
         $('#gridbutton10').addClass('grid_btn_selected');

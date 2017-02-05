@@ -67,7 +67,7 @@ $(document).ready(function() {
                         '<img src="' + servethumb_url + imagedir + '/' + filename + 
                             '&thumbsize=' + thumbsize + '">' +
                     '</a>' +
-                    render_menu(imagedir, filename, filetype, datetime) +
+                    render_menu(imagedir, filename, filetype, datetime) +  // Menu!
                     '<p>' + filename + '</p>' +
                '</li>';
     }
@@ -92,7 +92,7 @@ $(document).ready(function() {
     
     function render_menu(imagedir, filename, filetype, datetime) {
         return '<div class="menu">' +
-                    '<span class="fa fa-bars"></span>' +
+                    '<a href="#"><span class="fa fa-bars"></span></a>' +
                     '<div class="dropdown-content">' +
                         '<a href="#">Link 1</a>' +
                         '<a href="#">Link 2</a>' +
@@ -186,9 +186,9 @@ $(document).ready(function() {
     
     get_dir(imagedir, thumbsize);
     
-    $('.menu').click(function() {
-        console.log("Clicked menu");
-        $(this).find('.dropdown-content').css('display', 'block');
+    // Add click event to menu buttons on all thumbs - shows menus
+    $(document).on('click', '.menu', function() {
+        $(this).find('.dropdown-content').toggle();
     });
     
 });

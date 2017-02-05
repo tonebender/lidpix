@@ -258,7 +258,8 @@ def folder_view():
         return render_template('folder.html', username=authz.current_user.username,
                                 files = files,
                                 imagedir = imagedir,
-                                dirs = dirs)
+                                dirs = dirs,
+                                thumbsize=thumbsize)
 
 
 @folder.route('/getdir', methods=['GET'])

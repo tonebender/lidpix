@@ -3,7 +3,6 @@ $(document).ready(function() {
     var base_url = 'http://localhost:5080';
     var serveimage_url = base_url + '/serveimage?image=';
     var servethumb_url = base_url + '/servethumb?image=';
-    var thumbs_dir = '/.lidpixthumbs/';
     
     /**
      * Get the value of the URL parameter 'name'
@@ -54,7 +53,8 @@ $(document).ready(function() {
      * otherwise false
      */
     function is_image(extension) {
-        return ('jpeg jpg gif gifv png tiff bmp xcf psd pcx'.indexOf(extension) > -1);
+        return ('jpeg jpg gif gifv png tiff bmp xcf psd pcx'.
+                indexOf(extension.toLowerCase()) > -1);
     }
     
     /**
@@ -66,9 +66,9 @@ $(document).ready(function() {
                     '<a href="' + real_file_url + '">' +
                         '<img src="' + servethumb_url + imagedir + '/' + filename + 
                             '&thumbsize=' + thumbsize + '">' +
-                        '<p>' + filename + '</p>' +
-                        '<p>' + datetime + '</p>' + 
                     '</a>' +
+                    render_menu(imagedir, filename, filetype, datetime) +
+                    '<p>' + filename + '</p>' +
                '</li>';
     }
     
@@ -85,13 +85,24 @@ $(document).ready(function() {
                         '<div>' +
                             '<span class="' + fa_icon(filetype) +'"></span>' +
                         '</div>' +
-                        '<p>' + filename + '</p>' +
                     '</a>' +
+                    '<p>' + filename + '</p>' +
                 '</li>';
     }
     
+    function render_menu(imagedir, filename, filetype, datetime) {
+        return '<div class="menu">' +
+                    '<span class="fa fa-bars"></span>' +
+                    '<div class="dropdown-content">' +
+                        '<a href="#">Link 1</a>' +
+                        '<a href="#">Link 2</a>' +
+                        '<a href="#">Link 3</a>' +
+                    '</div>' +
+                '</div>';
+    }
+    
     /**
-     * Get content and add to the page. Create thumbnails if applicable.
+     * Get ajax/json content and add to the page. Maybe create thumbnails.
      * 
      * @param imagedir (string) The path for the files
      * @param thumbsize (string) Geometry for thumbnails (e.g. "200x")
@@ -114,13 +125,20 @@ $(document).ready(function() {
                         $('#thumbs_area').append(render_icon(imagedir, 
                         entry.name, entry.filetype, entry.datetime));
                     }
+                    /* $('li').last().append(render_menu(imagedir,   // Menu
+                        entry.name, entry.filetype, entry.datetime)); */
                 });
                 $('#status_field').html(''); // Remove "loading" message
             },
         });
     }
     
-    
+    /**
+     * Change the src attribute of the img tags inside #thumbs_area so they
+     * display different sized thumbnails
+     * 
+     * @param thumbsize (string) Geometry for thumbnail (e.g. "200x") to use
+     */
     function change_thumbs(thumbsize) {
         var src, new_src;
         $('#thumbs_area img').each(function(index, elem) {
@@ -167,6 +185,11 @@ $(document).ready(function() {
     var thumbsize = $.urlParam('thumbsize', '200x');
     
     get_dir(imagedir, thumbsize);
+    
+    $('.menu').click(function() {
+        console.log("Clicked menu");
+        $(this).find('.dropdown-content').css('display', 'block');
+    });
     
 });
 

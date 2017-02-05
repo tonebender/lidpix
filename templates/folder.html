@@ -10,49 +10,50 @@
     <noscript>
       {% for item in files %}
         {% if item.thumb %}
-          <a href="{{ url_for('.serveimage', image=imagedir+'/'+item.name) }}">
-            <li>
-              <img src="{{ url_for('.serveimage', image=imagedir+'/.lidpixthumbs/'+item.thumb) }}">
+          <li>
+            <a href="{{ url_for('.serveimage', image=imagedir+'/'+item.name) }}">
+              <img src="{{ url_for('.servethumb', image=imagedir+'/'+item.name, thumbsize=thumbsize) }}">
               <p>{{ item.name }}</p>
-              <p>{{ item.datetime }}</p>
-            </li>
-          </a>
+            </a>
+          </li>
         {% else %}
-          {% if item.filetype == 'DIR' %}
-            <a href="{{ url_for('.folder_view', imagedir=imagedir+'/'+item.name) }}">
-          {% endif %}
-            <li class="icon">
-              <div>
-                {# Font Awesome icons used for certain filetypes #}
-                {# Could be moved to some kind of database in the future #}
-                {% if item.filetype == 'DIR' %}
-                  <span class="fa fa-folder-o"></span>
-                {% elif item.filetype == 'MNT' %}
-                  <span class="fa fa-hdd-o"></span>
-                {% elif item.filetype|lower in 'jpeg jpg gif gifv png tiff bmp xcf 
-                  psd pcx' %}
-                  <span class="fa fa-file-image-o"></span> {# Not really used #}
-                {% elif item.filetype|lower in 'mov avi mpg mpeg mp4 flv wmv mkv
-                  ogv vob dv' %}
-                  <span class="fa fa-file-video-o"></span> 
-                {% elif item.filetype|lower in 'mp3 ogg flac wma wav sid mod xm aiff 
-                  ra ram rm mid midi m4a shn ape' %}
-                  <span class="fa fa-file-audio-o"></span>
-                {% elif item.filetype|lower in 'pdf' %}
-                  <span class="fa fa-file-pdf-o"></span>
-                {% elif item.filetype|lower in 'zip tar gz tgz tbz2 bz2 lhz arj xz 7z
-                  iso sit sitx lz sz z rar sfark' %}
-                  <span class="fa fa-file-archive-o"></span>
-                {% elif item.filetype|lower in 'txt text tex doc docx odt sxw xls 
-                  xlsx ods rtf rtfd mdb accdb ppt pptx' %}
-                  <span class="fa fa-file-text-o"></span>
-                {% else %}
-                  <span class="fa fa-file-o"></span>
-                {% endif %}
-              </div>
-              <p>{{ item.name }}</p>
-            </li>
-          </a>
+          <li class="icon">
+            {% if item.filetype == 'DIR' %}
+              <a href="{{ url_for('.folder_view', imagedir=imagedir+'/'+item.name) }}">
+            {% endif %}
+            <div>
+              {# Font Awesome icons used for certain filetypes #}
+              {# Could be moved to some kind of database in the future #}
+              {% if item.filetype == 'DIR' %}
+                <span class="fa fa-folder-o"></span>
+              {% elif item.filetype == 'MNT' %}
+                <span class="fa fa-hdd-o"></span>
+              {% elif item.filetype|lower in 'jpeg jpg gif gifv png tiff bmp xcf 
+                psd pcx' %}
+                <span class="fa fa-file-image-o"></span> {# Not really used #}
+              {% elif item.filetype|lower in 'mov avi mpg mpeg mp4 flv wmv mkv
+                ogv vob dv' %}
+                <span class="fa fa-file-video-o"></span>
+              {% elif item.filetype|lower in 'mp3 ogg flac wma wav sid mod xm aiff 
+                ra ram rm mid midi m4a shn ape' %}
+                <span class="fa fa-file-audio-o"></span>
+              {% elif item.filetype|lower in 'pdf' %}
+                <span class="fa fa-file-pdf-o"></span>
+              {% elif item.filetype|lower in 'zip tar gz tgz tbz2 bz2 lhz arj xz 7z
+                iso sit sitx lz sz z rar sfark' %}
+                <span class="fa fa-file-archive-o"></span>
+              {% elif item.filetype|lower in 'txt text tex doc docx odt sxw xls 
+                xlsx ods rtf rtfd mdb accdb ppt pptx' %}
+                <span class="fa fa-file-text-o"></span>
+              {% else %}
+                <span class="fa fa-file-o"></span>
+              {% endif %}
+            </div>
+            <p>{{ item.name }}</p>
+            {% if item.filetype == 'DIR' %}
+              </a>
+            {% endif %}
+          </li>
         {% endif %}
       {% endfor %}
     </noscript>

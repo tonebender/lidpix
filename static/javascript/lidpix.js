@@ -1,3 +1,7 @@
+
+
+
+// Jquery
 $(document).ready(function() {
 
     var base_url = 'http://localhost:5080';
@@ -17,6 +21,38 @@ $(document).ready(function() {
         } else {
            return results[1] || 0;
         }
+    }
+    
+    /**
+     * Return the width and height of the browser viewport
+     */
+    function getViewport() {
+        
+        var viewPortWidth;
+        var viewPortHeight;
+        
+        // The more standards compliant browsers (mozilla/netscape/opera/IE7) 
+        // use window.innerWidth and window.innerHeight
+        if (typeof window.innerWidth != 'undefined') {
+          viewPortWidth = window.innerWidth,
+          viewPortHeight = window.innerHeight
+        }
+        
+        // IE6 in standards compliant mode (i.e. with a valid doctype as the 
+        // first line in the document)
+         else if (typeof document.documentElement != 'undefined'
+         && typeof document.documentElement.clientWidth !=
+         'undefined' && document.documentElement.clientWidth != 0) {
+            viewPortWidth = document.documentElement.clientWidth,
+            viewPortHeight = document.documentElement.clientHeight
+         }
+        
+         // older versions of IE
+         else {
+           viewPortWidth = document.getElementsByTagName('body')[0].clientWidth,
+           viewPortHeight = document.getElementsByTagName('body')[0].clientHeight
+         }
+         return [viewPortWidth, viewPortHeight];
     }
     
               
@@ -152,7 +188,7 @@ $(document).ready(function() {
     // When the folder button right of 'Lidpix' is clicked, show the directory 
     // field and change the folder button itself
     $('#folder_button').click(function() {
-        if ( $('#dir_field').css('visibility') == 'hidden' )
+        if ($('#dir_field').css('visibility') == 'hidden')
             $('#dir_field').css('visibility','visible');
         else
             $('#dir_field').css('visibility','hidden');
@@ -165,21 +201,25 @@ $(document).ready(function() {
         $('.gb').removeClass('grid_btn_selected');
         $('ul.rig').removeClass('columns-1 columns-4 columns-10');
     });
-    $('#gridbutton1').click(function() {
+    $('#gridbutton1').click(function() {  // This one chooses huge thumbs sized
+        var vw, vh;                       // 10px narrower than viewport,
+        [vw, vh] = getViewport();         // but not larger than 800x
+        if (vw > 800)
+            vw = 810;
+        change_thumbs((vw - 10) + 'x');
         $('#gridbutton1').addClass('grid_btn_selected');
         $('ul.rig').addClass('columns-1');
-        change_thumbs('200x');
     });
     $('#gridbutton4').click(function() {
+        change_thumbs('400x');
         $('#gridbutton4').addClass('grid_btn_selected');
         $('ul.rig').addClass('columns-4');
-        change_thumbs('400x');
     });
     $('#gridbutton10').click(function() {
+        change_thumbs('200x');
         $('#gridbutton10').addClass('grid_btn_selected');
         $('ul.rig').addClass('columns-10');
     });
-    
     
     var imagedir = $.urlParam('imagedir', null);
     var thumbsize = $.urlParam('thumbsize', '200x');
@@ -190,7 +230,6 @@ $(document).ready(function() {
     $(document).on('click', '.menu', function() {
         $(this).find('.dropdown-content').toggle();
     });
-    
 });
 
 

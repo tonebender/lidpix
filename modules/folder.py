@@ -85,7 +85,7 @@ def prep_thumbdir(imgdir, thumbdir):
     
     """Create thumbdir inside of imgdir if thumbdir ain't already there.
        Return a tuple with the normalized absolute paths of imgdir and
-       thumbdir if successful; (None, None) if unsuccessful."""
+       thumbdir if successful, or (None, None) if unsuccessful."""
     
     try:
         imgdir = os.path.normpath(imgdir) + '/'
@@ -115,11 +115,14 @@ def create_thumb(imgdir, thumbdir, imagefile, thumbsize):
     
     """Create a thumbnail from the imagefile.
        If a matching & fresh thumbnail already exists, just return 1.
+       If requested thumb is larger than the original, just make a symlink
+       to the original in the thumbs directory.
     
     imgdir: directory where image resides (/abs/path/)
     thumbdir: directory where thumb should be placed (/abs/path/)
     imagefile: name of imagefile in imgdir
-    thumbsize: string such as "200x" or "175x100" 
+    thumbsize: string such as "200x" or "175x100". If it's '1' or empty,
+               create a symbolic link instead of real thumbnail
     Return: number of thumbnails done (1 or 0) """
     
     if os.path.isfile(imgdir + imagefile): # Image exists?
@@ -127,10 +130,17 @@ def create_thumb(imgdir, thumbdir, imagefile, thumbsize):
             if (os.stat(thumbdir + imagefile).st_mtime > # Thumb newer than img?
                 os.stat(imgdir + imagefile).st_mtime):
                 return 1                                 # No need to create
+        w, h = thumbsize.split('x')
         try:
+            if thumbsize == '' or thumbsize == '1': # Full-size thumb = symlink
+                os.symlink(imgdir + imagefile, thumbdir + imagefile)
+                return 1
             with Image(filename = imgdir + imagefile) as img:  # Create thumb
-                img.transform(resize = thumbsize)
-                img.save(filename = thumbdir + imagefile)
+                if img.width > w or img.height > h:    # If requested size is 
+                    img.transform(resize = thumbsize)  # smaller than original
+                    img.save(filename = thumbdir + imagefile)
+                else:                                # Otherwise, make symlink
+                    os.symlink(imgdir + imagefile, thumbdir + imagefile)
             return 1
         except Exception:
             pass

@@ -63,6 +63,7 @@
 {% endblock body %}
 
 {% block javascr %}
+  <script src="{{ url_for('static', filename='javascript/facebook_sdk.js') }}"></script>
   <script src="{{ url_for('static', filename='javascript/lidpix.js') }}"></script>
   <!-- <script src="{{ url_for('static', filename='javascript/jquery.lazyload.js') }}"></script> -->
 {% endblock javascr %}

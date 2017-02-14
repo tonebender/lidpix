@@ -1,12 +1,40 @@
-
-
-
 // Jquery
 $(document).ready(function() {
-
+    
+    $.ajaxSetup({ cache: true });
+    $.getScript('//connect.facebook.net/en_US/sdk.js', function(){
+        FB.init({
+            appId: '1650430888594943',
+            version: 'v2.7' // or v2.1, v2.2, v2.3, ...
+        });
+        $('#loginbutton,#feedbutton').removeAttr('disabled');
+        //FB.getLoginStatus(updateStatusCallback);
+        /*
+        FB.ui({
+            method: 'share_open_graph',
+            action_type: 'og.likes',
+            action_properties: JSON.stringify({
+            object:'https://developers.facebook.com/docs/',
+            })
+        }, function(response) {
+        // Debug response (optional)
+        console.log(response);
+        }); */
+    });
+    (function(d, s, id){
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) {return;}
+        js = d.createElement(s); js.id = id;
+        js.src = "//connect.facebook.net/en_US/sdk.js";
+        fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+    
+    
     var base_url = 'http://localhost:5080';
     var serveimage_url = base_url + '/serveimage?image=';
     var servethumb_url = base_url + '/servethumb?image=';
+    var fobs; // Array that will hold all file objects
+    
     
     /**
      * Get the value of the URL parameter 'name'
@@ -55,7 +83,7 @@ $(document).ready(function() {
          return [viewPortWidth, viewPortHeight];
     }
     
-              
+
     /**
      * Return a Font Awesome css class definition depending on what filetype is.
      * 
@@ -96,43 +124,48 @@ $(document).ready(function() {
     /**
      * Return HTML for a thumbnail, based on a bunch of variables ...
      */
-    function render_thumb(imagedir, filename, filetype, datetime, thumbsize) {
-        var real_file_url = serveimage_url + imagedir + '/' + filename;
-        return '<li>' +
+    function render_thumb(imagedir, id, thumbsize) {
+        var real_file_url = serveimage_url + imagedir + '/' + fobs[id].name;
+        return '<li id="' + id + '">' +
                     '<a href="' + real_file_url + '">' +
-                        '<img src="' + servethumb_url + imagedir + '/' + filename + 
+                        '<img src="' + servethumb_url + imagedir + '/' + fobs[id].name + 
                             '&thumbsize=' + thumbsize + '">' +
                     '</a>' +
-                    render_menu(imagedir, filename, filetype, datetime) +  // Menu!
-                    '<p>' + filename + '</p>' +
+                    '<p>' + fobs[id].name + '</p>' +
                '</li>';
     }
     
     /**
      * Return HTML for an icon, based on a bunch of variables ...
      */
-    function render_icon(imagedir, filename, filetype, datetime) {
+    function render_icon(imagedir, id) {
         var real_file_url = '#';
-        if (filetype == 'DIR') {
-            real_file_url = base_url + '/folder?imagedir=' + imagedir + '/' + filename;
+        if (fobs[id].filetype == 'DIR') {
+            real_file_url = base_url + '/folder?imagedir=' + imagedir + '/' + fobs[id].name;
         }
-        return '<li class="icon">' +
+        return '<li class="icon" id="' + id + '">' +
                     '<a href="' + real_file_url + '">' +
                         '<div>' +
-                            '<span class="' + fa_icon(filetype) +'"></span>' +
+                            '<span class="' + fa_icon(fobs[id].filetype) +'"></span>' +
                         '</div>' +
                     '</a>' +
-                    '<p>' + filename + '</p>' +
+                    '<p>' + fobs[id].name + '</p>' +
                 '</li>';
     }
     
-    function render_menu(imagedir, filename, filetype, datetime) {
+    /**
+     * Return HTML for a file menu
+     */
+    function render_menu(id) {
         return '<div class="menu">' +
                     '<a href="#"><span class="fa fa-bars"></span></a>' +
                     '<div class="dropdown-content">' +
-                        '<a href="#">Link 1</a>' +
-                        '<a href="#">Link 2</a>' +
-                        '<a href="#">Link 3</a>' +
+                        '<a href="#" id="' + id + '" class="menuitem facebook">' +
+                           '<span class="fa fa-facebook-official"></span> ' + 
+                           'Upload to Facebook</a>' +
+                        '<a href="#" id="' + id + '" class="menuitem info">' +
+                        '<span class="fa fa-info-circle"></span> Image info</a>' +
+                        //'<a href="#">Link 3</a>' +
                     '</div>' +
                 '</div>';
     }
@@ -145,6 +178,8 @@ $(document).ready(function() {
      */
     function get_dir(imagedir, thumbsize) {
         
+        var file_id = 0;
+        
         $('#status_field').html('Loading directory ...');
         
         $.getJSON({
@@ -153,16 +188,15 @@ $(document).ready(function() {
             data: 'imagedir=' + imagedir,
             success:function(feed) {
                 var real_file_url = '';
+                fobs = feed; // Save all file objects to global var (!)
                 feed.forEach(function(entry) {  // Put thumbs on page
                     if (is_image(entry.filetype)) {              // Thumb
-                        $('#thumbs_area').append(render_thumb(imagedir, 
-                        entry.name, entry.filetype, entry.datetime, thumbsize));
+                        $('#thumbs_area').append(render_thumb(imagedir, file_id, thumbsize));
+                        $('#thumbs_area li').last().find('a').after(render_menu(file_id)); // Menu
                     } else {                                     // or Icon
-                        $('#thumbs_area').append(render_icon(imagedir, 
-                        entry.name, entry.filetype, entry.datetime));
+                        $('#thumbs_area').append(render_icon(imagedir, file_id));
                     }
-                    /* $('li').last().append(render_menu(imagedir,   // Menu
-                        entry.name, entry.filetype, entry.datetime)); */
+                    file_id++;
                 });
                 $('#status_field').html(''); // Remove "loading" message
             },
@@ -182,6 +216,19 @@ $(document).ready(function() {
             new_src = src.replace(/&thumbsize=[x\d]+/, '&thumbsize=' + thumbsize);
             $(elem).attr('src', new_src);
         });
+    }
+    
+    
+    /**
+     * Show the file upload dialog
+     *
+    function upload_dialog() {
+        
+    } */
+    
+    
+    function upload_to_facebook(id) {
+        console.log(fobs[id].name);
     }
 
 
@@ -224,12 +271,20 @@ $(document).ready(function() {
     var imagedir = $.urlParam('imagedir', null);
     var thumbsize = $.urlParam('thumbsize', '200x');
     
+    $('div#dir_field').css('visibility', 'hidden');  // If JS is disabled, it will remain shown
+    
     get_dir(imagedir, thumbsize);
     
     // Add click event to menu buttons on all thumbs - shows menus
     $(document).on('click', '.menu', function() {
         $(this).find('.dropdown-content').toggle();
     });
+    
+    // Add click event to all facebook menu items
+    $(document).on('click', '.menuitem, .facebook', function() {
+        upload_to_facebook($(this).prop('id'));
+    });
+    
 });
 
 

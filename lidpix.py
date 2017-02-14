@@ -17,6 +17,7 @@ app.config.update(dict(
     PIXDIRS='/home/lidbjork/Bilder/Foton;/home/lidbjork/public_html/photos',
     THUMBDIR_BASE='.lidpixthumbs',
     USERDB='/home/lidbjork/Develop/python/lidpix/users_example.db',
+    UPLOAD_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'gifv', 'tif', 'tiff', 'bmp', 'xcf', 'psd', 'pcx']),
     SECRET_KEY='development key',
     USERNAME='admin',
     PASSWORD='default',

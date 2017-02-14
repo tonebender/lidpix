@@ -43,7 +43,12 @@
       <a class="gb" id="gridbutton4" href="#"><span class="fa fa-th-large"></span></a>
       <a class="gb grid_btn_selected" id="gridbutton10" href="#"><span class="fa fa-th"></span></a>
     
-    <!-- User control, logout, settings, etc. -->
+      <!-- Upload, user control, logout, settings, etc. -->
+      <form id="upload" action="/upload" method="post">
+        <input type="hidden" name="imagedir" value="" />
+        <input id="uploadfile" type="file" name="uploadfile" accept="image/*" onchange="this.form.submit()" />
+        <label for="uploadfile"><span class="fa fa-upload"></span></label>
+      </form>
       <span id="logged_in_as">Logged in as {{ username }}&nbsp;</span>
       <a href=""><span class="fa fa-gear"></span></a>
       <a href="{{ url_for('authz.logout') }}">

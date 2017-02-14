@@ -8,7 +8,7 @@ window.fbAsyncInit = function() {
 	FB.AppEvents.logPageView();
     console.log("Init FB ----");
     
-    /* make the API call */
+    /* make the API call
     FB.api(
         "/me/photos",
         "POST",
@@ -18,11 +18,11 @@ window.fbAsyncInit = function() {
     },
     function (response) {
         if (response && !response.error) {
-        /* handle the result */
+        /* handle the result
         console.log(response);
         }
         console.log(response.error);
-    }
+    } */
 );
     
 };

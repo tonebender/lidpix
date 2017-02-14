@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import os, string, threading, time, imghdr
 from flask import Flask, request, session, redirect, url_for, abort, \
   render_template, flash, make_response, Blueprint, current_app, json
+from werkzeug.utils import secure_filename
 from wand.image import Image
-import os, string, threading, time, imghdr
 from flask_login import login_required
 from modules import authz
 
@@ -22,6 +23,15 @@ class Folderfile:
     def to_json(self):
         return {'name': self.name, 'filetype': self.filetype,
                 'datetime': self.datetime}
+
+
+def allowed_file(filename):
+    
+    """ Return true if extension in filename is in UPLOAD_EXTENSIONS """
+    
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in \
+           current_app.config['UPLOAD_EXTENSIONS']
 
 
 def prep_thumbs(imgdir, thumbdir, thumbsize):
@@ -295,6 +305,27 @@ def supply_dir():
     json_files = json.dumps([f.to_json() for f in files])
 
     return json_files
+
+
+@folder.route('/upload', methods=['POST'])
+@login_required
+def upload_file():
+    if 'file' not in request.files:
+        flash('No file part')
+        return redirect(request.url)
+    file = request.files['file']
+    # if user does not select file, browser also
+    # submit a empty part without filename
+    if file.filename == '':
+        flash('No selected file')
+        return redirect(request.url)
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return redirect(url_for('uploaded_file',
+                                filename=filename))
+    return false
+    
 
 
 @folder.route('/serveimage')

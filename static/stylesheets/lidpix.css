@@ -43,12 +43,14 @@ div#toolbar {
   background-color: #4b0;
   padding: 0.8em;
   color: #efb;
-  box-shadow: 0px 3px 2px 0px #999;
+  box-shadow: 0px 3px 2px 0px #888;
   /* This directory chooser shows up when the folder button is pressed */
   /* end of #dir_field */ }
   div#toolbar a {
     color: #050; }
-  div#toolbar div, div#toolbar span {
+  div#toolbar a:hover {
+    color: #290; }
+  div#toolbar div, div#toolbar span, div#toolbar form {
     display: inline-block; }
   div#toolbar span {
     font-size: 1.2em; }
@@ -61,7 +63,6 @@ div#toolbar {
     padding-left: 2.5em; }
   div#toolbar div#dir_field {
     width: 40%;
-    visibility: hidden;
     padding-left: 0.5em;
     position: relative;
     top: -3px; }
@@ -103,6 +104,22 @@ div#toolbar {
     div#toolbar div#user_buttons span#logged_in_as {
       font-size: 1em;
       margin-left: 3em; }
+  div#toolbar form#upload input {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1; }
+  div#toolbar form#upload label {
+    /* font-size: 1.25em;
+    font-weight: 700; */
+    color: #050;
+    cursor: pointer;
+    display: inline-block; }
+  div#toolbar form#upload .uploadfile:focus + label,
+  div#toolbar form#upload label:hover {
+    color: #290; }
   div#toolbar a.grid_btn_selected {
     color: #290;
     /* Brighter than normal unselected color */ }

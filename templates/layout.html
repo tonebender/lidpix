@@ -3,36 +3,38 @@
   <head>
     <title>Lidpix</title>
     <link rel='stylesheet' href='static/stylesheets/lidpix.css'>
-    <script src="https://use.fontawesome.com/b7e281f8f6.js"></script>
+    <link rel="stylesheet" href="static/font-awesome-4.7.0/css/font-awesome.min.css">
+    <!-- <script src="https://use.fontawesome.com/b7e281f8f6.js"></script> -->
   </head>
   <body>
-  <div id="outer_container">
-
-    {% include "toolbar.html" %}
-    
-    <!-- Flashed messages: -->
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul class='flashes'>
-          {% for message in messages %}
-            <li>{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
-    
-    <!-- Actual page: -->
-    {% block body %}{% endblock %}
-    
-    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script> -->
-    <script>
-        window.jQuery || document.write('<script src="{{ url_for('static', filename='javascript/jquery-3.1.1.js') }}">\x3C/script>')
-        $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
-    </script>
-    
-    <!-- Here's where our own 'local' javascript file is inserted -->
-    {% block javascr %}{% endblock javascr %}
-
-  </div>
+    <!-- <script src="{{ url_for('static', filename='javascript/facebook_sdk.js') }}"></script> -->
+    <div id="outer_container">
+  
+      {% include "toolbar.html" %}
+      
+      <!-- Flashed messages: -->
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <ul class='flashes'>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+      
+      <!-- Actual page: -->
+      {% block body %}{% endblock %}
+      
+      <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script> -->
+      <script>
+          window.jQuery || document.write('<script src="{{ url_for('static', filename='javascript/jquery-3.1.1.js') }}">\x3C/script>')
+          $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+      </script>
+      
+      <!-- Here's where our own 'local' javascript file is inserted -->
+      {% block javascr %}{% endblock javascr %}
+  
+    </div>
   </body>
 </html>

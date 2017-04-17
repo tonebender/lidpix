@@ -210,8 +210,14 @@ ul.rig {
       
     }
     
+    div.icon {  /* This is only visible when icon mode is on */
+      display: none;
+      background-color: $bright_color;
+      padding: 10px;
+    }
+    
   }
-  li.icon {
+  li.icon { /* This is used for non-images, which are always icons */
     background-color: $bright_color;
     padding: 10px;
   }

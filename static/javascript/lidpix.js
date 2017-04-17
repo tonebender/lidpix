@@ -130,6 +130,9 @@ $(document).ready(function() {
                     '<a href="' + real_file_url + '">' +
                         '<img src="' + servethumb_url + imagedir + '/' + fobs[id].name + 
                             '&thumbsize=' + thumbsize + '">' +
+                        '<div class="icon">' +                 // Icon is used when image is hidden
+                            '<span class="' + fa_icon(fobs[id].filetype) +'"></span>' +
+                        '</div>' +
                     '</a>' +
                     '<p>' + fobs[id].name + '</p>' +
                '</li>';
@@ -211,11 +214,18 @@ $(document).ready(function() {
      */
     function change_thumbs(thumbsize) {
         var src, new_src;
-        $('#thumbs_area img').each(function(index, elem) {
-            src = $(elem).attr('src');
-            new_src = src.replace(/&thumbsize=[x\d]+/, '&thumbsize=' + thumbsize);
-            $(elem).attr('src', new_src);
-        });
+        if (thumbsize === 'icons') {
+            $('#thumbs_area img').toggle();
+            $('#thumbs_area li div.icon').toggle();
+        } else {
+            $('#thumbs_area img').each(function(index, elem) {
+                src = $(elem).attr('src');
+                new_src = src.replace(/&thumbsize=[x\d]+/, '&thumbsize=' + thumbsize);
+                $(elem).attr('src', new_src);
+            });
+            $('#thumbs_area li div.icon').hide();
+            $('#thumbs_area img').show();
+        }
     }
     
     
@@ -266,6 +276,9 @@ $(document).ready(function() {
         change_thumbs('200x');
         $('#gridbutton10').addClass('grid_btn_selected');
         $('ul.rig').addClass('columns-10');
+    });
+    $('#gridbutton_icon').click(function() {
+        change_thumbs('icons');
     });
     
     var imagedir = $.urlParam('imagedir', null);

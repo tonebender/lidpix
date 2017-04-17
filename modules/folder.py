@@ -146,7 +146,7 @@ def create_thumb(imgdir, thumbdir, imagefile, thumbsize):
                 os.symlink(imgdir + imagefile, thumbdir + imagefile)
                 return 1
             with Image(filename = imgdir + imagefile) as img:  # Create thumb
-                if img.width > w or img.height > h:    # If requested size is 
+                if int(img.width) > int(w) or int(img.height) > int(h):    # If requested size is 
                     img.transform(resize = thumbsize)  # smaller than original
                     img.save(filename = thumbdir + imagefile)
                 else:                                # Otherwise, make symlink
@@ -307,6 +307,7 @@ def supply_dir():
     return json_files
 
 
+# This function is not finished!
 @folder.route('/upload', methods=['POST'])
 @login_required
 def upload_file():
@@ -352,12 +353,18 @@ def servethumb():
     image = request.args.get('image', default=None) or abort(404)
     (imgdir, imagefile) = os.path.split(image)
     thumbsize = request.args.get('thumbsize', default='200x')
-    
+        
     # thumbdir is based on config and thumbsize, e.g. '.lidpixthumbs_200x'
     thumbdir = current_app.config['THUMBDIR_BASE']
     (imgdir, thumbdir) = prep_thumbdir(imgdir, thumbdir + '_' + thumbsize)
     
+    print "imgdir:", imgdir
+    print "imagefile:", imagefile
+    print "thumbdir:", thumbdir
+    print "thumbsize:", thumbsize
+    
     if create_thumb(imgdir, thumbdir, imagefile, thumbsize):
         return redirect(url_for('.serveimage', image=thumbdir+'/'+imagefile))
     else:
+        print "Fuck!"
         abort(404)

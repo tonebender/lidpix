@@ -158,7 +158,13 @@ ul.rig {
       font-size: 0.8em;
       margin: 0;
       border: 0px red solid; }
+    ul.rig li div.icon {
+      /* This is only visible when icon mode is on */
+      display: none;
+      background-color: #df9;
+      padding: 10px; }
   ul.rig li.icon {
+    /* This is used for non-images, which are always icons */
     background-color: #df9;
     padding: 10px; }
 

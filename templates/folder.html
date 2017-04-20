@@ -7,6 +7,7 @@
     <!-- Here we'll put thumbs and stuff via Javascript and JSON -->
     
     <!-- If JS is disabled/unsupported, we'll put the thumbnails in right now: -->
+    <!-- Perhaps I'll ditch the noscript functionality and just tell user here that JS is required -->
     <noscript>
       {% for item in files %}
         {% if item.thumb %}
@@ -59,6 +60,13 @@
     </noscript>
     
   </ul>
+  
+  <div id="settingsdialog">
+    <h2>Settings</h2>
+    <form method="POST">
+      <input type="button" value="Close" id="settingsclosebutton"/>
+    </form>
+  </div>
 
 {% endblock body %}
 

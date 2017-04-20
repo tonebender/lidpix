@@ -42,7 +42,8 @@
       <a class="gb" id="gridbutton1" href="#"><span class="fa fa-square adjust_square"></span></a>
       <a class="gb" id="gridbutton4" href="#"><span class="fa fa-th-large"></span></a>
       <a class="gb grid_btn_selected" id="gridbutton10" href="#"><span class="fa fa-th"></span></a>
-      <a class="gb" id="gridbutton_icon" href="#"><span class="fa fa-file-image-o"></span></a>
+      
+      <a id="gridbutton_icon" href="#"><span class="fa fa-file-image-o"></span></a>
     
       <!-- Upload, user control, logout, settings, etc. -->
       <form id="upload" action="/upload" method="post">
@@ -51,7 +52,7 @@
         <label for="uploadfile"><span class="fa fa-upload"></span></label>
       </form>
       <span id="logged_in_as">Logged in as {{ username }}&nbsp;</span>
-      <a href=""><span class="fa fa-gear"></span></a>
+      <a id="settingsbutton" href="#"><span class="fa fa-gear"></span></a>
       <a href="{{ url_for('authz.logout') }}">
         <span class="fa fa-sign-out"></span>
       </a>

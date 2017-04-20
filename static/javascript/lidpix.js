@@ -1,6 +1,13 @@
 // Jquery
 $(document).ready(function() {
+  
+    // Global variables, or shall we call them aliases ...
+    var base_url = 'http://localhost:5080';
+    var serveimage_url = base_url + '/serveimage?image=';
+    var servethumb_url = base_url + '/servethumb?image=';
+    var fobs; // Array that will hold all file objects
     
+    // Facebook crap
     $.ajaxSetup({ cache: true });
     $.getScript('//connect.facebook.net/en_US/sdk.js', function(){
         FB.init({
@@ -28,12 +35,6 @@ $(document).ready(function() {
         js.src = "//connect.facebook.net/en_US/sdk.js";
         fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
-    
-    
-    var base_url = 'http://localhost:5080';
-    var serveimage_url = base_url + '/serveimage?image=';
-    var servethumb_url = base_url + '/servethumb?image=';
-    var fobs; // Array that will hold all file objects
     
     
     /**
@@ -87,7 +88,7 @@ $(document).ready(function() {
     /**
      * Return a Font Awesome css class definition depending on what filetype is.
      * 
-     * @param filetype A string containing e.g. 'jpg'
+     * @param filetype A string containing the file extension, e.g. 'jpg'
      */
     function fa_icon(filetype) {
         var ft = filetype.toLowerCase();
@@ -130,7 +131,7 @@ $(document).ready(function() {
                     '<a href="' + real_file_url + '">' +
                         '<img src="' + servethumb_url + imagedir + '/' + fobs[id].name + 
                             '&thumbsize=' + thumbsize + '">' +
-                        '<div class="icon">' +                 // Icon is used when image is hidden
+                        '<div class="icon">' +                 // Icon is only used when image is hidden
                             '<span class="' + fa_icon(fobs[id].filetype) +'"></span>' +
                         '</div>' +
                     '</a>' +
@@ -140,6 +141,7 @@ $(document).ready(function() {
     
     /**
      * Return HTML for an icon, based on a bunch of variables ...
+     * This is used for files (non-images) that don't have thumbnails
      */
     function render_icon(imagedir, id) {
         var real_file_url = '#';
@@ -174,7 +176,7 @@ $(document).ready(function() {
     }
     
     /**
-     * Get ajax/json content and add to the page. Maybe create thumbnails.
+     * Get ajax/json content and add to the page (thumbs and whatnot)
      * 
      * @param imagedir (string) The path for the files
      * @param thumbsize (string) Geometry for thumbnails (e.g. "200x")
@@ -214,18 +216,13 @@ $(document).ready(function() {
      */
     function change_thumbs(thumbsize) {
         var src, new_src;
-        if (thumbsize === 'icons') {
-            $('#thumbs_area img').toggle();
-            $('#thumbs_area li div.icon').toggle();
-        } else {
-            $('#thumbs_area img').each(function(index, elem) {
-                src = $(elem).attr('src');
-                new_src = src.replace(/&thumbsize=[x\d]+/, '&thumbsize=' + thumbsize);
-                $(elem).attr('src', new_src);
-            });
-            $('#thumbs_area li div.icon').hide();
-            $('#thumbs_area img').show();
-        }
+        $('#thumbs_area img').each(function(index, elem) {
+            src = $(elem).attr('src');
+            new_src = src.replace(/&thumbsize=[x\d]+/, '&thumbsize=' + thumbsize);
+            $(elem).attr('src', new_src);
+        });
+        $('#thumbs_area li div.icon').hide();
+        $('#thumbs_area img').show();
     }
     
     
@@ -277,18 +274,31 @@ $(document).ready(function() {
         $('#gridbutton10').addClass('grid_btn_selected');
         $('ul.rig').addClass('columns-10');
     });
-    $('#gridbutton_icon').click(function() {
-        change_thumbs('icons');
+    
+    $('#gridbutton_icon').click(function() { // Hide thumbs and show icons instead
+        $('#thumbs_area img').toggle();      // (for images that aren't already icons)
+        $('#thumbs_area li div.icon').toggle();
     });
     
-    var imagedir = $.urlParam('imagedir', null);
-    var thumbsize = $.urlParam('thumbsize', '200x');
+    $('#settingsbutton').click(function() {
+        $('#settingsdialog').show();
+    });
+    
+    $('#settingsclosebutton').click(function() {
+        $('#settingsdialog').hide();
+    });
+    
     
     $('div#dir_field').css('visibility', 'hidden');  // If JS is disabled, it will remain shown
     
+    
+    var imagedir = $.urlParam('imagedir', null);
+    var thumbsize = $.urlParam('thumbsize', '200x');
+        
     get_dir(imagedir, thumbsize);
     
-    // Add click event to menu buttons on all thumbs - shows menus
+    
+    // Add click event to menu buttons on all thumbs
     $(document).on('click', '.menu', function() {
         $(this).find('.dropdown-content').toggle();
     });

@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css?family=Hind+Siliguri|Noto+Sans|Inconsolata|Bitter|Slackey|Audiowide');
 
-$bright_color: #df9;
 $brighter_color: #efb;
+$bright_color: #df9;
 $dark_color: #4b0;
 $darker_color: #290;
 $darkest_color: #050;
@@ -214,12 +214,14 @@ ul.rig {
       display: none;
       background-color: $bright_color;
       padding: 10px;
+      border: 1px dashed $dark_color;
     }
     
   }
   li.icon { /* This is used for non-images, which are always icons */
     background-color: $bright_color;
     padding: 10px;
+    border: 1px solid $dark_color;
   }
 }
 ul.columns-10 li {width: 7.5%;}  /* This + li margin 2.5% is 10% of space */
@@ -249,6 +251,18 @@ ul.columns-1 li {width: 97.5%;}  /* This + li margin 2.5% is 100% of space */
 .show {display:block;}
 
 
+#settingsdialog {
+  display: none;
+  z-index: 1;
+  position: fixed;
+  margin: auto;
+  width: 400px;
+  padding: 1em;
+  background-color: $dark_color;
+  color: white;
+}
+
+
 /* Turn the grid into a one-column Instagramish layout for mobiles UNTESTED */
 @media (max-width: 480px) {
   ul.rig {
@@ -268,6 +282,15 @@ input[type='password'] {
   font-size: 1em;
   background-color: $bright_color;
   color: $darker_color;
+  border: 0;
+}
+
+input[type='button'],
+input[type='submit'] {
+  margin-top: 1.2em;  
+  height: 3.5em;
+  font-size: 1.2em;
+  color: $dark_color;
   border: 0;
 }
 
@@ -333,13 +356,5 @@ div.loginform {
   /* The <i> tag is visible when checkbutton is checked */
   input[type='checkbox']:checked + label span#rembutton i {
     display: inline-block;
-  }
-  
-  input[type='submit'] {
-    margin-top: 1.2em;  
-    height: 3.5em;
-    font-size: 1.2em;
-    color: $dark_color;
-    border: 0;
   }
 }

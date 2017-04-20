@@ -358,13 +358,15 @@ def servethumb():
     thumbdir = current_app.config['THUMBDIR_BASE']
     (imgdir, thumbdir) = prep_thumbdir(imgdir, thumbdir + '_' + thumbsize)
     
-    print "imgdir:", imgdir
-    print "imagefile:", imagefile
-    print "thumbdir:", thumbdir
-    print "thumbsize:", thumbsize
-    
     if create_thumb(imgdir, thumbdir, imagefile, thumbsize):
         return redirect(url_for('.serveimage', image=thumbdir+'/'+imagefile))
     else:
-        print "Fuck!"
         abort(404)
+
+
+@folder.route('/settings')
+def settings():
+    
+    """Show the settings dialog (page) """
+    
+    return render_template('settings.html')

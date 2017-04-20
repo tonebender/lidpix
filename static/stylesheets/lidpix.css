@@ -162,11 +162,13 @@ ul.rig {
       /* This is only visible when icon mode is on */
       display: none;
       background-color: #df9;
-      padding: 10px; }
+      padding: 10px;
+      border: 1px dashed #4b0; }
   ul.rig li.icon {
     /* This is used for non-images, which are always icons */
     background-color: #df9;
-    padding: 10px; }
+    padding: 10px;
+    border: 1px solid #4b0; }
 
 ul.columns-10 li {
   width: 7.5%; }
@@ -198,6 +200,16 @@ ul.columns-1 li {
 .show {
   display: block; }
 
+#settingsdialog {
+  display: none;
+  z-index: 1;
+  position: fixed;
+  margin: auto;
+  width: 400px;
+  padding: 1em;
+  background-color: #4b0;
+  color: white; }
+
 /* Turn the grid into a one-column Instagramish layout for mobiles UNTESTED */
 @media (max-width: 480px) {
   ul.rig {
@@ -212,6 +224,14 @@ input[type='password'] {
   font-size: 1em;
   background-color: #df9;
   color: #290;
+  border: 0; }
+
+input[type='button'],
+input[type='submit'] {
+  margin-top: 1.2em;
+  height: 3.5em;
+  font-size: 1.2em;
+  color: #4b0;
   border: 0; }
 
 /* Login form styles */
@@ -261,11 +281,5 @@ div.loginform {
     display: none; }
   div.loginform input[type='checkbox']:checked + label span#rembutton i {
     display: inline-block; }
-  div.loginform input[type='submit'] {
-    margin-top: 1.2em;
-    height: 3.5em;
-    font-size: 1.2em;
-    color: #4b0;
-    border: 0; }
 
 /*# sourceMappingURL=lidpix.css.map */

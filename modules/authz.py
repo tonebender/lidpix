@@ -91,7 +91,7 @@ def load_user(username):
     row = c.fetchone()
     connection.close()
     try:
-        user = UserDB(*row)
+        user = UserDB(*row) # Where row contains id, username, password, etc.
         return user
     except:
         return None

@@ -294,6 +294,41 @@ input[type='submit'] {
   border: 0;
 }
 
+/* For the checkbox, we remove the actual checkbox and use the label.
+ * .checkbutton becomes the button and .checklabel is the label in practice.
+ * A Fontawesome icon is used for the check inside .checkbutton.
+ * Old browsers which don't understand "not(old)" shouldn't hide the checkbox. */
+input[type='checkbox']:not(old) {
+  display: none;
+}
+input[type='checkbox'] + label {
+  span.checkbutton:not(old) {
+    display: inline-block;
+    height: 1.5em;
+    width: 1.3em;
+    padding: 2px;
+    margin-top: 0.5em;
+    background-color: $bright_color;
+    color: $dark_color;
+    vertical-align: bottom;
+  }
+  span.checklabel {
+    display: inline-block;
+    height: 1.5em;
+    margin: 0.5em 0 0 0.5em;
+    color: $bright_color;
+    vertical-align: bottom;
+    font-size: 0.9em;
+  }
+  i {
+    display: none
+  }
+}
+/* The <i> tag (w/ the Fontawesome symbol) is visible when checkbutton is checked */
+input[type='checkbox']:checked + label span.checkbutton i {
+  display: inline-block;
+}
+
 
 /* Login form styles */
 
@@ -321,40 +356,5 @@ div.loginform {
   input[type='text'],
   input[type='password'] {
     font-family: 'Inconsolata', monospace;
-  }
-  
-  /* For the checkbox, we remove the actual checkbox and use the label.
-   * #rembutton becomes the button and #remlabel is the actual label.
-   * A Fontawesome icon is used for the check inside #rembutton.
-   * Old browsers which don't understand "not(old)" shouldn't hide the checkbox. */
-  input[type='checkbox']:not(old) {
-    display: none;
-  }
-  input[type='checkbox'] + label {
-    span#rembutton:not(old) {
-      display: inline-block;
-      height: 1.5em;
-      width: 1.3em;
-      padding: 2px;
-      margin-top: 0.5em;
-      background-color: $bright_color;
-      color: $dark_color;
-      vertical-align: bottom;
-    }
-    span#remlabel {
-      display: inline-block;
-      height: 1.5em;
-      margin: 0.5em 0 0 0.5em;
-      color: $bright_color;
-      vertical-align: bottom;
-      font-size: 0.9em;
-    }
-    i {
-      display: none
-    }
-  }
-  /* The <i> tag is visible when checkbutton is checked */
-  input[type='checkbox']:checked + label span#rembutton i {
-    display: inline-block;
   }
 }

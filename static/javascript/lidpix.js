@@ -7,6 +7,7 @@ $(document).ready(function() {
     var servethumb_url = base_url + '/servethumb?image=';
     var fobs; // Array that will hold all file objects
     
+    
     // Facebook crap
     $.ajaxSetup({ cache: true });
     $.getScript('//connect.facebook.net/en_US/sdk.js', function(){
@@ -43,7 +44,7 @@ $(document).ready(function() {
      * @param name The name of the parameter
      * @param defaultvalue This is returned if no value is found
      */
-    $.urlParam = function(name, defaultvalue) {
+    function urlParam(name, defaultvalue) {
         var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
         if (results == null) {
            return defaultvalue;
@@ -51,6 +52,7 @@ $(document).ready(function() {
            return results[1] || 0;
         }
     }
+    
     
     /**
      * Return the width and height of the browser viewport
@@ -237,76 +239,78 @@ $(document).ready(function() {
     function upload_to_facebook(id) {
         console.log(fobs[id].name);
     }
+    
 
-
-    // When the folder button right of 'Lidpix' is clicked, show the directory 
-    // field and change the folder button itself
-    $('#folder_button').click(function() {
-        if ($('#dir_field').css('visibility') == 'hidden')
-            $('#dir_field').css('visibility','visible');
-        else
-            $('#dir_field').css('visibility','hidden');
-        $('#folder_icon').toggleClass('fa-folder-open-o');
-        $('#folder_icon').toggleClass('fa-folder-o');
-    });
-    
-    // Buttons for choosing the grid format of the thumbnails
-    $('.gb').click(function() {
-        $('.gb').removeClass('grid_btn_selected');
-        $('ul.rig').removeClass('columns-1 columns-4 columns-10');
-    });
-    $('#gridbutton1').click(function() {  // This one chooses huge thumbs sized
-        var vw, vh;                       // 10px narrower than viewport,
-        [vw, vh] = getViewport();         // but not larger than 800x
-        if (vw > 800)
-            vw = 810;
-        change_thumbs((vw - 10) + 'x');
-        $('#gridbutton1').addClass('grid_btn_selected');
-        $('ul.rig').addClass('columns-1');
-    });
-    $('#gridbutton4').click(function() {
-        change_thumbs('400x');
-        $('#gridbutton4').addClass('grid_btn_selected');
-        $('ul.rig').addClass('columns-4');
-    });
-    $('#gridbutton10').click(function() {
-        change_thumbs('200x');
-        $('#gridbutton10').addClass('grid_btn_selected');
-        $('ul.rig').addClass('columns-10');
-    });
-    
-    $('#gridbutton_icon').click(function() { // Hide thumbs and show icons instead
-        $('#thumbs_area img').toggle();      // (for images that aren't already icons)
-        $('#thumbs_area li div.icon').toggle();
-    });
-    
-    $('#settingsbutton').click(function() {
-        $('#settingsdialog').show();
-    });
-    
-    $('#settingsclosebutton').click(function() {
-        $('#settingsdialog').hide();
-    });
-    
-    
-    $('div#dir_field').css('visibility', 'hidden');  // If JS is disabled, it will remain shown
-    
-    
-    var imagedir = $.urlParam('imagedir', null);
-    var thumbsize = $.urlParam('thumbsize', '200x');
+    (function init() {
+        // When the folder button right of 'Lidpix' is clicked, show the directory 
+        // field and change the folder button itself
+        $('#folder_button').click(function() {
+            if ($('#dir_field').css('visibility') == 'hidden')
+                $('#dir_field').css('visibility','visible');
+            else
+                $('#dir_field').css('visibility','hidden');
+            $('#folder_icon').toggleClass('fa-folder-open-o');
+            $('#folder_icon').toggleClass('fa-folder-o');
+        });
         
-    get_dir(imagedir, thumbsize);
-    
-    
-    // Add click event to menu buttons on all thumbs
-    $(document).on('click', '.menu', function() {
-        $(this).find('.dropdown-content').toggle();
-    });
-    
-    // Add click event to all facebook menu items
-    $(document).on('click', '.menuitem, .facebook', function() {
-        upload_to_facebook($(this).prop('id'));
-    });
+        // Buttons for choosing the grid format of the thumbnails
+        $('.gb').click(function() {
+            $('.gb').removeClass('grid_btn_selected');
+            $('ul.rig').removeClass('columns-1 columns-4 columns-10');
+        });
+        $('#gridbutton1').click(function() {  // This one chooses huge thumbs sized
+            var vw, vh;                       // 10px narrower than viewport,
+            [vw, vh] = getViewport();         // but not larger than 800x
+            if (vw > 800)
+                vw = 810;
+            change_thumbs((vw - 10) + 'x');
+            $('#gridbutton1').addClass('grid_btn_selected');
+            $('ul.rig').addClass('columns-1');
+        });
+        $('#gridbutton4').click(function() {
+            change_thumbs('400x');
+            $('#gridbutton4').addClass('grid_btn_selected');
+            $('ul.rig').addClass('columns-4');
+        });
+        $('#gridbutton10').click(function() {
+            change_thumbs('200x');
+            $('#gridbutton10').addClass('grid_btn_selected');
+            $('ul.rig').addClass('columns-10');
+        });
+        
+        $('#gridbutton_icon').click(function() { // Hide thumbs and show icons instead
+            $('#thumbs_area img').toggle();
+            $('#thumbs_area li div.icon').toggle();
+        });
+        
+        $('#settingsbutton').click(function() {
+            $('#settingsdialog').show();
+        });
+        
+        $('#settingsclosebutton').click(function() {
+            $('#settingsdialog').hide();
+        });
+        
+        
+        $('div#dir_field').css('visibility', 'hidden');  // If JS is disabled, it will remain shown
+        
+        
+        var imagedir = urlParam('imagedir', null);
+        var thumbsize = urlParam('thumbsize', '200x');
+            
+        get_dir(imagedir, thumbsize);
+        
+        
+        // Add click event to menu buttons on all thumbs
+        $(document).on('click', '.menu', function() {
+            $(this).find('.dropdown-content').toggle();
+        });
+        
+        // Add click event to all facebook menu items
+        $(document).on('click', '.menuitem, .facebook', function() {
+            upload_to_facebook($(this).prop('id'));
+        });
+    })();
     
 });
 

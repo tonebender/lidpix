@@ -6,7 +6,7 @@ from flask import Flask, request, session, redirect, url_for, abort, \
 from werkzeug.utils import secure_filename
 from wand.image import Image
 from flask_login import login_required
-from modules import authz
+from modules import authz, lsettings
 
 folder = Blueprint('folder', __name__)
 
@@ -275,11 +275,14 @@ def folder_view():
         # (Only used by non-javascript browsers)
         files = create_img_objects(imagedir)
         
+        settingsform = lsettings.SettingsForm(request.form)
+        
         return render_template('folder.html', username=authz.current_user.username,
                                 files = files,
                                 imagedir = imagedir,
                                 dirs = dirs,
-                                thumbsize=thumbsize)
+                                thumbsize = thumbsize,
+                                settingsform = settingsform)
 
 
 @folder.route('/getdir', methods=['GET'])

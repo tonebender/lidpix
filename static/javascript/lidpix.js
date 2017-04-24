@@ -229,6 +229,29 @@ $(document).ready(function() {
     
     
     /**
+     * Show the settings dialog
+     */
+    function show_settings() {
+        $.getJSON('http://localhost:5080/getusername', 
+            function(feed) { 
+                if (feed.username === 'None' || feed.username == undefined)
+                    $('#settingsuserinfo').html('Saving settings as browser cookies.');
+                else
+                    $('#settingsuserinfo').html('Settings will be saved in ' + feed.username + '\'s profile.');
+            }
+        );
+        $('#settingsdialog').show();
+        form = document.getElementById('settingsform');
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            //sendData();
+            console.log('Pretending to send data');
+            $('#settingsdialog').hide();
+        });
+    }
+    
+    
+    /**
      * Show the file upload dialog
      *
     function upload_dialog() {
@@ -283,9 +306,7 @@ $(document).ready(function() {
             $('#thumbs_area li div.icon').toggle();
         });
         
-        $('#settingsbutton').click(function() {
-            $('#settingsdialog').show();
-        });
+        $('#settingsbutton').click(show_settings);
         
         $('#settingsclosebutton').click(function() {
             $('#settingsdialog').hide();

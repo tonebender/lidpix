@@ -61,16 +61,6 @@
     
   </ul>
   
-  <!-- This form is intially hidden (via css) -->
-  <div id="settingsdialog">
-    <h2>Settings</h2>
-    <form method="POST">
-      {{ settingsform.confirmdelete() }}
-      <label for="confirmdelete"><span class="checkbutton"><i class="fa fa-check"></i></span><span class="checklabel">Confirm file delete</span></label>
-      <input type="button" value="Close" id="settingsclosebutton" />
-      <input type="submit" value="Save" id="settingssumbitbutton" />
-    </form>
-  </div>
 
 {% endblock body %}
 

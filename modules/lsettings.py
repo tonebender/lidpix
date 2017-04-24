@@ -5,7 +5,7 @@ from wtforms import Form, StringField, PasswordField, BooleanField, validators
 lsettings = Blueprint('lsettings', __name__)
 
 class SettingsForm(Form):
-    """The settings form class, using WTForms."""
+    """The settings form, a subclass of Form (using WTForms)."""
     confirmdelete = BooleanField('Confirm file delete')
 #    username = StringField('Username', [validators.Required(), 
 #                           validators.Length(min=3)], render_kw={"placeholder": "username"})

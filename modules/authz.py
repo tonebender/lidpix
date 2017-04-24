@@ -40,7 +40,7 @@ def on_load(state):
 
 
 class LoginForm(Form):
-    """The login form class, using WTForms."""
+    """The login form class, a subclass of Form, using WTForms."""
     username = StringField('Username', [validators.Required(), 
                            validators.Length(min=3)], render_kw={"placeholder": "username"})
     password = PasswordField('Password', [validators.Required(),
@@ -144,3 +144,11 @@ def logout():
     logout_user()
     flash("Logged out")
     return redirect(url_for('authz.login'))
+
+
+@authz.route('/getusername')
+def get_username():
+    """Return username (string) if logged in, otherwise 'None' """
+    if current_user.is_authenticated:
+        return '{"username":"' + current_user.get_id() + '"}'
+    return 'None'

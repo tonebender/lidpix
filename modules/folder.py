@@ -188,7 +188,7 @@ def get_rootdir(imagedir, pixdirs):
     return(rootdir[0] if rootdir else None)
     
     
-def get_paths(pathname, rootdir):
+def get_breadcrumbs(pathname, rootdir):
     
     """ If pathname is the string '/path/to/dir', this returns
     [['/path', 'path'], ['/path/to', 'to'], ['/path/to/dir', 'dir']] 
@@ -268,13 +268,14 @@ def folder_view():
             flash('Forbidden. Directory not setup for access to lidpix.')
             return redirect(url_for('.folder_view', imagedir = pixdirs[0]))
             
-        # Create a list of directory paths & names for the pathname buttons
-        dirs = get_paths(imagedir, rootdir)
+        # Create a list of directory paths & names for the breadcrumbs buttons
+        dirs = get_breadcrumbs(imagedir, rootdir)
         
         # Create a list of FolderFile objects from all the files in imagedir
         # (Only used by non-javascript browsers)
         files = create_img_objects(imagedir)
         
+        # Create the settings form
         settingsform = lsettings.SettingsForm(request.form)
         
         return render_template('folder.html', username=authz.current_user.username,
@@ -304,6 +305,7 @@ def supply_dir():
     # Create a list of FolderFile objects from all the files in imagedir
     files = create_img_objects(imagedir)
     
+    print [f.to_json() for f in files]
     # Convert the files list to json format
     json_files = json.dumps([f.to_json() for f in files])
 

@@ -209,6 +209,11 @@ ul.columns-1 li {
   padding: 1em;
   background-color: #4b0;
   color: white; }
+  #settingsdialog input[type='button'],
+  #settingsdialog input[type='submit'] {
+    margin-right: 1em; }
+  #settingsdialog p#settingsuserinfo {
+    font-size: 0.8em; }
 
 /* Turn the grid into a one-column Instagramish layout for mobiles UNTESTED */
 @media (max-width: 480px) {

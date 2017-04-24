@@ -260,6 +260,15 @@ ul.columns-1 li {width: 97.5%;}  /* This + li margin 2.5% is 100% of space */
   padding: 1em;
   background-color: $dark_color;
   color: white;
+  
+  input[type='button'],
+  input[type='submit'] {
+    margin-right: 1em;
+  }
+  
+  p#settingsuserinfo {
+    font-size: 0.8em;
+  }
 }
 
 

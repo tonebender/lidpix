@@ -63,3 +63,20 @@
 </div>
 
 <div id="status_field">&nbsp;</div>
+
+<!-- This form is intially hidden (via css) -->
+<!-- Possibly redo so it only uses JS and do away with the WTForms stuff -->
+<div id="settingsdialog">
+  <h3>Settings</h3>
+  <form id="settingsform" method="POST">
+    <div>
+      {{ settingsform.confirmdelete() }}
+      <label for="confirmdelete"><span class="checkbutton"><i class="fa fa-check"></i></span><span class="checklabel">Confirm file delete</span></label>
+    </div>
+    <div>
+      <input type="button" value="Close" id="settingsclosebutton" />
+      <input type="submit" value="Save" id="settingssumbitbutton" />
+    </div>
+  </form>
+  <p id="settingsuserinfo"></p>
+</div>

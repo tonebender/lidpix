@@ -51,7 +51,7 @@ class LoginForm(Form):
 class UserDB(UserMixin):
     """The user class with login-related states and personal data"""
     def __init__(self, id, username, password, fname, lname, joined, 
-                 active=True):
+                 active=True, confirmdelete=True):
         self.id = id
         self.username = username
         self.password = password
@@ -59,6 +59,7 @@ class UserDB(UserMixin):
         self.lname = lname
         self.joined = joined
         self.active = active
+        self.confirmdelete = confirmdelete
         
     def is_active(self):
         # Here you should write whatever the code is
@@ -73,8 +74,10 @@ class UserDB(UserMixin):
             return (self.username)
         except AttributeError:
             raise NotImplementedError('No `id` attribute - override `get_id`')
-    #def get_id(self):
-    #   return self.email
+            
+    def get_settings(self):
+        # Return settings in json style dict
+        return {'confirmdelete': self.confirmdelete}  # Add more settings ...
     
 
 @login_manager.user_loader
@@ -148,7 +151,19 @@ def logout():
 
 @authz.route('/getusername')
 def get_username():
-    """Return username (string) if logged in, otherwise 'None' """
+    """Return username (json string) if logged in, otherwise 'None' """
     if current_user.is_authenticated:
         return '{"username":"' + current_user.get_id() + '"}'
     return 'None'
+
+
+@authz.route('/getsettings')
+def get_settings():
+    """Get settings from logged in user object and return as json"""
+    return None
+
+
+@authz.route('/setsettings')
+def set_settings():
+    """Save settings posted as keywords to logged in user"""
+    return None

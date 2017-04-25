@@ -6,7 +6,8 @@ from flask import Flask, request, session, redirect, url_for, abort, \
 from werkzeug.utils import secure_filename
 from wand.image import Image
 from flask_login import login_required
-from modules import authz, lsettings
+from wtforms import Form, StringField, BooleanField, validators
+from modules import authz
 
 folder = Blueprint('folder', __name__)
 
@@ -23,6 +24,10 @@ class Folderfile:
     def to_json(self):
         return {'name': self.name, 'filetype': self.filetype,
                 'datetime': self.datetime}
+
+class SettingsForm(Form):
+    """The settings form, a subclass of Form (using WTForms)."""
+    confirmdelete = BooleanField('Confirm file delete')
 
 
 def allowed_file(filename):
@@ -331,7 +336,6 @@ def upload_file():
         return redirect(url_for('uploaded_file',
                                 filename=filename))
     return false
-    
 
 
 @folder.route('/serveimage')
@@ -367,11 +371,3 @@ def servethumb():
         return redirect(url_for('.serveimage', image=thumbdir+'/'+imagefile))
     else:
         abort(404)
-
-
-@folder.route('/settings')
-def settings():
-    
-    """Show the settings dialog (page) """
-    
-    return render_template('settings.html')

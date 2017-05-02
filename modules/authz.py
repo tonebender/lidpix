@@ -16,7 +16,7 @@
 # http://prettyprinted.com/using-bcrypt-in-python/
 
 from flask import Flask, request, render_template, flash, redirect, \
-url_for, abort, Blueprint, current_app
+url_for, abort, Blueprint, current_app, json
 from wtforms import Form, StringField, PasswordField, BooleanField, validators
 from flask_login import (LoginManager, current_user, login_required, \
 login_user, logout_user, UserMixin, confirm_login, login_url, \
@@ -51,7 +51,7 @@ class LoginForm(Form):
 class UserDB(UserMixin):
     """The user class with login-related states and personal data"""
     def __init__(self, id, username, password, fname, lname, joined, 
-                 active=True, confirmdelete=True):
+                 active=True, confirmdelete=True, viewmode=4):
         self.id = id
         self.username = username
         self.password = password
@@ -60,6 +60,7 @@ class UserDB(UserMixin):
         self.joined = joined
         self.active = active
         self.confirmdelete = confirmdelete
+        self.viewmode = viewmode
         
     def is_active(self):
         # Here you should write whatever the code is
@@ -77,7 +78,14 @@ class UserDB(UserMixin):
             
     def get_settings(self):
         # Return settings in json style dict
-        return {'confirmdelete': self.confirmdelete}  # Add more settings ...
+        return {'id': self.id,
+                'username': self.username,
+                'fname': self.fname,
+                'lname': self.lname,
+                'joined': self.joined,
+                'active': self.active,
+                'confirmdelete': self.confirmdelete,
+                'viewmode': self.viewmode}
     
 
 @login_manager.user_loader
@@ -160,10 +168,12 @@ def get_username():
 @authz.route('/getsettings')
 def get_settings():
     """Get settings from logged in user object and return as json"""
-    return None
+    if current_user.is_authenticated:
+        return json.dumps(current_user.get_settings())
+    return 'None'
 
 
 @authz.route('/setsettings')
 def set_settings():
     """Save settings posted as keywords to logged in user"""
-    return None
+    return 'None'

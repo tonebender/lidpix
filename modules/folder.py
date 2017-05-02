@@ -281,7 +281,7 @@ def folder_view():
         files = create_img_objects(imagedir)
         
         # Create the settings form
-        settingsform = lsettings.SettingsForm(request.form)
+        settingsform = SettingsForm(request.form)
         
         return render_template('folder.html', username=authz.current_user.username,
                                 files = files,
@@ -310,7 +310,6 @@ def supply_dir():
     # Create a list of FolderFile objects from all the files in imagedir
     files = create_img_objects(imagedir)
     
-    print [f.to_json() for f in files]
     # Convert the files list to json format
     json_files = json.dumps([f.to_json() for f in files])
 

@@ -6,6 +6,7 @@ $(document).ready(function() {
     var serveimage_url = base_url + '/serveimage?image=';
     var servethumb_url = base_url + '/servethumb?image=';
     var fobs; // Array that will hold all file objects
+    var user_settings; // Object with user's settings
     
     
     // Facebook crap
@@ -229,8 +230,22 @@ $(document).ready(function() {
     
     
     /**
+     * Get settings via json
+     */
+    function get_settings() {
+        $.getJSON('http://localhost:5080/getsettings',
+             function(feed) {
+                 user_settings = feed;
+                 console.log(user_settings);
+             }
+        );
+    }
+    
+    
+    /**
      * Show the settings dialog
      */
+    // Since we have a new get_settings function above, change this!
     function show_settings() {
         $.getJSON('http://localhost:5080/getusername', 
             function(feed) { 
@@ -320,6 +335,8 @@ $(document).ready(function() {
         var thumbsize = urlParam('thumbsize', '200x');
             
         get_dir(imagedir, thumbsize);
+        
+        get_settings();
         
         
         // Add click event to menu buttons on all thumbs

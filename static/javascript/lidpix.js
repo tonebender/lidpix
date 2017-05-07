@@ -5,9 +5,13 @@ $(document).ready(function() {
     var base_url = 'http://localhost:5080';
     var serveimage_url = base_url + '/serveimage?image=';
     var servethumb_url = base_url + '/servethumb?image=';
-    var fobs; // Array that will hold all file objects
+    // var fobs; // Array that will hold all file objects
     var user_settings; // Object with user's settings
     
+    var app = {
+        fobs: {},      // Array that will hold all file objects
+        settings: {}   // Object with user's settings
+    };
     
     // Facebook crap
     $.ajaxSetup({ cache: true });
@@ -52,6 +56,16 @@ $(document).ready(function() {
         } else {
            return results[1] || 0;
         }
+    }
+    
+    
+    /**
+     * Show information in upper left corner
+     * 
+     * @param text The text to show. Set this to '' to remove!
+     */
+    function info_message(text) {
+        $('#status_field').html(text);
     }
     
     
@@ -129,16 +143,22 @@ $(document).ready(function() {
      * Return HTML for a thumbnail, based on a bunch of variables ...
      */
     function render_thumb(imagedir, id, thumbsize) {
-        var real_file_url = serveimage_url + imagedir + '/' + fobs[id].name;
+        var real_file_url = serveimage_url + imagedir + '/' + app.fobs[id].name;
         return '<li id="' + id + '">' +
-                    '<a href="' + real_file_url + '">' +
-                        '<img src="' + servethumb_url + imagedir + '/' + fobs[id].name + 
+                    '<div class="imgcontainer">' +
+                        '<img src="' + servethumb_url + imagedir + '/' + app.fobs[id].name + 
                             '&thumbsize=' + thumbsize + '">' +
-                        '<div class="icon">' +                 // Icon is only used when image is hidden
-                            '<span class="' + fa_icon(fobs[id].filetype) +'"></span>' +
-                        '</div>' +
-                    '</a>' +
-                    '<p>' + fobs[id].name + '</p>' +
+                        '<a href="' + real_file_url + '">' +
+                            '<div class="overlay overlay_open"><span class="fa fa-arrows-alt"></span></div>' +
+                        '</a>' +
+                        '<div class="overlay overlay_menu"><span class="fa fa-angle-double-down"></span></div>' +
+                        '<a href="' + real_file_url + '">' +
+                            '<div class="icon">' +                 // Icon is only used when image is hidden
+                                '<span class="' + fa_icon(app.fobs[id].filetype) +'"></span>' +
+                            '</div>' +
+                        '</a>' +
+                    '</div>' +
+                    '<p>' + app.fobs[id].name + '</p>' +
                '</li>';
     }
     
@@ -148,16 +168,16 @@ $(document).ready(function() {
      */
     function render_icon(imagedir, id) {
         var real_file_url = '#';
-        if (fobs[id].filetype == 'DIR') {
-            real_file_url = base_url + '/folder?imagedir=' + imagedir + '/' + fobs[id].name;
+        if (app.fobs[id].filetype == 'DIR') {
+            real_file_url = base_url + '/folder?imagedir=' + imagedir + '/' + app.fobs[id].name;
         }
         return '<li class="icon" id="' + id + '">' +
                     '<a href="' + real_file_url + '">' +
                         '<div>' +
-                            '<span class="' + fa_icon(fobs[id].filetype) +'"></span>' +
+                            '<span class="' + fa_icon(app.fobs[id].filetype) +'"></span>' +
                         '</div>' +
                     '</a>' +
-                    '<p>' + fobs[id].name + '</p>' +
+                    '<p>' + app.fobs[id].name + '</p>' +
                 '</li>';
     }
     
@@ -166,7 +186,7 @@ $(document).ready(function() {
      */
     function render_menu(id) {
         return '<div class="menu">' +
-                    '<a href="#"><span class="fa fa-bars"></span></a>' +
+                    // '<a href="#"><span class="fa fa-bars"></span></a>' +
                     '<div class="dropdown-content">' +
                         '<a href="#" id="' + id + '" class="menuitem facebook">' +
                            '<span class="fa fa-facebook-official"></span> ' + 
@@ -196,7 +216,7 @@ $(document).ready(function() {
             data: 'imagedir=' + imagedir,
             success:function(feed) {
                 var real_file_url = '';
-                fobs = feed; // Save all file objects to global var (!)
+                app.fobs = feed; // Save all file objects to global var (!)
                 feed.forEach(function(entry) {  // Put thumbs on page
                     if (is_image(entry.filetype)) {              // Thumb
                         $('#thumbs_area').append(render_thumb(imagedir, file_id, thumbsize));
@@ -235,37 +255,26 @@ $(document).ready(function() {
     function get_settings() {
         $.getJSON('http://localhost:5080/getsettings',
              function(feed) {
-                 user_settings = feed;
-                 console.log(user_settings);
+                 app.settings = feed;
+                 console.log(app.settings);
              }
-        );
-    }
-    
-    
-    /**
-     * Show the settings dialog
-     */
-    // Since we have a new get_settings function above, change this!
-    function show_settings() {
-        $.getJSON('http://localhost:5080/getusername', 
-            function(feed) { 
-                if (feed.username === 'None' || feed.username == undefined)
-                    $('#settingsuserinfo').html('Saving settings as browser cookies.');
-                else
-                    $('#settingsuserinfo').html('Settings will be saved in ' + feed.username + '\'s profile.');
-            }
-        );
-        $('#settingsdialog').show();
-        form = document.getElementById('settingsform');
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
-            //sendData();
-            console.log('Pretending to send data');
-            $('#settingsdialog').hide();
+        )
+        .fail(function() {
+            info_message('Failed to read user settings');
+        })
+        .done(function() {
+            $('#settingsconfirmdelete').prop('checked', true);
+            $('#settingsusername').html(app.settings.username);
+            /*
+            if (app.settings.username == 'None' || app.settings.username == undefined)
+                $('#settingsuserinfo').html('Saving settings as browser cookies.');
+            else
+                $('#settingsuserinfo').html('Settings will be saved in ' + app.settings.username + '\'s profile.');
+            */
         });
     }
     
-    
+        
     /**
      * Show the file upload dialog
      *
@@ -275,25 +284,27 @@ $(document).ready(function() {
     
     
     function upload_to_facebook(id) {
-        console.log(fobs[id].name);
+        console.log(app.fobs[id].name);
     }
     
 
+    /**
+     * Initialize the app: retrieve settings, add click events, etc.
+     */
     (function init() {
-        // When the folder button right of 'Lidpix' is clicked, show the directory 
-        // field and change the folder button itself
-        $('#folder_button').click(function() {
-            if ($('#dir_field').css('visibility') == 'hidden')
-                $('#dir_field').css('visibility','visible');
-            else
-                $('#dir_field').css('visibility','hidden');
-            $('#folder_icon').toggleClass('fa-folder-open-o');
-            $('#folder_icon').toggleClass('fa-folder-o');
+        // When the "terminal" button right of breadcrumbs is clicked, 
+        // show the directory field
+        $('#terminal_button').click(function() {
+            if ($('#directory_form').css('visibility') == 'hidden') {
+                $('#directory_form').css('visibility','visible');
+                $('#directory_form > input:text').focus();
+            } else
+                $('#directory_form').css('visibility','hidden');
         });
         
         // Buttons for choosing the grid format of the thumbnails
-        $('.gb').click(function() {
-            $('.gb').removeClass('grid_btn_selected');
+        $('.gridbuttons').click(function() {
+            $('.gridbuttons').removeClass('grid_btn_selected');
             $('ul.rig').removeClass('columns-1 columns-4 columns-10');
         });
         $('#gridbutton1').click(function() {  // This one chooses huge thumbs sized
@@ -321,14 +332,27 @@ $(document).ready(function() {
             $('#thumbs_area li div.icon').toggle();
         });
         
-        $('#settingsbutton').click(show_settings);
+        $('#settingsbutton').click(function() {
+            if (! $('#settingsdialog').is(':visible')) {  // Will be true immediately below
+                window.setTimeout(function() {
+                    $('#settingsdialog').fadeOut();
+                }, 10000);
+            }
+            $('#settingsdialog').fadeToggle(100);
+        });
         
         $('#settingsclosebutton').click(function() {
             $('#settingsdialog').hide();
         });
         
+        $('#settingsform').submit(function(event) {
+            event.preventDefault();
+            //sendData();
+            console.log('Pretending to send data');
+            $('#settingsdialog').hide();
+        });
         
-        $('div#dir_field').css('visibility', 'hidden');  // If JS is disabled, it will remain shown
+        $('#directory_form').css('visibility', 'hidden');  // If JS is disabled, it will remain shown
         
         
         var imagedir = urlParam('imagedir', null);
@@ -340,7 +364,7 @@ $(document).ready(function() {
         
         
         // Add click event to menu buttons on all thumbs
-        $(document).on('click', '.menu', function() {
+        $(document).on('click', '.overlay_menu', function() {
             $(this).find('.dropdown-content').toggle();
         });
         
@@ -351,17 +375,3 @@ $(document).ready(function() {
     })();
     
 });
-
-
-/*
-    function resizeInput() {
-        $(this).attr('size', $(this).val().length);
-    }
-
-    // The directory text input changes width according to content
-    $('#directory_form > input[type="text"]')
-        // event handler
-        .keyup(resizeInput)
-        // resize on page load
-        .each(resizeInput);
-*/

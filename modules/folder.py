@@ -27,7 +27,7 @@ class Folderfile:
 
 class SettingsForm(Form):
     """The settings form, a subclass of Form (using WTForms)."""
-    confirmdelete = BooleanField('Confirm file delete')
+    settingsconfirmdelete = BooleanField('Confirm file delete')
 
 
 def allowed_file(filename):

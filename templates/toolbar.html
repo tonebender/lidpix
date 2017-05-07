@@ -9,18 +9,22 @@
   {% if username %}  {# This block only visible if a user is logged in #}
   
     <!-- This button shows the directory field -->
+    <!-- Fuck this. Let the directory field be shown all the time 
     <div id="folder_button">
       <a href="#"><span id="folder_icon" class="fa fa-folder-o"></span></a>
     </div>
+    -->
     
     <!-- General directory field with buttons, form, etc. -->
     <div id="dir_field">
       <!-- One dir button for each available parent dir -->
       <div id="dir_buttons">
+        <div><span id="folder_icon" class="fa fa-folder-o"></span></div>
         {% for d in dirs %}
           <a href="{{ url_for('.folder_view', imagedir=d[0]) }}">
-            <div>/{{ d[1] }}</div>
+            <div>{{ d[1] }}</div>
           </a>
+          /
         {% endfor %}
       </div>
     
@@ -30,6 +34,10 @@
       </a>
       --> #}
 
+      <div id="terminal_button">
+        <a href="#"><span id="terminal_icon" class="fa fa-angle-double-right"></span></a>
+      </div>
+      
       <!-- Form for entering directory manually -->
       <form id="directory_form" action="/folder" method="POST">
         <input type="text" name="imagedir" value="{{ imagedir }}"
@@ -39,9 +47,9 @@
     
     <!-- Buttons for controlling grid layout -->
     <div id="user_buttons">
-      <a class="gb" id="gridbutton1" href="#"><span class="fa fa-square adjust_square"></span></a>
-      <a class="gb" id="gridbutton4" href="#"><span class="fa fa-th-large"></span></a>
-      <a class="gb grid_btn_selected" id="gridbutton10" href="#"><span class="fa fa-th"></span></a>
+      <a class="gridbuttons" id="gridbutton1" href="#"><span class="fa fa-square adjust_square"></span></a>
+      <a class="gridbuttons" id="gridbutton4" href="#"><span class="fa fa-th-large"></span></a>
+      <a class="gridbuttons grid_btn_selected" id="gridbutton10" href="#"><span class="fa fa-th"></span></a>
       
       <a id="gridbutton_icon" href="#"><span class="fa fa-file-image-o"></span></a>
     
@@ -62,21 +70,25 @@
   
 </div>
 
+{% if username %}
+  <!-- This form is intially hidden (via css) -->
+  <!-- Possibly redo so it only uses JS and do away with the WTForms stuff -->
+  <div id="settingsdialog">
+    <p>Settings</p>
+    <!-- <p>Username: <span id="settingsusername"></span></p> -->
+    <form id="settingsform" method="POST">
+      <div>
+        {{ settingsform.settingsconfirmdelete() }}
+        <label for="confirmdelete"><span class="checkbutton"><i class="fa fa-check"></i></span><span class="checklabel">Confirm file delete</span></label>
+      </div>
+      <div>
+        <!-- <input type="button" value="Close" id="settingsclosebutton" /> -->
+        <input type="submit" value="Save" id="settingssumbitbutton" />
+      </div>
+    </form>
+    <!-- <p id="settingsuserinfo"></p> -->
+  </div>
+{% endif %}
+
 <div id="status_field">&nbsp;</div>
 
-<!-- This form is intially hidden (via css) -->
-<!-- Possibly redo so it only uses JS and do away with the WTForms stuff -->
-<div id="settingsdialog">
-  <h3>Settings</h3>
-  <form id="settingsform" method="POST">
-    <div>
-      {{ settingsform.confirmdelete() }}
-      <label for="confirmdelete"><span class="checkbutton"><i class="fa fa-check"></i></span><span class="checklabel">Confirm file delete</span></label>
-    </div>
-    <div>
-      <input type="button" value="Close" id="settingsclosebutton" />
-      <input type="submit" value="Save" id="settingssumbitbutton" />
-    </div>
-  </form>
-  <p id="settingsuserinfo"></p>
-</div>

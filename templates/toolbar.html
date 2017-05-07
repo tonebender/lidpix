@@ -88,6 +88,14 @@
     </form>
     <!-- <p id="settingsuserinfo"></p> -->
   </div>
+  
+  <div id="confirmdialog">
+    <p id="messagetext">Please confirm</p> <!-- The fields will be (re)set by JS -->
+    <form id="settingsform" method="POST">
+      <input type="button" value="Yes" id="yesbutton" />
+      <input type="button" value="No" id="nobutton" />
+    </form>
+  </div>
 {% endif %}
 
 <div id="status_field">&nbsp;</div>

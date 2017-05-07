@@ -57,17 +57,7 @@ $(document).ready(function() {
            return results[1] || 0;
         }
     }
-    
-    
-    /**
-     * Show information in upper left corner
-     * 
-     * @param text The text to show. Set this to '' to remove!
-     */
-    function info_message(text) {
-        $('#status_field').html(text);
-    }
-    
+
     
     /**
      * Return the width and height of the browser viewport
@@ -99,6 +89,29 @@ $(document).ready(function() {
            viewPortHeight = document.getElementsByTagName('body')[0].clientHeight
          }
          return [viewPortWidth, viewPortHeight];
+    }
+    
+    
+    /**
+     * A modal dialog with "yes" (confirm) and "no" (cancel) buttons
+     * 
+     * @param messagetext The question to ask in the dialog
+     * @param yestext The string to show on confirm button
+     * @param notext The string to show on cancel button
+     * @param callback The function to execute upon confirmation
+     */
+    function confirmdialog(messagetext, yestext, notext, callback) {
+        $('#confirmdialog #messagetext').text(messagetext);
+        $('#confirmdialog #yesbutton').attr('value', yestext);
+        $('#confirmdialog #nobutton').attr('value', notext);
+        $('#confirmdialog #nobutton').click(function() {
+            $('#confirmdialog').hide();
+        });
+        $('#confirmdialog #yesbutton').click(function() {
+            $('#confirmdialog').hide();
+            callback();
+        });
+        $('#confirmdialog').show();
     }
     
 
@@ -148,17 +161,17 @@ $(document).ready(function() {
                     '<div class="imgcontainer">' +
                         '<img src="' + servethumb_url + imagedir + '/' + app.fobs[id].name + 
                             '&thumbsize=' + thumbsize + '">' +
-                        '<a href="' + real_file_url + '">' +
-                            '<div class="overlay overlay_open"><span class="fa fa-arrows-alt"></span></div>' +
-                        '</a>' +
-                        '<div class="overlay overlay_menu"><span class="fa fa-angle-double-down"></span></div>' +
-                        '<a href="' + real_file_url + '">' +
-                            '<div class="icon">' +                 // Icon is only used when image is hidden
-                                '<span class="' + fa_icon(app.fobs[id].filetype) +'"></span>' +
+                        '<div class="overlay">' +
+                            '<div class="menubutton">' +
+                                '<a href="' + real_file_url + '"><p>' + app.fobs[id].name + '</p></a>' +
+                                '<a href="#"><span class="fa fa-bars"></span></a>' +  // Or '<span class="fa fa-angle-double-down"></span>' +
                             '</div>' +
-                        '</a>' +
+                        '</div>' +
+                        /* Menu to be inserted here */
+                        '<div class="icon">' +                 // Icon is only used when image is hidden
+                            '<span class="' + fa_icon(app.fobs[id].filetype) +'"></span>' +
+                        '</div>' +
                     '</div>' +
-                    '<p>' + app.fobs[id].name + '</p>' +
                '</li>';
     }
     
@@ -180,22 +193,20 @@ $(document).ready(function() {
                     '<p>' + app.fobs[id].name + '</p>' +
                 '</li>';
     }
-    
+
     /**
      * Return HTML for a file menu
      */
     function render_menu(id) {
-        return '<div class="menu">' +
-                    // '<a href="#"><span class="fa fa-bars"></span></a>' +
-                    '<div class="dropdown-content">' +
-                        '<a href="#" id="' + id + '" class="menuitem facebook">' +
-                           '<span class="fa fa-facebook-official"></span> ' + 
-                           'Upload to Facebook</a>' +
-                        '<a href="#" id="' + id + '" class="menuitem info">' +
-                        '<span class="fa fa-info-circle"></span> Image info</a>' +
-                        //'<a href="#">Link 3</a>' +
-                    '</div>' +
-                '</div>';
+        return '<div class="menu" id="' + id + '">' +
+                    '<a href="#" class="menuitem facebook">' +
+                        '<span class="fa fa-facebook-official"></span> ' + 
+                        'Upload to Facebook</a>' +
+                    '<a href="#" class="menuitem info">' +
+                    '<span class="fa fa-info-circle"></span> Image info</a>' +
+                    '<a href="#" class="menuitem delete">' +
+                        '<span class="fa fa-remove"></span>Delete real file</a>' +
+               '</div>';
     }
     
     /**
@@ -220,7 +231,7 @@ $(document).ready(function() {
                 feed.forEach(function(entry) {  // Put thumbs on page
                     if (is_image(entry.filetype)) {              // Thumb
                         $('#thumbs_area').append(render_thumb(imagedir, file_id, thumbsize));
-                        $('#thumbs_area li').last().find('a').after(render_menu(file_id)); // Menu
+                        $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
                     } else {                                     // or Icon
                         $('#thumbs_area').append(render_icon(imagedir, file_id));
                     }
@@ -260,10 +271,13 @@ $(document).ready(function() {
              }
         )
         .fail(function() {
-            info_message('Failed to read user settings');
+            $('#status_field').html('Failed to read user settings');
         })
         .done(function() {
-            $('#settingsconfirmdelete').prop('checked', true);
+            if (app.settings.confirmdelete)
+                $('#settingsconfirmdelete').prop('checked', true);
+            else
+                $('#settingsconfirmdelete').prop('checked', false);
             $('#settingsusername').html(app.settings.username);
             /*
             if (app.settings.username == 'None' || app.settings.username == undefined)
@@ -285,6 +299,10 @@ $(document).ready(function() {
     
     function upload_to_facebook(id) {
         console.log(app.fobs[id].name);
+    }
+    
+    function delete_file(id) {
+        confirmdialog('Really delete file ' + id + '?', 'Yeah', 'Nope', function(){return});
     }
     
 
@@ -333,7 +351,7 @@ $(document).ready(function() {
         });
         
         $('#settingsbutton').click(function() {
-            if (! $('#settingsdialog').is(':visible')) {  // Will be true immediately below
+            if (! $('#settingsdialog').is(':visible')) {  // (Will turn true immediately below)
                 window.setTimeout(function() {
                     $('#settingsdialog').fadeOut();
                 }, 10000);
@@ -353,7 +371,7 @@ $(document).ready(function() {
         });
         
         $('#directory_form').css('visibility', 'hidden');  // If JS is disabled, it will remain shown
-        
+                                                           // (which is absurd since the whole app requires JS...)        
         
         var imagedir = urlParam('imagedir', null);
         var thumbsize = urlParam('thumbsize', '200x');
@@ -364,13 +382,26 @@ $(document).ready(function() {
         
         
         // Add click event to menu buttons on all thumbs
-        $(document).on('click', '.overlay_menu', function() {
-            $(this).find('.dropdown-content').toggle();
+        $(document).on('click', '.menubutton', function() {
+            $('.menu').hide();
+            $(this).closest('.imgcontainer').find('.menu').toggle();
+        });
+        
+        // Add click event that removes menus on outside click
+        $(document).click(function(event) {
+            if(!$(event.target).closest('.menubutton').length) { // If not clicked on the menu button
+                $('.menu').hide();
+            }
         });
         
         // Add click event to all facebook menu items
         $(document).on('click', '.menuitem, .facebook', function() {
-            upload_to_facebook($(this).prop('id'));
+            upload_to_facebook($(this).parent().prop('id'));
+        });
+        
+        // Add click event to all delete-file menu items
+        $(document).on('click', '.menuitem, .delete', function() {
+            delete_file($(this).parent().prop('id'));
         });
     })();
     

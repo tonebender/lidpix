@@ -187,7 +187,7 @@ div#status_field {
 }
 
 
-#settingsdialog {
+div#settingsdialog {
   display: none;
   z-index: 1;
   float: right;  
@@ -208,6 +208,25 @@ div#status_field {
   
   p#settingsuserinfo {
     font-size: 0.8em;
+  }
+}
+
+div#confirmdialog {
+  display: none;
+  z-index: 2;
+  float: left;
+  background-color: $dark_color;
+  color: $brighter_color;
+  box-shadow: 0px 2px 2px 0px #888;
+  padding: 1em;
+  margin: 5em 33% 0 33%;
+  
+  input[type='button'],
+  input[type='submit'] {
+    margin-top: 1em;
+    border-radius: 3px;
+    height: 2em;
+    width: 50%;
   }
 }
 
@@ -240,33 +259,33 @@ ul.rig {
       .overlay {
         position: absolute;
         left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
         color: white;
         padding-left: 0.5em;
         display: none;
-      }
-      
-      .overlay_open {
-        top: 0;
-        width: 100%;
-        height: 80%;
-      }
-      
-      .overlay_menu {
-        top: 80%;
-        height: 20%;
-        width: 100%;
-        line-height: 100%;
-        font-size: 1.2em;
-      }
-    }
+        
+        .menubutton {
+          position: absolute;
+          left: 0;
+          bottom: 0;
+          padding: 1em;
+          
+          a { color: white; }
+          
+          p { 
+            font-size: 0.8em;
+            margin: 0;
+            margin-bottom: 0.4em;
+          }
+        }
+      } /* end .overlay */
+    } /* end .imgcontainer */
     
-    .imgcontainer:hover {
-      .overlay {
-        display: block;
-      }
-      .overlay_menu {
-        /* background: rgba(0, 0, 0, 0.30); */
-      }
+    .imgcontainer:hover .overlay {
+      display: block;
+      background: rgba(0, 0, 0, 0.30);
     }
     
     img {
@@ -274,12 +293,6 @@ ul.rig {
       height: auto;
       margin: 0;
       display: block;
-    }
-    
-    p { 
-      font-size: 0.8em;
-      margin: 0;
-      
     }
     
     div.icon {  /* This is only visible when icon mode is on */
@@ -302,12 +315,12 @@ ul.columns-1 li {width: 97.5%;}  /* This + li margin 2.5% is 100% of space */
 
 
 
-.dropdown-content {
+.menu {
   display: none;
   position: absolute;
   background-color: $menucolor;
   min-width: 160px;
-  box-shadow: 0px 8px 8px 0px rgba(0,0,0,0.2);
+  box-shadow: 0px 3px 3px 0px rgba(0,0,0,0.3);
   z-index: 1;
   
   a {

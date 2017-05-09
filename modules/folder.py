@@ -241,6 +241,41 @@ def create_img_objects(imagedir):
     return files
               
 
+@folder.route('/serveimage')
+def serveimage():
+    
+    """ Get image path & file from url keyword and get the image
+        from nginx server via X-Accel-Redirect response header """
+        
+    image = request.args.get('image', default=None) or abort(404)
+    response = make_response('')
+    response.headers['X-Accel-Redirect'] = image
+    del response.headers['Content-Type'] # Webserver decides type later
+    return response
+
+
+@folder.route('/servethumb')
+def servethumb():
+    
+    """ Create & serve thumbnail on the fly!
+    
+    Takes two url keys: image (required), thumbsize
+    'image' key should have full /path/with/imagefilename """
+    
+    image = request.args.get('image', default=None) or abort(404)
+    (imgdir, imagefile) = os.path.split(image)
+    thumbsize = request.args.get('thumbsize', default='200x')
+        
+    # thumbdir is based on config and thumbsize, e.g. '.lidpixthumbs_200x'
+    thumbdir = current_app.config['THUMBDIR_BASE']
+    (imgdir, thumbdir) = prep_thumbdir(imgdir, thumbdir + '_' + thumbsize)
+    
+    if create_thumb(imgdir, thumbdir, imagefile, thumbsize):
+        return redirect(url_for('.serveimage', image=thumbdir+'/'+imagefile))
+    else:
+        abort(404)
+
+
 @folder.route('/folder', methods=['GET', 'POST'])
 @login_required
 def folder_view():
@@ -248,8 +283,8 @@ def folder_view():
     """ 
     Show a folder with thumbnails 
     
-    GET: Get image directory from URL keyword; prep thumbnails;
-         show folder.html with thumbnails
+    GET: Get image directory and thumbsize from URL keyword; 
+         prep thumbnails; show folder.html with thumbnails
     POST: Get new image directory from form and call this again
     """
     
@@ -291,9 +326,33 @@ def folder_view():
                                 settingsform = settingsform)
 
 
+@folder.route('/gallery', methods=['GET'])
+@login.required
+def gallery_view():
+    
+    """Show a gallery with thumbnails/images found through database
+    
+    GET: Get gallery name from URL keyword and look it up in the db
+    """
+    
+    # Find database
+    # Check user permissions
+    # Find image dir
+    # Prep thumbs
+    # Read information, comments, settings, etc.
+    # Show page
+    
+    # No need for ajax since visitor is not going to edit afterwards
+    
+    return render_template('gallery.html')
+
+
 @folder.route('/getdir', methods=['GET'])
 @login_required
 def supply_dir():
+    
+    """ Supply a JSON object (string) with image & thumb names.
+        (This function has some similarities to photo_view() ) """
     
     pixdirs = current_app.config['PIXDIRSLIST']
 
@@ -335,38 +394,3 @@ def upload_file():
         return redirect(url_for('uploaded_file',
                                 filename=filename))
     return false
-
-
-@folder.route('/serveimage')
-def serveimage():
-    
-    """ Get image path & file from url keyword and get the image
-        from nginx server via X-Accel-Redirect response header """
-        
-    image = request.args.get('image', default=None) or abort(404)
-    response = make_response('')
-    response.headers['X-Accel-Redirect'] = image
-    del response.headers['Content-Type'] # Webserver decides type later
-    return response
-
-
-@folder.route('/servethumb')
-def servethumb():
-    
-    """ Create & serve thumbnail on the fly!
-    
-    Takes two url keys: image (required), thumbsize
-    'image' key should have full /path/with/imagefilename """
-    
-    image = request.args.get('image', default=None) or abort(404)
-    (imgdir, imagefile) = os.path.split(image)
-    thumbsize = request.args.get('thumbsize', default='200x')
-        
-    # thumbdir is based on config and thumbsize, e.g. '.lidpixthumbs_200x'
-    thumbdir = current_app.config['THUMBDIR_BASE']
-    (imgdir, thumbdir) = prep_thumbdir(imgdir, thumbdir + '_' + thumbsize)
-    
-    if create_thumb(imgdir, thumbdir, imagefile, thumbsize):
-        return redirect(url_for('.serveimage', image=thumbdir+'/'+imagefile))
-    else:
-        abort(404)

@@ -29,7 +29,7 @@ def create_new_user_db(db_name, db_filename):
     
     # Create new database from schema file
     with open(schemafile, mode='r') as f:
-        scriptlines = "CREATE TABLE lidpixusers (" + f.read() + ");"
+        scriptlines = "CREATE TABLE " + db_name + " (" + f.read() + ");"
     
     c.execute("DROP TABLE IF EXISTS " + db_name + ";")
     c.executescript(scriptlines)
@@ -38,37 +38,35 @@ def create_new_user_db(db_name, db_filename):
     return True
 
 
-# Add db_name parameter to functions below!!!
-
-def add_user(username, password, fname, joining, groupz, db_filename):
+def add_user(username, password, fullname, joined, groups, db_name, db_filename):
     connection = connect_to_db(db_filename)
     c = connection.cursor()
     
-    format_str = """INSERT INTO lidpixusers (user_nr, username, password,
-    fname, lname, joining)
-    VALUES (NULL, "{username}", "{password}", "{fullname}", "{joined}", "{groups}");"""
-    sql_command = format_str.format(username=username, password=password, \
-    fullname=fname, joined=joining, groups=groupz)
+    format_str = """INSERT INTO {db_name} (user_nr, username, password,
+    fullname, groups, joining, active, confirmdelete, viewmode, theme)
+    VALUES (NULL, "{username}", "{password}", "{fullname}", "{groups}", "{joined}", TRUE, TRUE, 10, "default");"""
+    sql_command = format_str.format(db_name=db_name, username=username, password=password, \
+    fullname=fullname, joined=joined, groups=groups)
     c.execute(sql_command)
     connection.commit()
     connection.close()
     return True
     
     
-def delete_user(username, db_filename):
+def delete_user(username, db_name, db_filename):
     connection = connect_to_db(db_filename)
     c = connection.cursor()
-    command = "DELETE FROM lidpixusers WHERE username =?"
+    command = "DELETE FROM {db_name} WHERE username =?".format(db_name=db_name)
     c.execute(command, (username,))
     connection.commit()
     connection.close()
     return True
     
     
-def print_db(db_filename):
+def print_db(db_name, db_filename):
     connection = connect_to_db(db_filename)
     c = connection.cursor()
-    c.execute('SELECT * FROM lidpixusers')
+    c.execute('SELECT * FROM {db_name}'.format(db_name=db_name))
     rows = c.fetchall()
     connection.close()
     for r in rows:

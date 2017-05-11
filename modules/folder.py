@@ -24,10 +24,11 @@ class Folderfile:
     def to_json(self):
         return {'name': self.name, 'filetype': self.filetype,
                 'datetime': self.datetime}
-
+        
 class SettingsForm(Form):
     """The settings form, a subclass of Form (using WTForms)."""
     settingsconfirmdelete = BooleanField('Confirm file delete')
+        
 
 
 def allowed_file(filename):
@@ -332,7 +333,7 @@ def gallery_view():
     
     """Show a gallery with thumbnails/images found through database
     
-    GET: Get gallery name from URL keyword and look it up in the db
+    GET: Get gallery name from URL keyword and look it up in the db, und zo weiter
     """
     
     # Find database
@@ -342,7 +343,7 @@ def gallery_view():
     # Read information, comments, settings, etc.
     # Show page
     
-    # No need for ajax since visitor is not going to edit afterwards
+    # No need for ajax since visitor is not going to edit afterwards - OR NOT?
     
     return render_template('gallery.html')
 

@@ -8,6 +8,7 @@ import string, os
 
 from modules.authz import authz
 from modules.folder import folder
+from modules.gallery import gallery
 #from modules.lsettings import lsettings
 
 app = Flask(__name__)
@@ -32,7 +33,7 @@ app.config.from_envvar('LIDPIX_SETTINGS', silent=True)
 pixdirs = [os.path.abspath(x) 
            for x in string.split(app.config['PIXDIRS'], ';')]
            
-# Remove folder names in pixdirs which are subdirs of other folders in pixdirs
+# Remove folder names in pixdirs which are (redundant) subdirs of other folders in pixdirs
 # Example: '/abc/def;/abc;/hey/ho' --> '/abc;/hey/ho'
 pixdirs = filter(lambda d: 
                  not any(d.startswith(x) and not d == x for x in pixdirs), 
@@ -44,6 +45,7 @@ app.config['PIXDIRSLIST'] = pixdirs
 
 app.register_blueprint(authz)
 app.register_blueprint(folder)
+app.register_blueprint(gallery)
 #app.register_blueprint(lsettings)
 
 

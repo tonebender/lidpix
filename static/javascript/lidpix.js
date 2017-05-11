@@ -242,6 +242,7 @@ $(document).ready(function() {
         });
     }
     
+    
     /**
      * Change the src attribute of the img tags inside #thumbs_area so they
      * display different sized thumbnails

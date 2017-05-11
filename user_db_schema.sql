@@ -5,5 +5,6 @@ fullname VARCHAR(30),
 groups VARCHAR(30),
 joining DATE,
 active BOOLEAN DEFAULT TRUE,
-viewlayout INTEGER,
-confirmdelete BOOLEAN DEFAULT TRUE
+confirmdelete BOOLEAN DEFAULT TRUE,
+viewmode INTEGER DEFAULT 10,
+theme VARCHAR(30)

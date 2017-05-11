@@ -8,7 +8,7 @@
 # http://stackoverflow.com/questions/12075535/flask-login-cant-understand-how-it-works
 # https://gist.github.com/bkdinoop/6698956
 
-# SQL3 tutorial:
+# SQLite3 tutorial:
 # http://www.python-course.eu/sql_python.php
 # http://sebastianraschka.com/Articles/2014_sqlite_in_python_tutorial.html
 
@@ -51,7 +51,7 @@ class LoginForm(Form):
 class UserDB(UserMixin):
     """The user class with login-related states and personal data"""
     def __init__(self, id, username, password, fname, lname, joined, 
-                 active=True, confirmdelete=True, viewmode=4):
+                 active=True, confirmdelete=True, viewmode=10, theme='default'):
         self.id = id
         self.username = username
         self.password = password
@@ -61,6 +61,7 @@ class UserDB(UserMixin):
         self.active = active
         self.confirmdelete = confirmdelete
         self.viewmode = viewmode
+        self.theme = theme
         
     def is_active(self):
         # Here you should write whatever the code is
@@ -85,7 +86,8 @@ class UserDB(UserMixin):
                 'joined': self.joined,
                 'active': self.active,
                 'confirmdelete': self.confirmdelete,
-                'viewmode': self.viewmode}
+                'viewmode': self.viewmode,
+                'theme': self.theme}
     
 
 @login_manager.user_loader

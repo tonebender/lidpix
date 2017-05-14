@@ -9,7 +9,6 @@ import string, os
 from modules.authz import authz
 from modules.folder import folder
 from modules.gallery import gallery
-#from modules.lsettings import lsettings
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -46,7 +45,6 @@ app.config['PIXDIRSLIST'] = pixdirs
 app.register_blueprint(authz)
 app.register_blueprint(folder)
 app.register_blueprint(gallery)
-#app.register_blueprint(lsettings)
 
 
 if __name__ == '__main__':

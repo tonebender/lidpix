@@ -4,7 +4,9 @@ import os, string, time
 from flask import Flask, request, session, redirect, url_for, abort, \
   render_template, flash, make_response, Blueprint, current_app, json
 from flask_login import login_required
-from modules import authz folder
+import authz, folder
+# from modules import authz, folder
+from lidpix_db import *
 
 gallery = Blueprint('gallery', __name__)
 
@@ -32,13 +34,13 @@ class Galleryfile:
 
 def gb_get_gallery_properties():
     
-    """ Get first row in gallery db, i.e. the gallery properties """
+    """ Get row with gallery properties in gallery db """
     
     return Galleryprop_object
     
     
 def db_get_image():
     
-    """ Get the whole row of data for one image in gallery db """
+    """ Get row of data for one image in gallery db """
     
     return Galleryfile_object

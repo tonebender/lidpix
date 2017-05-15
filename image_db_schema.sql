@@ -1,4 +1,6 @@
-gallery_id INTEGER PRIMARY KEY,
+image_id INTEGER PRIMARY KEY,
+imagefile TEXT,
+time_photo INTEGER,
 time_added INTEGER,
 description TEXT,
 users_r TEXT,

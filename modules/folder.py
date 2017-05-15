@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from wand.image import Image
 from flask_login import login_required
 from wtforms import Form, StringField, BooleanField, validators
-from modules import authz
+import authz
 
 folder = Blueprint('folder', __name__)
 
@@ -328,7 +328,7 @@ def folder_view():
 
 
 @folder.route('/gallery', methods=['GET'])
-@login.required
+@login_required
 def gallery_view():
     
     """Show a gallery with thumbnails/images found through database

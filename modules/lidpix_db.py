@@ -9,17 +9,30 @@ import sqlite3, time, sys, bcrypt
 
 
 def connect_to_db(db_filename):
+    
+    """ Connect to an SQLite database and return connection
+    
+    db_filename: File with SQLite database in it
+    Return: Tuple with connection and cursor """
+    
     try:
         connection = sqlite3.connect(db_filename)
     except:
         print "Could not open database:", db_filename
-        sys.exit(0)
+        return None
     else:
         c = connection.cursor()
         return connection, c
 
 
-def create_new_db(table, db_filename, schema_filename):
+def new_table(table, db_filename, schema_filename):
+    
+    """ Create a new table in database file
+    
+    table: Name of table
+    db_filename: Database file
+    schema_filename: File with SQLite schema """
+    
     connection, c = connect_to_db(db_filename)
     
     c.execute("DROP TABLE IF EXISTS " + table + ";") # Delete existing
@@ -35,6 +48,9 @@ def create_new_db(table, db_filename, schema_filename):
 
 
 def add_user(username, password, fullname, joined, groups, table, db_filename):
+    
+    """ Add a lidpix user to the users table """
+    
     connection, c = connect_to_db(db_filename)
     
     format_str = """INSERT INTO {table} (user_nr, username, password,
@@ -46,8 +62,42 @@ def add_user(username, password, fullname, joined, groups, table, db_filename):
     connection.commit()
     connection.close()
     return True
+
+
+def add_gallery(gallery_id, description, users_r, users_w, groups_r, 
+                groups_w, table, db_filename):
     
+    """ Add a row with gallery properties to the galleries table """
     
+    conn, c = connect_to_db(db_filename)
+    sql_cmd = """INSERT INTO ? (gallery_id, time_added, description, 
+    users_r, users_w, groups_r, groups_w)
+    VALUES (NULL, ?, ?, ?, ?, ?, ?)"""
+    c.execute(sql_cmd, (table, gallery_id,
+                        time.asctime(time.localtime(time.time())),
+                        description, users_r, users_w, groups_r, groups_w,))
+    conn.commit()
+    conn.close()
+    return True
+
+
+def add_image(imagefile, time_photo, time_added, description, 
+              users_r, users_w, groups_r, groups_w, table, db_filename):
+    
+    """ Add a row with image properties to an image (gallery) table """
+    
+    conn, c = connect_to_db(db_filename)
+    sql_cmd = """INSERT INTO ? (image_id, imagefile, time_photo, 
+    time_added, description, users_r, users_w, groups_r, groups_w)
+    VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?)"""
+    c.execute(sql_cmd, (table, imagefile, time_photo,
+              time.asctime(time.localtime(time.time())),
+              description, users_r, users_w, groups_r, groups_w,))
+    conn.commit()
+    conn.close()
+    return True
+    
+
 def delete_user(username, table, db_filename):
     connection, c = connect_to_db(db_filename)
     command = "DELETE FROM {table} WHERE username =?".format(table=table)
@@ -57,7 +107,10 @@ def delete_user(username, table, db_filename):
     return True
     
     
-def print_db(table, db_filename):
+def print_table(table, db_filename):
+    
+    """ Print the table called table in file db_filename """
+    
     connection, c = connect_to_db(db_filename)
     c.execute('SELECT * FROM {table}'.format(table=table))
     rows = c.fetchall()
@@ -77,38 +130,48 @@ def print_db(table, db_filename):
 
 
 def show_usage():
-    print """Usage: edit_users.py command [username] table database_file
+    print """Usage: lidpix_db.py command [username|galleryname] table database_file
           command can be:
-          a   add user with [username] to table in database_file
-          d   delete user from database
-          c   create new table (existing will be deleted)
-          p   print existing table in database_file"""
+          adduser      add user with [username] to user table in database_file
+          addgallery   add gallery with [galleryname] to gallery table in database_file
+          deleteuser   delete user from table in database_file
+          newutable    create new table (overwrite existing)
+          newgtable    create new table of galleries (overwrite existing)
+          printtable   print existing table in database_file"""
     sys.exit(0)
 
 
 if __name__ == '__main__':
+    
+    """ This main function handles all the shell commands for
+    administering the lidpix database"""
+    
     if len(sys.argv) < 4 or len(sys.argv) > 5:
         show_usage()
     
-    # Command c: Create new database
-    if sys.argv[1] == 'c':
+    # Command newutable or newgtable: Create new table of users or galleries
+    if sys.argv[1] == 'newutable' or sys.argv[1] == 'newgtable':
+        if len(sys.argv) != 4:
+            print "Too few or too many arguments. Needs tablename and database_file."
+            show_usage()
+        try:
+            if sys.argv[1] == 'newutable':
+                new_table(sys.argv[2], sys.argv[3], 'user_db_schema.sql')
+            elif sys.argv[1] == 'newgtable':
+                new_table(sys.argv[2], sys.argv[3], 'gallery_db_schema.sql')
+            print "Created new table " + sys.argv[2] + " in file", sys.argv[3]
+        except:
+            print "Error creating table " + sys.argv[2] + " in file", sys.argv[3]
+            
+    # Command printtable: Show table
+    if sys.argv[1] == 'printtable':
         if len(sys.argv) != 4:
             print "Too few or too many arguments."
             show_usage()
-        if create_new_db(sys.argv[2], sys.argv[3], 'user_db_schema.sql'):
-            print "Created new database " + sys.argv[2] + " in file", sys.argv[3]
-        else:
-            print "Error creating database " + sys.argv[2] + " in file", sys.argv[3]
+        print_table(sys.argv[2], sys.argv[3])
             
-    # Command p: Show table
-    if sys.argv[1] == 'p':
-        if len(sys.argv) != 4:
-            print "Too few or too many arguments."
-            show_usage()
-        print_db(sys.argv[2], sys.argv[3])
-            
-    # Command a: Add new user to database
-    if sys.argv[1] == 'a':
+    # Command adduser: Add new user to database
+    if sys.argv[1] == 'adduser':
         if len(sys.argv) != 5:
             print "Incorrect number of arguments after command 'a'"
             sys.exit(0)
@@ -124,12 +187,12 @@ if __name__ == '__main__':
         j = time.asctime(time.localtime(time.time()))
         
         if add_user(sys.argv[2], hashed_pw, f, j, gr, sys.argv[3], sys.argv[4]):
-            print "Successfully added user %s to database %s in file %s" \
+            print "Successfully added user %s to table %s in file %s" \
             % (sys.argv[2], sys.argv[3], sys.argv[4])
         
-    # Command d: Delete user
-    if sys.argv[1] == 'd':
+    # Command deleteuser: Delete user
+    if sys.argv[1] == 'deleteuser':
         if len(sys.argv) != 5:
             print "Incorrect number of arguments after command 'd'"
         if delete_user(sys.argv[2], sys.argv[3], sys.argv[4]):
-            print "Deleted user %s from database %s in file %s" % (sys.argv[2], sys.argv[3], sys.argv[4])
+            print "Deleted user %s from table %s in file %s" % (sys.argv[2], sys.argv[3], sys.argv[4])

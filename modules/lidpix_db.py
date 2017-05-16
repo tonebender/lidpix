@@ -4,7 +4,8 @@
 # See show_usage() below for how to use it.
 
 
-import sqlite3, time, sys, bcrypt
+import sqlite3, time, sys, argparse
+import bcrypt
 #from users import UserDB
 
 
@@ -146,22 +147,31 @@ if __name__ == '__main__':
     """ This main function handles all the shell commands for
     administering the lidpix database"""
     
+    # https://stackoverflow.com/questions/8423895/using-argparse-in-conjunction-with-sys-argv-in-python
+    # https://stackoverflow.com/questions/4480075/argparse-optional-positional-arguments
+
+    parser = argparse.ArgumentParser(description='Lidpix database editor')
+    parser.add_argument('cmd', help='command')
+    parser.add_argument('uname', nargs='?', help='username to add')
+    parser.add_argument('gname', nargs='?', help='gallery name to add')
+    parser.add_argument('table', help='table to use')
+    parser.add_argument('dbfile', help='sqlite database file')
+    parser.add_argument('images', nargs='*', help='images')
+    args = parser.parse_args()
+    
     if len(sys.argv) < 4 or len(sys.argv) > 5:
         show_usage()
     
     # Command newutable or newgtable: Create new table of users or galleries
-    if sys.argv[1] == 'newutable' or sys.argv[1] == 'newgtable':
-        if len(sys.argv) != 4:
-            print "Too few or too many arguments. Needs tablename and database_file."
-            show_usage()
+    if args.cmd == 'newutable' or args.cmd == 'newgtable':
         try:
-            if sys.argv[1] == 'newutable':
-                new_table(sys.argv[2], sys.argv[3], 'user_db_schema.sql')
-            elif sys.argv[1] == 'newgtable':
-                new_table(sys.argv[2], sys.argv[3], 'gallery_db_schema.sql')
-            print "Created new table " + sys.argv[2] + " in file", sys.argv[3]
+            if args.cmd == 'newutable':
+                new_table(args.table, args.dbfile, 'user_db_schema.sql')
+            elif args.cmd == 'newgtable':
+                new_table(args.table, args.dbfile, 'gallery_db_schema.sql')
+            print "Created new table " + args.table + " in file", args.dbfile
         except:
-            print "Error creating table " + sys.argv[2] + " in file", sys.argv[3]
+            print "Error creating table " + args.table + " in file", args.dbfile
             
     # Command printtable: Show table
     if sys.argv[1] == 'printtable':

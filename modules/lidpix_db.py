@@ -76,7 +76,7 @@ def add_gallery(galleryname, description, tags, users_r, users_w,
         return True
 
 
-def add_images([imagefiles], description, tags, time_photo, time_added, 
+def add_images(imagefiles, description, tags, time_photo, time_added, 
               users_r, users_w, groups_r, groups_w, table, db_filename):
     
     """ Add one or more rows with image properties to an image (gallery) table """
@@ -179,7 +179,7 @@ def show_usage():
     print """Usage: lidpix_db.py command [username|galleryname] [-t table] [-d database_file] [images]
           command can be:
           addimages    add [images] to image gallery table with [galleryname]
-          addgallery   add gallery with [galleryname] to gallery table in database_file
+          addgallery   add gallery with [galleryname] to gallery index table in database_file
           adduser      add user with [username] to user table in database_file
           deleteuser   delete user from table in database_file
           newutable    create new table (overwrite existing)
@@ -192,6 +192,9 @@ def show_usage():
           """
     sys.exit(0)
 
+def testit(table):
+    print "--- table is", table
+    
 
 if __name__ == '__main__':
     
@@ -202,12 +205,33 @@ if __name__ == '__main__':
     # https://stackoverflow.com/questions/4480075/argparse-optional-positional-arguments
 
     parser = argparse.ArgumentParser(description='Lidpix database editor')
-    parser.add_argument('cmd', metavar='command', help='command')
-    parser.add_argument('name', metavar='username|galleryname', nargs='?', help='username or galleryname')
-    parser.add_argument('--table', '-t', nargs='?', dest='table', help='table to use')
-    parser.add_argument('--dbfile', '-d', nargs='?', dest='dbfile', const='lidpix_users.db', default='lidpix_users.db', help='sqlite database file')
-    parser.add_argument('images', nargs='*', help='images')
+    #parser.add_argument('cmd', metavar='command', help='command')
+    #parser.add_argument('name', metavar='username|galleryname', nargs='?', help='username or galleryname')
+    #parser.add_argument('--table', '-t', nargs='?', dest='table', help='table to use')
+    #parser.add_argument('--dbfile', '-d', nargs='?', dest='dbfile', const='lidpix.db', default='lidpix.db', help='sqlite database file')
+    #parser.add_argument('images', nargs='*', help='images')
+    
+    subparsers = parser.add_subparsers()  # Can check this name if needed
+    
+    parser_printtable = subparsers.add_parser('printtable', help='printtable help')
+    parser_printtable.add_argument('table', help='print the specified table') 
+    #parser_printtable.add_argument('--dbfile', '-d', nargs='?', dest='dbfile', const='newusers.db', default='newusers.db', help='sqlite database file')
+    parser_printtable.set_defaults(func=print_usertable)
+    
+    #parser_addimages = subparsers.add_parser('addimages', help='addimages help')
+    
     args = parser.parse_args()
+    #print args
+    #print args.subparser_name
+    args.func(args.table, 'newusers.db')
+    
+    """
+    if args.cmd in 'adduser deleteuser':
+        table = 'users'
+    elif args.cmd ipn 'addgallery':
+        table = 'galleries'
+    
+    if args.table: table = args.table
     
     # Create new table of users or galleries
     if args.cmd == 'newutable':
@@ -246,3 +270,4 @@ if __name__ == '__main__':
     if args.cmd == 'deleteuser':
         if delete_user(args.name, args.table, args.dbfile):
             print "Deleted user %s from table %s in file %s" % (args.name, args.table, args.dbfile)
+"""

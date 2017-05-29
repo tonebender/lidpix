@@ -145,7 +145,10 @@ def delete_user(username, table, db_filename):
     else:
         return True
     
-    
+
+# Make more general "print table" function, 
+# perhaps with schema as argument for formatting?
+# Or maybe it's possible to print cols from table?
 def print_usertable(table, db_filename):
     
     """ Print the table called table in file db_filename """
@@ -175,6 +178,7 @@ def print_usertable(table, db_filename):
         return True
         
 
+# Delete this function and/or make something more generally explaining...
 def show_usage():
     print """Usage: lidpix_db.py command [username|galleryname] [-t table] [-d database_file] [images]
           command can be:
@@ -191,68 +195,64 @@ def show_usage():
           --dbfile -d  specify which sqlite database file to use
           """
     sys.exit(0)
-
-def testit(table):
-    print "--- table is", table
     
 
 if __name__ == '__main__':
     
     """ This main function handles all the shell commands for
     administering the lidpix database"""
-    
-    # https://stackoverflow.com/questions/8423895/using-argparse-in-conjunction-with-sys-argv-in-python
-    # https://stackoverflow.com/questions/4480075/argparse-optional-positional-arguments
 
     parser = argparse.ArgumentParser(description='Lidpix database editor')
-    #parser.add_argument('cmd', metavar='command', help='command')
-    #parser.add_argument('name', metavar='username|galleryname', nargs='?', help='username or galleryname')
-    #parser.add_argument('--table', '-t', nargs='?', dest='table', help='table to use')
-    #parser.add_argument('--dbfile', '-d', nargs='?', dest='dbfile', const='lidpix.db', default='lidpix.db', help='sqlite database file')
-    #parser.add_argument('images', nargs='*', help='images')
     
-    subparsers = parser.add_subparsers()  # Can check this name if needed
+    parser.add_argument('--dbfile', '-d', nargs='?', dest='dbfile', const='lidpix.db', default='lidpix.db', help='sqlite database file')
     
-    parser_printtable = subparsers.add_parser('printtable', help='printtable help')
-    parser_printtable.add_argument('table', help='print the specified table') 
-    #parser_printtable.add_argument('--dbfile', '-d', nargs='?', dest='dbfile', const='newusers.db', default='newusers.db', help='sqlite database file')
-    parser_printtable.set_defaults(func=print_usertable)
+    subparsers = parser.add_subparsers(dest='subparser_name')    
     
-    #parser_addimages = subparsers.add_parser('addimages', help='addimages help')
+    parser_printtable = subparsers.add_parser('printtable', help='print table to stdout')
+    parser_printtable.add_argument('table', help='name of the table to print') 
+    
+    parser_newutable = subparsers.add_parser('newutable', help='create new user table')
+    parser_newutable.add_argument('table', help='name of the table to create')
+    
+    parser_newgtable = subparsers.add_parser('newgtable', help='create new gallery index table')
+    parser_newgtable.add_argument('table', help='name of the table to create')
+    
+    parser_newitable = subparsers.add_parser('newitable', help='create new image gallery table')
+    parser_newitable.add_argument('table', help='name of the table to create')
+    
+    parser_adduser = subparsers.add_parser('adduser', help='add new user to user table')
+    parser_adduser.add_argument('username', help='username of the new user')
+    parser_adduser.add_argument('--table', '-t', nargs='?', const='lidpixusers', default='lidpixusers', help='table to add user to')
+    
+    parser_addimages = subparsers.add_parser('addimages', help='add images to image gallery table')
+    parser_addimages.add_argument('table', help='name of table to record images in')
+    parser_addimages.add_argument('images', nargs='*', help='image files to add')
     
     args = parser.parse_args()
-    #print args
-    #print args.subparser_name
-    args.func(args.table, 'newusers.db')
     
-    """
-    if args.cmd in 'adduser deleteuser':
-        table = 'users'
-    elif args.cmd ipn 'addgallery':
-        table = 'galleries'
     
-    if args.table: table = args.table
+    # Table operations
     
-    # Create new table of users or galleries
-    if args.cmd == 'newutable':
+    if args.subparser_name == 'printtable':
+        print_usertable(args.table, args.dbfile)
+        
+    if args.subparser_name == 'newutable':
         if new_table(args.table, args.dbfile, 'user_db_schema.sql'):
             print "Created new user table " + args.table + " in file", args.dbfile
-    elif args.cmd == 'newgtable':
-        if new_table(args.table, args.dbfile, 'gallery_db_schema.sql'):
-            print "Created new gallery table " + args.table + " in file", args.dbfile
             
-    #def add_images([imagefiles], description, tags, time_photo, time_added, 
-              # users_r, users_w, groups_r, groups_w, table, db_filename):
-              
-    if args.cmd == 'add_images':
-        if add_images():
-            print "Added images"
+    if args.subparser_name == 'newgtable':
+        if new_table(args.table, args.dbfile, 'gallery_db_schema.sql'):
+            print "Created new gallery index table " + args.table + " in file", args.dbfile
+            
+    if args.subparser_name == 'newitable':
+        if new_table(args.table, args.dbfile, 'image_db_schema.sql'):
+            print "Created new image gallery table " + args.table + " in file", args.dbfile
     
-    if args.cmd == 'printtable':
-        print_table(args.table, args.dbfile)
-
-    if args.cmd == 'adduser':
-        print "Adding user {u} ...".format(u=args.name)
+    
+    # User operations
+    
+    if args.subparser_name == 'adduser':
+        print "Adding user " + args.username + " ..."
         pw = raw_input("Please enter user's new password: ")
         pa = raw_input("Repeat password: ")
         if pw != pa:
@@ -263,11 +263,22 @@ if __name__ == '__main__':
         gr = raw_input("The groups user is member of (lower case with ; between): ")
         j = time.asctime(time.localtime(time.time()))
         
-        if add_user(args.name, hashed_pw, f, j, gr, args.table, args.dbfile):
+        if add_user(args.username, hashed_pw, f, j, gr, args.table, args.dbfile):
             print "Successfully added user %s to table %s in file %s" \
             % (args.name, args.table, args.dbfile)
 
-    if args.cmd == 'deleteuser':
-        if delete_user(args.name, args.table, args.dbfile):
+    if args.subparser_name == 'deleteuser':
+        if delete_user(args.username, args.table, args.dbfile):
             print "Deleted user %s from table %s in file %s" % (args.name, args.table, args.dbfile)
-"""
+            
+    
+    # Image gallery operations
+    
+    if args.subparser_name == 'addimages':
+        print "Going to add images to table " + args.table + ": "
+        print args.images
+        
+        # Here add some Q & A input, as with adduser above, then call add_images(...)
+    
+    #def add_images([imagefiles], description, tags, time_photo, time_added, 
+              # users_r, users_w, groups_r, groups_w, table, db_filename):

@@ -6,6 +6,7 @@
 
 import sqlite3, time, sys, argparse
 import bcrypt
+from modules.folder import get_image_info
 #from users import UserDB
 
 
@@ -53,6 +54,22 @@ def new_table(table, db_filename, schema_filename):
         return True
 
 
+def find_table(table, db_filename):
+    
+    """ Return true if table exists in db_filename, false if not """
+    
+    try:
+        conn, c = connect_to_db(db_filename)
+        tb_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name='" + table + "'"
+        fetched = conn.execute(tb_exists).fetchone()
+        conn.close()
+    except:
+        print "Error when trying to find table " + table + " in database file " + db_filename
+        return False
+    else:
+        return True if fetched else False
+
+
 def add_gallery(galleryname, description, tags, users_r, users_w, 
                 groups_r, groups_w, table, db_filename):
     
@@ -76,8 +93,8 @@ def add_gallery(galleryname, description, tags, users_r, users_w,
         return True
 
 
-def add_images(imagefiles, description, tags, time_photo, time_added, 
-              users_r, users_w, groups_r, groups_w, table, db_filename):
+def add_images(imagefiles, description, tags, time_photo, users_r, 
+               users_w, groups_r, groups_w, table, db_filename):
     
     """ Add one or more rows with image properties to an image (gallery) table """
     
@@ -86,10 +103,13 @@ def add_images(imagefiles, description, tags, time_photo, time_added,
         sql_cmd = """INSERT INTO ? (image_id, imagefile, description, tags,
             time_photo, time_added, users_r, users_w, groups_r, groups_w)
             VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
-        tyme = time.asctime(time.localtime(time.time()))
-        for i in imagefiles:
-            c.execute(sql_cmd, (table, i, time_photo, description, tags,
-                  tyme, users_r, users_w, groups_r, groups_w,))
+        time_added = time.asctime(time.localtime(time.time()))
+        print "Adding images ..."
+        for img in imagefiles:
+            time_photo = get_image_info(img).get('DateTimeOriginal', '(no time)')
+            c.execute(sql_cmd, (table, img, description, tags, time_photo,
+                  time_added, users_r, users_w, groups_r, groups_w,))
+            print img
         conn.commit()
         conn.close()
     except:
@@ -106,6 +126,7 @@ def fill_gallery(images, table, db_filename):
     return True
     
 
+# Improve this - remove format, etc.
 def add_user(username, password, fullname, joined, groups, table, db_filename):
     
     """ Add a lidpix user to the users table """
@@ -128,6 +149,7 @@ def add_user(username, password, fullname, joined, groups, table, db_filename):
         return True
         
 
+# Improve this one too
 def delete_user(username, table, db_filename):
     
     """ Remove a lidpix user from the users table """
@@ -148,7 +170,7 @@ def delete_user(username, table, db_filename):
 
 # Make more general "print table" function, 
 # perhaps with schema as argument for formatting?
-# Or maybe it's possible to print cols from table?
+# Or maybe it's possible to print cols ("keys") from table?
 def print_usertable(table, db_filename):
     
     """ Print the table called table in file db_filename """
@@ -179,6 +201,7 @@ def print_usertable(table, db_filename):
         
 
 # Delete this function and/or make something more generally explaining...
+# Maybe readme/doc is enough
 def show_usage():
     print """Usage: lidpix_db.py command [username|galleryname] [-t table] [-d database_file] [images]
           command can be:
@@ -195,6 +218,23 @@ def show_usage():
           --dbfile -d  specify which sqlite database file to use
           """
     sys.exit(0)
+    
+
+def get_user_input(genre):
+    
+    """ Get input from user and return as a tuple, to use when adding 
+    gallery, images, etc.
+        
+    genre: String to use in message, e.g. 'gallery' or 'images' """
+    
+    desc = raw_input("Enter description of %s (single line): " % genre)
+    tags = raw_input("Enter comma-separated tags describing %s (e.g. 'pets,dogs,cats'): " % genre)
+    users_r = raw_input("Users to give read permission to %s (e.g. 'silvio,vladimir'): " % genre)
+    users_w = raw_input("Users to give write permission to %s (e.g. 'barack,angela'): " % genre)
+    group_r = raw_input("Group to give read permission to %s (e.g. 'colleagues,friends'): " % genre)
+    group_w = raw_input("Group to give write permission to %s (e.g. 'management,workers'): " % genre)
+    return (desc, tags, users_r, users_w, group_r, group_w)
+    
     
 
 if __name__ == '__main__':
@@ -217,6 +257,7 @@ if __name__ == '__main__':
     parser_newgtable = subparsers.add_parser('newgtable', help='create new gallery index table')
     parser_newgtable.add_argument('table', help='name of the table to create')
     
+    # maybe remove this command and let it be done through other commands below
     parser_newitable = subparsers.add_parser('newitable', help='create new image gallery table')
     parser_newitable.add_argument('table', help='name of the table to create')
     
@@ -224,8 +265,12 @@ if __name__ == '__main__':
     parser_adduser.add_argument('username', help='username of the new user')
     parser_adduser.add_argument('--table', '-t', nargs='?', const='lidpixusers', default='lidpixusers', help='table to add user to')
     
+    parser_addgallery = subparsers.add_parser('addgallery', help='add gallery to gallery index table')
+    parser_addgallery.add_argument('table', help='name of table to record gallery in')
+    parser_addgallery.add_argument('galleryname', help='name of gallery to add to table')
+    
     parser_addimages = subparsers.add_parser('addimages', help='add images to image gallery table')
-    parser_addimages.add_argument('table', help='name of table to record images in')
+    parser_addimages.add_argument('galleryname', help='name of image gallery table to record images in') # galleryname is a table also found inside gallery index table
     parser_addimages.add_argument('images', nargs='*', help='image files to add')
     
     args = parser.parse_args()
@@ -260,7 +305,7 @@ if __name__ == '__main__':
             sys.exit(0)
         hashed_pw = bcrypt.hashpw(pw.encode('utf-8'), bcrypt.gensalt())
         f = raw_input("User's full name (first and last with space between): ")
-        gr = raw_input("The groups user is member of (lower case with ; between): ")
+        gr = raw_input("The groups user is member of (e.g. 'friends,relatives'): ").lower()
         j = time.asctime(time.localtime(time.time()))
         
         if add_user(args.username, hashed_pw, f, j, gr, args.table, args.dbfile):
@@ -274,11 +319,20 @@ if __name__ == '__main__':
     
     # Image gallery operations
     
+    if args.subparser_name == 'addgallery':
+        desc, tags, ur, uw, gr, gw = get_user_input('gallery')
+        if add_gallery(args.galleryname, desc, tags, ur, uw, gr, gw, args.table, args.dbfile):
+            print "Successfully added gallery '" + args.galleryname + "' to table '" + args.table "'"
+        
     if args.subparser_name == 'addimages':
         print "Going to add images to table " + args.table + ": "
         print args.images
+        # Here we should check if gallery exists and then create it if not, perhaps with a prompt question
+        desc, tags, ur, uw, gr, gw = get_user_input('images')
+        if add_images(args.images, desc, tags, ur, uw, gr, gw, args.table, args.dbfile):
+            print "Successfully added images to gallery '" + args.table + "'"
         
-        # Here add some Q & A input, as with adduser above, then call add_images(...)
     
-    #def add_images([imagefiles], description, tags, time_photo, time_added, 
+    
+    #def add_images([imagefiles], description, tags, time_photo, 
               # users_r, users_w, groups_r, groups_w, table, db_filename):

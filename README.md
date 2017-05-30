@@ -54,7 +54,7 @@ Databas till galleri:
 ---------------------
 
 En databasfil till hela sajtens gallerier
-En galleritabell med gallerierna
+En galleriindextabell med gallerierna
 En bildtabell per galleri
 En egen tabell med kommentarerna
 En standardmapp med bilder per galleri - kan köras över med bildsökväg
@@ -62,7 +62,7 @@ En standardmapp med bilder per galleri - kan köras över med bildsökväg
 
 Databasfil.db
 |
-|  Databas med gallerier: gallery
+|  Databas med gallerier: galleries
 |
 |  ID    Gallerinamn  Beskrivning            Tid skapad        Användare R   Användare W   Grupp R   Grupp W
 |  ---------------------------------------------------------------------------------------------------------

@@ -168,7 +168,7 @@ def get_image_info(imagefile):
     """ Read the exif info in the image and return it as a dict.
     
     imagefile: the image file with full path
-    Return: dict containing all exif info from image, or empty dict"""
+    Return: dict containing all exif info from image, or empty dict """
     
     # http://docs.wand-py.org/en/0.4.4/guide/exif.html
     
@@ -353,7 +353,7 @@ def gallery_view():
 def supply_dir():
     
     """ Supply a JSON object (string) with image & thumb names.
-        (This function has some similarities to photo_view() ) """
+        (This function has some similarities to folder_view() ) """
     
     pixdirs = current_app.config['PIXDIRSLIST']
 

@@ -115,7 +115,7 @@ def add_gallery(galleryname, description, tags, users_r, users_w,
         return True
 
 
-def add_images(imagefiles, description, tags, time_photo, users_r, 
+def add_images(imagefiles, description, tags, users_r, 
                users_w, groups_r, groups_w, table, db_filename):
     
     """ Add one or more rows with image properties to an image (gallery) table """
@@ -130,14 +130,13 @@ def add_images(imagefiles, description, tags, time_photo, users_r,
         print "Adding images ..."
         for img in imagefiles:
             time_photo = get_image_info(img).get('DateTimeOriginal', '(no time)')
-            c.execute(sql_cmd, (table, img, description, tags, time_photo,
+            c.execute(sql_cmd, (img, description, tags, time_photo,
                   time_added, users_r, users_w, groups_r, groups_w,))
             print img
         conn.commit()
         conn.close()
     except Exception as e:
-        print "Error when trying to add image " + imagefile + \
-        " in table " + table + " in db file " + db_filename
+        print "Error when trying to add images in table", table, "in db file", db_filename
         print e
         return False
     else:
@@ -358,7 +357,7 @@ if __name__ == '__main__':
         desc, tags, ur, uw, gr, gw = get_user_input('gallery')
         if add_gallery(args.galleryname, desc, tags, ur, uw, gr, gw, 'galleryindex', args.dbfile):
             if new_table(args.galleryname, args.dbfile, 'image_db_schema.sql'): # Create image gallery table if not there
-                print "Successfully added gallery '" + args.galleryname + "' to galleryindex table"
+                print "Successfully added gallery", args.galleryname, "to galleryindex table"
         
     if args.subparser_name == 'addimages':
         if not find_table(args.galleryname, args.dbfile): # Can't find specified gallery
@@ -370,4 +369,4 @@ if __name__ == '__main__':
         else:
             desc, tags, ur, uw, gr, gw = get_user_input('images')
         if add_images(args.images, desc, tags, ur, uw, gr, gw, args.galleryname, args.dbfile):
-            print "Successfully added images to gallery '" + args.galleryname + "'"
+            print "Successfully added images to gallery" + args.galleryname

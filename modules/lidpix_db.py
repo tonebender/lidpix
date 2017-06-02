@@ -6,10 +6,15 @@
 
 import sqlite3, time, sys, argparse
 import bcrypt
-from modules.folder import get_image_info
+from folder import get_image_info
 #from users import UserDB
 
 
+def safe(s):
+    """ Sanitize string s. Only allow a-z, A-Z, 0-9 and _ """
+    return ("".join(c for c in s if c.isalnum() or c == '_').rstrip())
+
+    
 def connect_to_db(db_filename):
     
     """ Connect to an SQLite database and return connection
@@ -19,7 +24,7 @@ def connect_to_db(db_filename):
     
     try:
         connection = sqlite3.connect(db_filename)
-    except:
+    except Exception as e:
         print "Could not open database:", db_filename
         return None
     else:
@@ -29,7 +34,8 @@ def connect_to_db(db_filename):
 
 def new_table(table, db_filename, schema_filename):
     
-    """ Create a new table in database file
+    """ Create a new table in database file. Do nothing if specified
+    table already exists.
     
     table: Name of table
     db_filename: Database file
@@ -37,17 +43,12 @@ def new_table(table, db_filename, schema_filename):
     
     try:
         conn, c = connect_to_db(db_filename)
-        
-        c.execute("DROP TABLE IF EXISTS " + table + ";") # Delete existing
-        
         with open(schema_filename, mode='r') as f:
-            scriptlines = "CREATE TABLE " + table + " (" + f.read() + ");"
-        
-        c.execute("DROP TABLE IF EXISTS " + table + ";")
+            scriptlines = "CREATE TABLE IF NOT EXISTS " + table + "\n(" + f.read() + ");"
         c.executescript(scriptlines)
         conn.commit()
         conn.close()
-    except:
+    except Exception as e:
         print "Error when trying to create table " + table + " in db file " + db_filename
         return False
     else:
@@ -60,14 +61,33 @@ def find_table(table, db_filename):
     
     try:
         conn, c = connect_to_db(db_filename)
-        tb_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name='" + table + "'"
+        if table == '*':
+            tb_exists = "SELECT name FROM sqlite_master WHERE type='table'"
+        else:
+            tb_exists = "SELECT name FROM sqlite_master WHERE type='table' AND name='" + table + "'"
         fetched = conn.execute(tb_exists).fetchone()
         conn.close()
-    except:
+    except Exception as e:
         print "Error when trying to find table " + table + " in database file " + db_filename
         return False
     else:
-        return True if fetched else False
+        return fetched
+        
+
+def delete_table(table, db_filename):
+    
+    """ Delete existing table in database file """
+    
+    try:
+        conn, c = connect_to_db(db_filename)
+        c.execute("DROP TABLE IF EXISTS " + safe(table) + ";")
+        conn.close()
+    except Exception as e:
+        print "Error when trying to delete table " + table + " in database file " + db_filename
+        return False
+        print e
+    else:
+        return True
 
 
 def add_gallery(galleryname, description, tags, users_r, users_w, 
@@ -77,17 +97,19 @@ def add_gallery(galleryname, description, tags, users_r, users_w,
     
     try:
         conn, c = connect_to_db(db_filename)
-        sql_cmd = """INSERT INTO ? (gallery_id, gallery_name, description, 
-        tags, time_added, users_r, users_w, groups_r, groups_w)
-        VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?);"""
-        c.execute(sql_cmd, (table, galleryname, description, tags,
+        sql_cmd = """INSERT INTO {t}
+        (gallery_id, gallery_name, description, tags, time_added, 
+        users_r, users_w, groups_r, groups_w)
+        VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?);""".format(t=safe(table))
+        c.execute(sql_cmd, (galleryname, description, tags,
                             time.asctime(time.localtime(time.time())),
                             users_r, users_w, groups_r, groups_w,))
         conn.commit()
         conn.close()
-    except:
+    except Exception as e:
         print "Error when trying to add gallery in table " + table + \
         " in db file " + db_filename
+        print e
         return False
     else:
         return True
@@ -100,9 +122,10 @@ def add_images(imagefiles, description, tags, time_photo, users_r,
     
     try:
         conn, c = connect_to_db(db_filename)
-        sql_cmd = """INSERT INTO ? (image_id, imagefile, description, tags,
-            time_photo, time_added, users_r, users_w, groups_r, groups_w)
-            VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
+        sql_cmd = """INSERT INTO {t} 
+            (image_id, imagefile, description, tags, time_photo, 
+            time_added, users_r, users_w, groups_r, groups_w)
+            VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?);""".format(t=safe(table))
         time_added = time.asctime(time.localtime(time.time()))
         print "Adding images ..."
         for img in imagefiles:
@@ -112,9 +135,10 @@ def add_images(imagefiles, description, tags, time_photo, users_r,
             print img
         conn.commit()
         conn.close()
-    except:
+    except Exception as e:
         print "Error when trying to add image " + imagefile + \
         " in table " + table + " in db file " + db_filename
+        print e
         return False
     else:
         return True
@@ -141,9 +165,10 @@ def add_user(username, password, fullname, joined, groups, table, db_filename):
         c.execute(sql_command)
         conn.commit()
         conn.close()
-    except:
+    except Exception as e:
         print "Error when trying to add user " + username + \
         " in table " + table + " in db file " + db_filename
+        print e
         return False
     else:
         return True
@@ -160,44 +185,32 @@ def delete_user(username, table, db_filename):
         c.execute(command, (username,))
         conn.commit()
         conn.close()
-    except:
+    except Exception as e:
         print "Error when trying to delete user " + username + \
         " from table " + table + " in file " + db_filename
+        print e
         return False
     else:
         return True
     
 
-# Make more general "print table" function, 
-# perhaps with schema as argument for formatting?
-# Or maybe it's possible to print cols ("keys") from table?
-def print_usertable(table, db_filename):
+def print_table(table, db_filename):
     
     """ Print the table called table in file db_filename """
     
     try:
         conn, c = connect_to_db(db_filename)
-        c.execute('SELECT * FROM {table}'.format(table=table))
-        rows = c.fetchall()
+        rows = c.execute('SELECT * FROM {t}'.format(t=safe(table))).fetchall()
+        cols = c.execute("PRAGMA table_info({t})".format(t=safe(table))).fetchall()
         conn.close()
-        for r in rows:
-            print ""
-            print "User number:", r[0]
-            print "Username:", r[1]
-            print "Password:", r[2]
-            print "Full name:", r[3]
-            print "Member of groups:", r[4]
-            print "Joined date:", r[5]
-            print "Active:", r[6]
-            print "Confirm deletions:", r[7]
-            print "View mode (thumbnail columns):", r[8]
-            print "GUI Theme:", r[9]
-    except:
-        print "Error when trying to print table " + table + \
-        " in database file " + db_filename
-        return False
-    else:
-        return True
+        print '\nTABLE           ', table, '\n'
+        for row in rows:
+            for i in range(len(cols)):
+                print cols[i][1].ljust(16), (str(row[i]) if isinstance(row[i],(int,long)) else row[i])
+            print ''
+    except Exception as e:
+        print "Error when trying to print table", table
+        print e
         
 
 # Delete this function and/or make something more generally explaining...
@@ -255,19 +268,25 @@ if __name__ == '__main__':
     parser_newutable.add_argument('table', help='name of the table to create')
     
     parser_newgtable = subparsers.add_parser('newgtable', help='create new gallery index table')
-    parser_newgtable.add_argument('table', help='name of the table to create')
+    #parser_newgtable.add_argument('table', help='name of the table to create')
     
     # maybe remove this command and let it be done through other commands below
     parser_newitable = subparsers.add_parser('newitable', help='create new image gallery table')
     parser_newitable.add_argument('table', help='name of the table to create')
     
+    parser_deltable = subparsers.add_parser('deltable', help='delete table')
+    parser_deltable.add_argument('table', help='name of table to delete')
+    
+    parser_findtable = subparsers.add_parser('findtable', help='find table')
+    parser_findtable.add_argument('table', help='name of table to find')
+    
     parser_adduser = subparsers.add_parser('adduser', help='add new user to user table')
     parser_adduser.add_argument('username', help='username of the new user')
     parser_adduser.add_argument('--table', '-t', nargs='?', const='lidpixusers', default='lidpixusers', help='table to add user to')
     
-    parser_addgallery = subparsers.add_parser('addgallery', help='add gallery to gallery index table')
-    parser_addgallery.add_argument('table', help='name of table to record gallery in')
-    parser_addgallery.add_argument('galleryname', help='name of gallery to add to table')
+    parser_newgallery = subparsers.add_parser('newgallery', help='create new gallery (add row to gallery index table, and create image gallery table)')
+    #parser_newgallery.add_argument('table', help='name of gallery index table to record the new gallery in (e.g. "galleries")')
+    parser_newgallery.add_argument('galleryname', help='name of gallery to add to table')
     
     parser_addimages = subparsers.add_parser('addimages', help='add images to image gallery table')
     parser_addimages.add_argument('galleryname', help='name of image gallery table to record images in') # galleryname is a table also found inside gallery index table
@@ -276,22 +295,37 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     
-    # Table operations
+    # "Low level" table operations
     
     if args.subparser_name == 'printtable':
-        print_usertable(args.table, args.dbfile)
+        print_table(args.table, args.dbfile)
+        
+    if args.subparser_name == 'deltable':
+        if raw_input("Really delete table " + args.table + "? (y/n) ") in 'Yy':
+            if delete_table(args.table, args.dbfile):
+                print "Deleted table", args.table, "in file", args.dbfile
+                
+    if args.subparser_name == 'findtable':
+        if find_table(args.table, args.dbfile):
+            print "Table", args.table, "exists"
+        else:
+            print "Table", args.table, "not found"
         
     if args.subparser_name == 'newutable':
         if new_table(args.table, args.dbfile, 'user_db_schema.sql'):
-            print "Created new user table " + args.table + " in file", args.dbfile
+            print "Created new user table", args.table, "in file", args.dbfile
             
     if args.subparser_name == 'newgtable':
-        if new_table(args.table, args.dbfile, 'gallery_db_schema.sql'):
-            print "Created new gallery index table " + args.table + " in file", args.dbfile
+        if new_table('galleryindex', args.dbfile, 'gallery_db_schema.sql'):
+            print "Created new gallery index table 'galleryindex' in file", args.dbfile
             
     if args.subparser_name == 'newitable':
         if new_table(args.table, args.dbfile, 'image_db_schema.sql'):
-            print "Created new image gallery table " + args.table + " in file", args.dbfile
+            print "Created new image gallery table", args.table, "in file", args.dbfile
+    
+    
+    # Need "delete row" etc.
+    # mydata = c.execute("DELETE FROM Zoznam WHERE Name=?", (data3,))
     
     
     # User operations
@@ -319,20 +353,21 @@ if __name__ == '__main__':
     
     # Image gallery operations
     
-    if args.subparser_name == 'addgallery':
+    if args.subparser_name == 'newgallery':
+        new_table('galleryindex', args.dbfile, 'gallery_db_schema.sql') # Create gallery index table if not there
         desc, tags, ur, uw, gr, gw = get_user_input('gallery')
-        if add_gallery(args.galleryname, desc, tags, ur, uw, gr, gw, args.table, args.dbfile):
-            print "Successfully added gallery '" + args.galleryname + "' to table '" + args.table "'"
+        if add_gallery(args.galleryname, desc, tags, ur, uw, gr, gw, 'galleryindex', args.dbfile):
+            if new_table(args.galleryname, args.dbfile, 'image_db_schema.sql'): # Create image gallery table if not there
+                print "Successfully added gallery '" + args.galleryname + "' to galleryindex table"
         
     if args.subparser_name == 'addimages':
-        print "Going to add images to table " + args.table + ": "
-        print args.images
-        # Here we should check if gallery exists and then create it if not, perhaps with a prompt question
-        desc, tags, ur, uw, gr, gw = get_user_input('images')
-        if add_images(args.images, desc, tags, ur, uw, gr, gw, args.table, args.dbfile):
-            print "Successfully added images to gallery '" + args.table + "'"
-        
-    
-    
-    #def add_images([imagefiles], description, tags, time_photo, 
-              # users_r, users_w, groups_r, groups_w, table, db_filename):
+        if not find_table(args.galleryname, args.dbfile): # Can't find specified gallery
+            print "Gallery", args.galleryname, "not found. Will create it now."
+            new_table('galleryindex', args.dbfile, 'gallery_db_schema.sql') # Create galleryindex if not existing
+            desc, tags, ur, uw, gr, gw = get_user_input('gallery')
+            add_gallery(args.galleryname, desc, tags, ur, uw, gr, gw, 'galleryindex', args.dbfile) # Add to gallery index
+            new_table(args.galleryname, args.dbfile, 'image_db_schema.sql') # Create image gallery table
+        else:
+            desc, tags, ur, uw, gr, gw = get_user_input('images')
+        if add_images(args.images, desc, tags, ur, uw, gr, gw, args.galleryname, args.dbfile):
+            print "Successfully added images to gallery '" + args.galleryname + "'"

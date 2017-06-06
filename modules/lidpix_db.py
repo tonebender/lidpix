@@ -4,7 +4,7 @@
 # See show_usage() below for how to use it.
 
 
-import sqlite3, time, sys, argparse
+import sqlite3, time, sys, argparse, os
 import bcrypt
 from folder import get_image_info
 #from users import UserDB
@@ -90,18 +90,18 @@ def delete_table(table, db_filename):
         return True
 
 
-def add_gallery(galleryname, description, tags, users_r, users_w, 
-                groups_r, groups_w, table, db_filename):
+def add_gallery(galleryname, defpath, description, tags, users_r, 
+                users_w, groups_r, groups_w, table, db_filename):
     
     """ Add a row with gallery properties to a gallery index table """
     
     try:
         conn, c = connect_to_db(db_filename)
         sql_cmd = """INSERT INTO {t}
-        (gallery_id, gallery_name, description, tags, time_added, 
-        users_r, users_w, groups_r, groups_w)
-        VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?);""".format(t=safe(table))
-        c.execute(sql_cmd, (galleryname, description, tags,
+        (gallery_id, gallery_name, defpath, description, tags, 
+        time_added, users_r, users_w, groups_r, groups_w)
+        VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?);""".format(t=safe(table))
+        c.execute(sql_cmd, (galleryname, defpath, description, tags,
                             time.asctime(time.localtime(time.time())),
                             users_r, users_w, groups_r, groups_w,))
         conn.commit()
@@ -130,9 +130,10 @@ def add_images(imagefiles, description, tags, users_r,
         print "Adding images ..."
         for img in imagefiles:
             time_photo = get_image_info(img).get('DateTimeOriginal', '(no time)')
-            c.execute(sql_cmd, (img, description, tags, time_photo,
+            realimg = os.path.realpath(img)
+            c.execute(sql_cmd, (realimg, description, tags, time_photo,
                   time_added, users_r, users_w, groups_r, groups_w,))
-            print img
+            print realimg
         conn.commit()
         conn.close()
     except Exception as e:
@@ -247,7 +248,14 @@ def get_user_input(genre):
     group_w = raw_input("Group to give write permission to %s (e.g. 'management,workers'): " % genre)
     return (desc, tags, users_r, users_w, group_r, group_w)
     
-    
+
+def get_defpath(defpath):
+    """ Let user specify default path for images in gallery """
+    userpath = raw_input("Base path for images [%s]: " % defpath)
+    if userpath == '':
+        userpath = defpath
+    return userpath
+
 
 if __name__ == '__main__':
     
@@ -256,6 +264,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Lidpix database editor')
     
+    # const is the default when there are zero values given, default is default when no arg is given at all
     parser.add_argument('--dbfile', '-d', nargs='?', dest='dbfile', const='lidpix.db', default='lidpix.db', help='sqlite database file')
     
     subparsers = parser.add_subparsers(dest='subparser_name')    
@@ -284,12 +293,13 @@ if __name__ == '__main__':
     parser_adduser.add_argument('--table', '-t', nargs='?', const='lidpixusers', default='lidpixusers', help='table to add user to')
     
     parser_newgallery = subparsers.add_parser('newgallery', help='create new gallery (add row to gallery index table, and create image gallery table)')
-    #parser_newgallery.add_argument('table', help='name of gallery index table to record the new gallery in (e.g. "galleries")')
     parser_newgallery.add_argument('galleryname', help='name of gallery to add to table')
+    #parser_newgallery.add_argument('--defpath', '-p', nargs='*', default='.', help='base path for gallery (where images are located by default)')
     
     parser_addimages = subparsers.add_parser('addimages', help='add images to image gallery table')
-    parser_addimages.add_argument('galleryname', help='name of image gallery table to record images in') # galleryname is a table also found inside gallery index table
+    parser_addimages.add_argument('galleryname', help='name of image gallery table to record images in') # galleryname is also recorded (on a row) in gallery index table
     parser_addimages.add_argument('images', nargs='*', help='image files to add')
+    #parser_newgallery.add_argument('--defpath', '-p', nargs='*', default='.', help='base path for images (where they are located by default)')
     
     args = parser.parse_args()
     
@@ -354,19 +364,21 @@ if __name__ == '__main__':
     
     if args.subparser_name == 'newgallery':
         new_table('galleryindex', args.dbfile, 'gallery_db_schema.sql') # Create gallery index table if not there
+        defpath = get_defpath(os.getcwd())
         desc, tags, ur, uw, gr, gw = get_user_input('gallery')
-        if add_gallery(args.galleryname, desc, tags, ur, uw, gr, gw, 'galleryindex', args.dbfile):
+        if add_gallery(args.galleryname, desc, defpath, tags, ur, uw, gr, gw, 'galleryindex', args.dbfile):
             if new_table(args.galleryname, args.dbfile, 'image_db_schema.sql'): # Create image gallery table if not there
                 print "Successfully added gallery", args.galleryname, "to galleryindex table"
         
     if args.subparser_name == 'addimages':
         if not find_table(args.galleryname, args.dbfile): # Can't find specified gallery
             print "Gallery", args.galleryname, "not found. Will create it now."
-            new_table('galleryindex', args.dbfile, 'gallery_db_schema.sql') # Create galleryindex if not existing
-            desc, tags, ur, uw, gr, gw = get_user_input('gallery')
-            add_gallery(args.galleryname, desc, tags, ur, uw, gr, gw, 'galleryindex', args.dbfile) # Add to gallery index
+            new_table('galleryindex', args.dbfile, 'gallery_db_schema.sql') # Create the galleryindex if not existing
+            defpath = get_defpath(os.path.dirname(os.path.realpath(args.images[0]))) # Directory of first image is default defpath
+            desc, tags, ur, uw, gr, gw = get_user_input('gallery', )
+            add_gallery(args.galleryname, desc, defpath, tags, ur, uw, gr, gw, 'galleryindex', args.dbfile) # Add to gallery index
             new_table(args.galleryname, args.dbfile, 'image_db_schema.sql') # Create image gallery table
         else:
             desc, tags, ur, uw, gr, gw = get_user_input('images')
-        if add_images(args.images, desc, tags, ur, uw, gr, gw, args.galleryname, args.dbfile):
-            print "Successfully added images to gallery" + args.galleryname
+        if add_images(args.images, desc, tags, ur, uw, gr, gw, args.galleryname, args.dbfile): # Finally, add images
+            print "Successfully added images to gallery", args.galleryname

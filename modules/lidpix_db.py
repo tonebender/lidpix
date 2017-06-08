@@ -10,6 +10,7 @@ from folder import get_image_info
 #from users import UserDB
 
 
+
 def safe(s):
     """ Sanitize string s. Only allow a-z, A-Z, 0-9 and _ """
     return ("".join(c for c in s if c.isalnum() or c == '_').rstrip())
@@ -142,14 +143,8 @@ def add_images(imagefiles, description, tags, users_r,
         return False
     else:
         return True
-    
 
-def fill_gallery(images, table, db_filename):
     
-    """ Add a number of images to a gallery """
-    return True
-    
-
 # Improve this - remove format, etc.
 def add_user(username, password, fullname, joined, groups, table, db_filename):
     

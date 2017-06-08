@@ -223,7 +223,7 @@ $(document).ready(function() {
         
         $.getJSON({
             type: 'GET',
-            url: 'http://localhost:5080/getdir',
+            url: 'http://localhost:5080/folder_json',
             data: 'imagedir=' + imagedir,
             success:function(feed) {
                 var real_file_url = '';

@@ -6,24 +6,31 @@ from flask import Flask, request, session, redirect, url_for, abort, \
 from flask_login import login_required
 import authz, folder
 # from modules import authz, folder
-from lidpix_db import *
+from lidpix_db import *  # just select needed ones!
 
 gallery = Blueprint('gallery', __name__)
 
 
-class Galleryprop:
-    def __init__(self, gallery_name, users_r, users_w, groups_r, groups_w):
+class Gallery:
+    def __init__(self, gallery_id, gallery_name, defpath, desc, tags, time_added, users_r, users_w, groups_r, groups_w):
+        self.gallery_id = gallery_id
         self.gallery_name = gallery_name
+        self.defpath = defpath
+        self.desc = desc
+        self.tags = tags
+        self.time_added = time_added
         self.users_r = users_r
         self.users_w = users_w
         self.groups_r = groups_r
         self.groups_w = groups_w
         
-class Galleryfile:
-    def __init__(self, image_id, imagefile, time_photo, time_added, 
+class Img:
+    def __init__(self, image_id, imagefile, desc, tags, time_photo, time_added, 
                  users_r, users_w, groups_r, groups_w):
         self.image_id = image_id
         self.imagefile = imagefile
+        self.desc = desc
+        self.tags = tags        
         self.time_photo = time_photo
         self.time_added = time_added
         self.users_r = users_r
@@ -32,15 +39,22 @@ class Galleryfile:
         self.groups_w = groups_w
 
 
-def gb_get_gallery_properties():
+def db_get_galleryprops(galleryname):
     
     """ Get row with gallery properties in gallery db """
     
-    return Galleryprop_object
+    return Gallery_object
     
     
-def db_get_image():
+def db_get_img(something):
     
     """ Get row of data for one image in gallery db """
     
-    return Galleryfile_object
+    return Img_object
+
+
+def db_get_images(galleryname):
+    
+    """ Get all rows (images) from a gallery in db """
+    
+    return list_of_Img_objects

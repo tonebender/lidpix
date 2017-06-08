@@ -7,7 +7,9 @@ from werkzeug.utils import secure_filename
 from wand.image import Image
 from flask_login import login_required
 from wtforms import Form, StringField, BooleanField, validators
+#from lidpix_db import 
 import authz
+
 
 folder = Blueprint('folder', __name__)
 
@@ -278,14 +280,22 @@ def servethumb():
 
 
 @folder.route('/folder', methods=['GET', 'POST'])
+@folder.route('/folder_json', methods=['GET'])
 @login_required
 def folder_view():
     
     """ 
-    Show a folder with thumbnails 
+    Render folder with thumbnails (/folder)
+    or provide thumbnails as JSON (/folder_json)
+    (Some of the stuff in the non-json case is just for 
+    non-javascript users.)
     
     GET: Get image directory and thumbsize from URL keyword; 
-         prep thumbnails; show folder.html with thumbnails
+         prep thumbnails;
+           show folder.html
+           or
+           send json object with thumbnails
+             
     POST: Get new image directory from form and call this again
     """
     
@@ -308,33 +318,35 @@ def folder_view():
         if not rootdir:
             flash('Forbidden. Directory not setup for access to lidpix.')
             return redirect(url_for('.folder_view', imagedir = pixdirs[0]))
-            
-        # Create a list of directory paths & names for the breadcrumbs buttons
-        dirs = get_breadcrumbs(imagedir, rootdir)
         
         # Create a list of FolderFile objects from all the files in imagedir
-        # (Only used by non-javascript browsers)
         files = create_img_objects(imagedir)
         
-        # Create the settings form
-        settingsform = SettingsForm(request.form)
-        
-        return render_template('folder.html', username=authz.current_user.username,
-                                files = files,
-                                imagedir = imagedir,
-                                dirs = dirs,
-                                thumbsize = thumbsize,
-                                settingsform = settingsform)
+        if 'folder_json' in request.path: # Supply JSON
+            json_files = json.dumps([f.to_json() for f in files])
+            return json_files
+        else:                  # Supply folder view
+            dirs = get_breadcrumbs(imagedir, rootdir)
+            settingsform = SettingsForm(request.form)            
+            return render_template('folder.html', username=authz.current_user.username,
+                                    files = files,
+                                    imagedir = imagedir,
+                                    dirs = dirs,
+                                    thumbsize = thumbsize,
+                                    settingsform = settingsform)
 
 
-@folder.route('/gallery', methods=['GET'])
+@folder.route('/gallery/<galleryname>', methods=['GET'])
 @login_required
-def gallery_view():
+def gallery_view(galleryname):
     
     """Show a gallery with thumbnails/images found through database
     
     GET: Get gallery name from URL keyword and look it up in the db, und zo weiter
     """
+    
+    #galleryname = request.args.get('gallery', default='defaultgallery')
+    
     
     # Find database
     # Check user permissions
@@ -346,34 +358,6 @@ def gallery_view():
     # No need for ajax since visitor is not going to edit afterwards - OR NOT?
     
     return render_template('gallery.html')
-
-
-@folder.route('/getdir', methods=['GET'])
-@login_required
-def supply_dir():
-    
-    """ Supply a JSON object (string) with image & thumb names.
-        (This function has some similarities to folder_view() ) """
-    
-    pixdirs = current_app.config['PIXDIRSLIST']
-
-    # Get url keywords
-    thumbsize = request.args.get('thumbsize', default='200x')
-    imagedir = os.path.abspath(request.args.get('imagedir', default=pixdirs[0]))
-    
-    # Find the root dir of the image dir, abort if it's not valid
-    rootdir = get_rootdir(imagedir, pixdirs)
-    if not rootdir:
-        flash('Forbidden. Directory not setup for access to lidpix.')
-        return redirect(url_for('.folder_view', imagedir = pixdirs[0]))
-    
-    # Create a list of FolderFile objects from all the files in imagedir
-    files = create_img_objects(imagedir)
-    
-    # Convert the files list to json format
-    json_files = json.dumps([f.to_json() for f in files])
-
-    return json_files
 
 
 # This function is not finished!

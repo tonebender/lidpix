@@ -6,7 +6,8 @@
 
 import sqlite3, time, sys, argparse, os
 import bcrypt
-from folder import get_image_info
+import folder
+#from folder import get_image_info
 #from users import UserDB
 
 
@@ -16,52 +17,52 @@ def safe(s):
     return ("".join(c for c in s if c.isalnum() or c == '_').rstrip())
 
     
-def connect_to_db(db_filename):
+def connect_to_db(db_file):
     
     """ Connect to an SQLite database and return connection
     
-    db_filename: File with SQLite database in it
+    db_file: File with SQLite database in it
     Return: Tuple with connection and cursor """
     
     try:
-        connection = sqlite3.connect(db_filename)
+        connection = sqlite3.connect(db_file)
     except Exception as e:
-        print "Could not open database:", db_filename
+        print "Could not open database:", db_file
         return None
     else:
         c = connection.cursor()
         return connection, c
 
 
-def new_table(table, db_filename, schema_filename):
+def new_table(table, db_file, schema_filename):
     
     """ Create a new table in database file. Do nothing if specified
     table already exists.
     
     table: Name of table
-    db_filename: Database file
+    db_file: Database file
     schema_filename: File with SQLite schema """
     
     try:
-        conn, c = connect_to_db(db_filename)
+        conn, c = connect_to_db(db_file)
         with open(schema_filename, mode='r') as f:
             scriptlines = "CREATE TABLE IF NOT EXISTS " + table + "\n(" + f.read() + ");"
         c.executescript(scriptlines)
         conn.commit()
         conn.close()
     except Exception as e:
-        print "Error when trying to create table " + table + " in db file " + db_filename
+        print "Error when trying to create table " + table + " in db file " + db_file
         return False
     else:
         return True
 
 
-def find_table(table, db_filename):
+def find_table(table, db_file):
     
-    """ Return true if table exists in db_filename, false if not """
+    """ Return true if table exists in db_file, false if not """
     
     try:
-        conn, c = connect_to_db(db_filename)
+        conn, c = connect_to_db(db_file)
         if table == '*':
             tb_exists = "SELECT name FROM sqlite_master WHERE type='table'"
         else:
@@ -69,47 +70,81 @@ def find_table(table, db_filename):
         fetched = conn.execute(tb_exists).fetchone()
         conn.close()
     except Exception as e:
-        print "Error when trying to find table " + table + " in database file " + db_filename
+        print "Error when trying to find table " + table + " in database file " + db_file
         return False
     else:
         return fetched
         
 
-def delete_table(table, db_filename):
+def delete_table(table, db_file):
     
     """ Delete existing table in database file """
     
     try:
-        conn, c = connect_to_db(db_filename)
+        conn, c = connect_to_db(db_file)
         c.execute("DROP TABLE IF EXISTS " + safe(table) + ";")
         conn.close()
     except Exception as e:
-        print "Error when trying to delete table " + table + " in database file " + db_filename
-        return False
+        print "Error when trying to delete table " + table + " in database file " + db_file
         print e
+        return False
     else:
         return True
 
 
-def add_gallery(galleryname, defpath, description, tags, users_r, 
-                users_w, groups_r, groups_w, table, db_filename):
+def get_row(column, value, table, db_file):
+
+    """ Get contents of all columns in a row that match a certain value in 1 column.
+    Return as a list with one tuple. """
+    
+    try:
+        conn, c = connect_to_db(db_file)    
+        c.execute('SELECT * FROM {t} WHERE {col}="{value}"'.format(t=safe(table), 
+                  col=safe(column), value=safe(value)))
+        row = c.fetchall()
+        conn.close()
+        return row
+    except Exception as e:
+        print "Error when trying to fetch row in table", table, "in database file", db_file
+        print e
+        return []
+
+
+def get_all_rows(table, db_file):
+
+    """ Get all rows in table, return it as a list with a tuple for each row """
+    
+    try:
+        conn, c = connect_to_db(db_file)    
+        c.execute('SELECT * FROM {t}'.format(t=safe(table)))
+        allrows = c.fetchall()
+        conn.close()
+        return allrows
+    except Exception as e:
+        print "Error when trying to fetch all rows in table", table, "in database file", db_file
+        print e
+        return []
+        
+
+def add_gallery(galleryname, defpath, description, tags, zipfile, 
+                users_r, users_w, groups_r, groups_w, table, db_file):
     
     """ Add a row with gallery properties to a gallery index table """
     
     try:
-        conn, c = connect_to_db(db_filename)
+        conn, c = connect_to_db(db_file)
         sql_cmd = """INSERT INTO {t}
         (gallery_id, gallery_name, defpath, description, tags, 
-        time_added, users_r, users_w, groups_r, groups_w)
-        VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?);""".format(t=safe(table))
+        time_added, zipfile, users_r, users_w, groups_r, groups_w)
+        VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""".format(t=safe(table))
         c.execute(sql_cmd, (galleryname, defpath, description, tags,
                             time.asctime(time.localtime(time.time())),
-                            users_r, users_w, groups_r, groups_w,))
+                            zipfile, users_r, users_w, groups_r, groups_w,))
         conn.commit()
         conn.close()
     except Exception as e:
         print "Error when trying to add gallery in table " + table + \
-        " in db file " + db_filename
+        " in db file " + db_file
         print e
         return False
     else:
@@ -117,12 +152,12 @@ def add_gallery(galleryname, defpath, description, tags, users_r,
 
 
 def add_images(imagefiles, description, tags, users_r, 
-               users_w, groups_r, groups_w, table, db_filename):
+               users_w, groups_r, groups_w, table, db_file):
     
     """ Add one or more rows with image properties to an image (gallery) table """
     
     try:
-        conn, c = connect_to_db(db_filename)
+        conn, c = connect_to_db(db_file)
         sql_cmd = """INSERT INTO {t} 
             (image_id, imagefile, description, tags, time_photo, 
             time_added, users_r, users_w, groups_r, groups_w)
@@ -130,7 +165,7 @@ def add_images(imagefiles, description, tags, users_r,
         time_added = time.asctime(time.localtime(time.time()))
         print "Adding images ..."
         for img in imagefiles:
-            time_photo = get_image_info(img).get('DateTimeOriginal', '(no time)')
+            time_photo = folder.get_image_info(img).get('DateTimeOriginal', '(no time)')
             realimg = os.path.realpath(img)
             c.execute(sql_cmd, (realimg, description, tags, time_photo,
                   time_added, users_r, users_w, groups_r, groups_w,))
@@ -138,7 +173,7 @@ def add_images(imagefiles, description, tags, users_r,
         conn.commit()
         conn.close()
     except Exception as e:
-        print "Error when trying to add images in table", table, "in db file", db_filename
+        print "Error when trying to add images in table", table, "in db file", db_file
         print e
         return False
     else:
@@ -146,12 +181,12 @@ def add_images(imagefiles, description, tags, users_r,
 
     
 # Improve this - remove format, etc.
-def add_user(username, password, fullname, joined, groups, table, db_filename):
+def add_user(username, password, fullname, joined, groups, table, db_file):
     
     """ Add a lidpix user to the users table """
     
     try:
-        conn, c = connect_to_db(db_filename)
+        conn, c = connect_to_db(db_file)
         format_str = """INSERT INTO {table} (user_nr, username, password,
         fullname, groups, joining, active, confirmdelete, viewmode, theme)
         VALUES (NULL, "{username}", "{password}", "{fullname}", "{groups}", "{joined}", 1, 1, 10, "default");"""
@@ -162,7 +197,7 @@ def add_user(username, password, fullname, joined, groups, table, db_filename):
         conn.close()
     except Exception as e:
         print "Error when trying to add user " + username + \
-        " in table " + table + " in db file " + db_filename
+        " in table " + table + " in db file " + db_file
         print e
         return False
     else:
@@ -170,39 +205,42 @@ def add_user(username, password, fullname, joined, groups, table, db_filename):
         
 
 # Improve this one too
-def delete_user(username, table, db_filename):
+def delete_user(username, table, db_file):
     
     """ Remove a lidpix user from the users table """
     
     try:
-        conn, c = connect_to_db(db_filename)
+        conn, c = connect_to_db(db_file)
         command = "DELETE FROM {table} WHERE username =?".format(table=table)
         c.execute(command, (username,))
         conn.commit()
         conn.close()
     except Exception as e:
         print "Error when trying to delete user " + username + \
-        " from table " + table + " in file " + db_filename
+        " from table " + table + " in file " + db_file
         print e
         return False
     else:
         return True
     
 
-def print_table(table, db_filename):
+def print_table(table, db_file):
     
-    """ Print the table called table in file db_filename """
+    """ Print the table called table in file db_file """
     
     try:
-        conn, c = connect_to_db(db_filename)
+        conn, c = connect_to_db(db_file)
         rows = c.execute('SELECT * FROM {t}'.format(t=safe(table))).fetchall()
         cols = c.execute("PRAGMA table_info({t})".format(t=safe(table))).fetchall()
         conn.close()
         print '\nTABLE           ', table, '\n'
+        r = 1
         for row in rows:
+            print "ROW", r
             for i in range(len(cols)):
-                print cols[i][1].ljust(16), (str(row[i]) if isinstance(row[i],(int,long)) else row[i])
+                print ' ', cols[i][1].ljust(16), (str(row[i]) if isinstance(row[i],(int,long)) else row[i])
             print ''
+            r += 1
     except Exception as e:
         print "Error when trying to print table", table
         print e
@@ -361,7 +399,8 @@ if __name__ == '__main__':
         new_table('galleryindex', args.dbfile, 'gallery_db_schema.sql') # Create gallery index table if not there
         defpath = get_defpath(os.getcwd())
         desc, tags, ur, uw, gr, gw = get_user_input('gallery')
-        if add_gallery(args.galleryname, desc, defpath, tags, ur, uw, gr, gw, 'galleryindex', args.dbfile):
+        zipfile = ''
+        if add_gallery(args.galleryname, desc, defpath, tags, zipfile, ur, uw, gr, gw, 'galleryindex', args.dbfile):
             if new_table(args.galleryname, args.dbfile, 'image_db_schema.sql'): # Create image gallery table if not there
                 print "Successfully added gallery", args.galleryname, "to galleryindex table"
         
@@ -370,8 +409,9 @@ if __name__ == '__main__':
             print "Gallery", args.galleryname, "not found. Will create it now."
             new_table('galleryindex', args.dbfile, 'gallery_db_schema.sql') # Create the galleryindex if not existing
             defpath = get_defpath(os.path.dirname(os.path.realpath(args.images[0]))) # Directory of first image is default defpath
-            desc, tags, ur, uw, gr, gw = get_user_input('gallery', )
-            add_gallery(args.galleryname, desc, defpath, tags, ur, uw, gr, gw, 'galleryindex', args.dbfile) # Add to gallery index
+            desc, tags, ur, uw, gr, gw = get_user_input('gallery')
+            zipfile = ''
+            add_gallery(args.galleryname, desc, defpath, tags, zipfile, ur, uw, gr, gw, 'galleryindex', args.dbfile) # Add to gallery index
             new_table(args.galleryname, args.dbfile, 'image_db_schema.sql') # Create image gallery table
         else:
             desc, tags, ur, uw, gr, gw = get_user_input('images')

@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from wand.image import Image
 from flask_login import login_required
 from wtforms import Form, StringField, BooleanField, validators
-#from lidpix_db import 
+import lidpix_db
 import authz
 
 
@@ -16,16 +16,28 @@ folder = Blueprint('folder', __name__)
 thumbprepping = threading.Event()
 
 
-class Folderfile:
-    def __init__(self, name, filetype, datetime):
+class Imagefile:
+    def __init__(self, file_id, name, desc, tags, time_photo, 
+    time_added, users_r, users_w, groups_r, groups_w, filetype):
+        self.file_id = file_id
         self.name = name
+        self.desc = desc
+        self.tags = tags
+        self.time_photo = time_photo
+        self.time_added = time_added
+        self.users_r = users_r
+        self.users_w = users_w
+        self.groups_r = groups_r
+        self.groups_w = groups_w
         self.filetype = filetype
-        self.datetime = datetime
-        # (Space for more file/image properties)
     
     def to_json(self):
-        return {'name': self.name, 'filetype': self.filetype,
-                'datetime': self.datetime}
+        return {'file_id': self.file_id, 'name': self.name, 
+        'desc': self.desc, 'tags': self.tags,
+        'time_photo': self.time_photo, 'time_added': self.time_added, 
+        'users_r': self.users_r, 'users_w': self.users_w, 
+        'groups_r': self.groups_r, 'groups_w': self.groups_w,
+        'filetype': self.filetype}
         
 class SettingsForm(Form):
     """The settings form, a subclass of Form (using WTForms)."""
@@ -204,7 +216,8 @@ def get_breadcrumbs(pathname, rootdir):
     
     pathname: string containing a pathname to process
     rootdir: string with pathname that should be a subset of pathname
-    Return: list with lists (see above) """
+    Return: list with lists (see above) 
+    """
     
     pathnames = [pathname.rsplit("/",n)[0]
          for n in range(pathname.count("/")-1,-1,-1)]
@@ -215,15 +228,16 @@ def get_breadcrumbs(pathname, rootdir):
 
 def create_img_objects(imagedir):
     
-    """ Create Folderfile objects of all the files in imagedir and return
+    """ Create Imagefile objects of all the files in imagedir and return
     them in a list.
     
     imagedir: Directory containing the images/files
-    Return: list of Folderfile objects
+    Return: list of Imagefile objects
     """
         
     try:
         files = []
+        i = 0
         for n in sorted(os.listdir(imagedir.decode('utf-8'))):
             if n[0] != '.':
                 if os.path.isdir(imagedir + '/' + n):
@@ -234,7 +248,9 @@ def create_img_objects(imagedir):
                     filetype = os.path.splitext(n)[1][1:] # Get file extension
                 exif = get_image_info(imagedir + '/' + n)
                 datetime = exif.get('DateTimeOriginal', '(no time)')
-                files.append(Folderfile(n, filetype, datetime))
+                files.append(Imagefile(i, n, '', '', datetime, '', '', 
+                '', '', '', filetype))
+                i += 1
     except OSError:
         pass
     except UnicodeError:
@@ -319,7 +335,7 @@ def folder_view():
             flash('Forbidden. Directory not setup for access to lidpix.')
             return redirect(url_for('.folder_view', imagedir = pixdirs[0]))
         
-        # Create a list of FolderFile objects from all the files in imagedir
+        # Create a list of Imagefile objects from all the files in imagedir
         files = create_img_objects(imagedir)
         
         if 'folder_json' in request.path: # Supply JSON
@@ -346,8 +362,7 @@ def gallery_view(galleryname):
     """
     
     #galleryname = request.args.get('gallery', default='defaultgallery')
-    
-    
+        
     # Find database
     # Check user permissions
     # Find image dir
@@ -357,7 +372,11 @@ def gallery_view(galleryname):
     
     # No need for ajax since visitor is not going to edit afterwards - OR NOT?
     
-    return render_template('gallery.html')
+    gallery = lidpix_db.get_row('gallery_name', galleryname, 'galleryindex', 'lidpix.db')
+    images = lidpix_db.get_all_rows(galleryname, 'lidpix.db')
+    print galleryrow
+    
+    return "Done."
 
 
 # This function is not finished!

@@ -5,7 +5,6 @@ $(document).ready(function() {
     var base_url = 'http://localhost:5080';
     var serveimage_url = base_url + '/serveimage?image=';
     var servethumb_url = base_url + '/servethumb?image=';
-    // var fobs; // Array that will hold all file objects
     var user_settings; // Object with user's settings
     
     var app = {

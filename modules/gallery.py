@@ -11,19 +11,6 @@ from lidpix_db import *  # just select needed ones!
 gallery = Blueprint('gallery', __name__)
 
 
-class Gallery:
-    def __init__(self, gallery_id, gallery_name, defpath, desc, tags, time_added, users_r, users_w, groups_r, groups_w):
-        self.gallery_id = gallery_id
-        self.gallery_name = gallery_name
-        self.defpath = defpath
-        self.desc = desc
-        self.tags = tags
-        self.time_added = time_added
-        self.users_r = users_r
-        self.users_w = users_w
-        self.groups_r = groups_r
-        self.groups_w = groups_w
-        
 class Img:
     def __init__(self, image_id, imagefile, desc, tags, time_photo, time_added, 
                  users_r, users_w, groups_r, groups_w):
@@ -37,11 +24,30 @@ class Img:
         self.users_w = users_w
         self.groups_r = groups_r
         self.groups_w = groups_w
+        
+
+class Gallery:
+    def __init__(self, gallery_id, gallery_name, defpath, desc, tags, time_added, zipfile, users_r, users_w, groups_r, groups_w):
+        self.gallery_id = gallery_id
+        self.gallery_name = gallery_name
+        self.defpath = defpath
+        self.desc = desc
+        self.tags = tags
+        self.time_added = time_added
+        self.zipfile = zipfile
+        self.users_r = users_r
+        self.users_w = users_w
+        self.groups_r = groups_r
+        self.groups_w = groups_w
+        self.images = []
+        
 
 
 def db_get_galleryprops(galleryname):
     
     """ Get row with gallery properties in gallery db """
+    
+    # Use function in lidpix_db which returns row?
     
     return Gallery_object
     

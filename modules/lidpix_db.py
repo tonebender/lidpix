@@ -95,19 +95,19 @@ def delete_table(table, db_file):
 def get_row(column, value, table, db_file):
 
     """ Get contents of all columns in a row that match a certain value in 1 column.
-    Return as a list with one tuple. """
+    Return as a tuple. """
     
     try:
         conn, c = connect_to_db(db_file)    
         c.execute('SELECT * FROM {t} WHERE {col}="{value}"'.format(t=safe(table), 
                   col=safe(column), value=safe(value)))
-        row = c.fetchall()
+        row = c.fetchone()
         conn.close()
         return row
     except Exception as e:
         print "Error when trying to fetch row in table", table, "in database file", db_file
         print e
-        return []
+        return None
 
 
 def get_all_rows(table, db_file):

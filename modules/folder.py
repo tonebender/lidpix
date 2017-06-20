@@ -18,7 +18,7 @@ thumbprepping = threading.Event()
 
 class Imagefile:
     def __init__(self, file_id, name, desc, tags, time_photo, 
-    time_added, users_r, users_w, groups_r, groups_w, filetype):
+    time_added, users_r, users_w, groups_r, groups_w, filetype=''):
         self.file_id = file_id
         self.name = name
         self.desc = desc
@@ -31,13 +31,37 @@ class Imagefile:
         self.groups_w = groups_w
         self.filetype = filetype
     
-    def to_json(self):
+    def to_dict(self):
         return {'file_id': self.file_id, 'name': self.name, 
         'desc': self.desc, 'tags': self.tags,
         'time_photo': self.time_photo, 'time_added': self.time_added, 
         'users_r': self.users_r, 'users_w': self.users_w, 
         'groups_r': self.groups_r, 'groups_w': self.groups_w,
         'filetype': self.filetype}
+        
+class Gallery:
+    def __init__(self, gallery_id, gallery_name, defpath, desc, tags, 
+    time_added, zipfile, users_r, users_w, groups_r, groups_w):
+        self.gallery_id = gallery_id
+        self.gallery_name = gallery_name
+        self.defpath = defpath
+        self.desc = desc
+        self.tags = tags
+        self.time_added = time_added
+        self.zipfile = zipfile
+        self.users_r = users_r
+        self.users_w = users_w
+        self.groups_r = groups_r
+        self.groups_w = groups_w
+        self.images = []
+        
+    def to_dict(self):
+        return {'gallery_id': self.gallery_id, 'gallery_name': self.gallery_name,
+        'defpath': self.defpath, 'desc': self.desc, 'tags': self.tags,
+        'time_added': self.time_added, 'zipfile': self.zipfile,
+        'users_r': self.users_r, 'users_w': self.users_w, 'groups_r':
+        self.groups_r, 'groups_w': self.groups_w, 'images': [i.to_dict() for i in self.images]}
+
         
 class SettingsForm(Form):
     """The settings form, a subclass of Form (using WTForms)."""
@@ -339,7 +363,7 @@ def folder_view():
         files = create_img_objects(imagedir)
         
         if 'folder_json' in request.path: # Supply JSON
-            json_files = json.dumps([f.to_json() for f in files])
+            json_files = json.dumps([f.to_dict() for f in files])
             return json_files
         else:                  # Supply folder view
             dirs = get_breadcrumbs(imagedir, rootdir)
@@ -353,6 +377,7 @@ def folder_view():
 
 
 @folder.route('/gallery/<galleryname>', methods=['GET'])
+@folder.route('/gallery_json/<galleryname>', methods=['GET'])
 @login_required
 def gallery_view(galleryname):
     
@@ -370,12 +395,16 @@ def gallery_view(galleryname):
     # Read information, comments, settings, etc.
     # Show page
     
-    # No need for ajax since visitor is not going to edit afterwards - OR NOT?
+    gallery_row = lidpix_db.get_row('gallery_name', galleryname, 'galleryindex', 'lidpix.db')
+    gallery = Gallery(*gallery_row) # Make one Gallery object from galleryindex database row
     
-    gallery = lidpix_db.get_row('gallery_name', galleryname, 'galleryindex', 'lidpix.db')
-    images = lidpix_db.get_all_rows(galleryname, 'lidpix.db')
-    print galleryrow
+    image_rows = lidpix_db.get_all_rows(galleryname, 'lidpix.db') # Get list with one tuple for every row from image db
+    for i in image_rows:
+        gallery.images.append(Imagefile(*i)) # Make Imagefile object of every tuple
     
+    if 'gallery_json' in request.path: # Supply JSON
+            print json.dumps(gallery.to_dict())
+            return json.dumps(gallery.to_dict())
     return "Done."
 
 

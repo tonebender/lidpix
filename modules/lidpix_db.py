@@ -4,7 +4,7 @@
 # See show_usage() below for how to use it.
 
 
-import sqlite3, time, sys, argparse, os
+import sqlite3, time, sys, argparse, os, subprocess
 import bcrypt
 import folder
 #from folder import get_image_info
@@ -92,15 +92,33 @@ def delete_table(table, db_file):
         return True
 
 
-def get_row(column, value, table, db_file):
+def get_column(col_to_search, value_to_match, col_to_get, table, db_file):
 
-    """ Get contents of all columns in a row that match a certain value in 1 column.
+    """ Get contents of one column in the first row that match a certain value in 1 column.
+    Return as a tuple. """
+    
+    try:
+        conn, c = connect_to_db(db_file)    
+        c.execute('SELECT {cg} FROM {t} WHERE {col}="{value}"'.format(t=safe(table), 
+                  cg=safe(col_to_get), col=safe(col_to_search), value=safe(value_to_match)))
+        column = c.fetchone()
+        conn.close()
+        return column
+    except Exception as e:
+        print "Error when trying to fetch row in table", table, "in database file", db_file
+        print e
+        return None
+
+
+def get_row(column_to_search, value_to_match, table, db_file):
+
+    """ Get contents of all columns in the first row that match a certain value in 1 column.
     Return as a tuple. """
     
     try:
         conn, c = connect_to_db(db_file)    
         c.execute('SELECT * FROM {t} WHERE {col}="{value}"'.format(t=safe(table), 
-                  col=safe(column), value=safe(value)))
+                  col=safe(column_to_search), value=safe(value_to_match)))
         row = c.fetchone()
         conn.close()
         return row
@@ -279,8 +297,15 @@ def get_user_input(genre):
     users_w = raw_input("Users to give write permission to %s (e.g. 'barack,angela'): " % genre)
     group_r = raw_input("Group to give read permission to %s (e.g. 'colleagues,friends'): " % genre)
     group_w = raw_input("Group to give write permission to %s (e.g. 'management,workers'): " % genre)
-    return (desc, tags, users_r, users_w, group_r, group_w)
-    
+    return (desc, tags, zipfile, users_r, users_w, group_r, group_w)
+
+
+def get_user_zip(galleryname):
+    zipfile = raw_input("Include images in zipfile? Hit enter to use galleryname as zip name, 'n' for no zip, or anything else as custom name (incl '.zip'): ").lower()
+    if zipfile == '':
+        zipfile = galleryname + '.zip'
+    return zipfile
+
 
 def get_defpath(defpath):
     """ Let user specify default path for images in gallery """
@@ -290,6 +315,14 @@ def get_defpath(defpath):
     return userpath
 
 
+def new_gallery(galleryname, desc, defpath, tags, zipfile, ur, uw, gr, gw, dbfile):
+    """ Create a new gallery """
+    new_table('galleryindex', dbfile, 'gallery_db_schema.sql') # Create gallery index table if not there
+    if add_gallery(galleryname, desc, defpath, tags, zipfile, ur, uw, gr, gw, 'galleryindex', dbfile): # Add gallery to gallery index table
+        if new_table(galleryname, dbfile, 'image_db_schema.sql'): # Create image gallery table if not there
+            print "Successfully added gallery", galleryname, "to galleryindex table"
+
+#subprocess.call(['zip', '-0', zipfile, images])
 if __name__ == '__main__':
     
     """ This main function handles all the shell commands for
@@ -338,6 +371,7 @@ if __name__ == '__main__':
     
     
     # "Low level" table operations
+    # DELETE some of these, as they're never used by the user anyway
     
     if args.subparser_name == 'printtable':
         print_table(args.table, args.dbfile)
@@ -396,24 +430,21 @@ if __name__ == '__main__':
     # Image gallery operations
     
     if args.subparser_name == 'newgallery':
-        new_table('galleryindex', args.dbfile, 'gallery_db_schema.sql') # Create gallery index table if not there
-        defpath = get_defpath(os.getcwd())
         desc, tags, ur, uw, gr, gw = get_user_input('gallery')
-        zipfile = ''
-        if add_gallery(args.galleryname, desc, defpath, tags, zipfile, ur, uw, gr, gw, 'galleryindex', args.dbfile):
-            if new_table(args.galleryname, args.dbfile, 'image_db_schema.sql'): # Create image gallery table if not there
-                print "Successfully added gallery", args.galleryname, "to galleryindex table"
-        
+        zipfile = get_user_zip(args.galleryname)
+        new_gallery(args.galleryname, desc, os.getcwd(), tags, zipfile, ur, uw, gr, gw, args.dbfile)
+
     if args.subparser_name == 'addimages':
-        if not find_table(args.galleryname, args.dbfile): # Can't find specified gallery
-            print "Gallery", args.galleryname, "not found. Will create it now."
-            new_table('galleryindex', args.dbfile, 'gallery_db_schema.sql') # Create the galleryindex if not existing
-            defpath = get_defpath(os.path.dirname(os.path.realpath(args.images[0]))) # Directory of first image is default defpath
+        if not find_table(args.galleryname, args.dbfile): # Gallery doesn't exist yet
+            print "Creating gallery", args.galleryname
             desc, tags, ur, uw, gr, gw = get_user_input('gallery')
-            zipfile = ''
-            add_gallery(args.galleryname, desc, defpath, tags, zipfile, ur, uw, gr, gw, 'galleryindex', args.dbfile) # Add to gallery index
-            new_table(args.galleryname, args.dbfile, 'image_db_schema.sql') # Create image gallery table
+            defpath = get_defpath(os.path.dirname(os.path.realpath(args.images[0]))) # Directory of first image is default defpath
+            zipfile = get_user_zip(args.galleryname)
+            new_gallery(args.galleryname, desc, defpath, tags, zipfile, ur, uw, gr, gw, args.dbfile)
         else:
+            print "Found gallery", args.galleryname
             desc, tags, ur, uw, gr, gw = get_user_input('images')
+            zipfile = get_column('galleryname', args.galleryname, 'zipfile', 'galleryindex', args.dbfile)
         if add_images(args.images, desc, tags, ur, uw, gr, gw, args.galleryname, args.dbfile): # Finally, add images
             print "Successfully added images to gallery", args.galleryname
+            # Remember to add images to zip!

@@ -76,6 +76,26 @@ def find_table(table, db_file):
         return fetched
         
 
+#def find_row(column_to_search, value_to_match, table, db_file):
+#    
+#    """ Find first row where column_to_search has value_to_match in table.
+#    Return  """
+#    
+#    try:
+#        conn, c = connect_to_db(db_file)
+#        v = c.execute('DELETE FROM {t} WHERE {cs}="{vm}"'.format(t=safe(table),
+#                  cs=safe(column_to_search), vm=value_to_match))
+#        deleted = c.rowcount
+#        conn.commit()
+#        conn.close()
+#    except Exception as e:
+#        print "Error when trying to delete row in table", table, "in db file", db_file
+#        print e
+#        return 0
+#    else:
+#        return deleted
+        
+
 def delete_table(table, db_file):
     
     """ Delete existing table in database file """
@@ -90,6 +110,26 @@ def delete_table(table, db_file):
         return False
     else:
         return True
+
+
+def delete_row(column_to_search, value_to_match, table, db_file):
+    
+    """ Delete row(s) from a table.
+    Return number of deleted rows. """
+    
+    try:
+        conn, c = connect_to_db(db_file)
+        v = c.execute('DELETE FROM {t} WHERE {cs}="{vm}"'.format(t=safe(table),
+                  cs=safe(column_to_search), vm=value_to_match))
+        deleted = c.rowcount
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print "Error when trying to delete row in table", table, "in db file", db_file
+        print e
+        return 0
+    else:
+        return deleted
 
 
 def get_column(col_to_search, value_to_match, col_to_get, table, db_file):
@@ -181,13 +221,14 @@ def add_images(imagefiles, description, tags, users_r,
             time_added, users_r, users_w, groups_r, groups_w)
             VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?);""".format(t=safe(table))
         time_added = time.asctime(time.localtime(time.time()))
-        print "Adding images ..."
+        print "Adding images to table " + table + ":"
         for img in imagefiles:
+            if img[-4:].lower() == '.zip': # Don't include our own zip
+                continue
             time_photo = folder.get_image_info(img).get('DateTimeOriginal', '(no time)')
-            realimg = os.path.realpath(img)
-            c.execute(sql_cmd, (realimg, description, tags, time_photo,
+            c.execute(sql_cmd, (os.path.basename(img), description, tags, time_photo,
                   time_added, users_r, users_w, groups_r, groups_w,))
-            print realimg
+            print img
         conn.commit()
         conn.close()
     except Exception as e:
@@ -284,7 +325,7 @@ def show_usage():
     sys.exit(0)
     
 
-def get_user_input(genre):
+def get_user_input(genre, galleryname):
     
     """ Get input from user and return as a tuple, to use when adding 
     gallery, images, etc.
@@ -297,14 +338,14 @@ def get_user_input(genre):
     users_w = raw_input("Users to give write permission to %s (e.g. 'barack,angela'): " % genre)
     group_r = raw_input("Group to give read permission to %s (e.g. 'colleagues,friends'): " % genre)
     group_w = raw_input("Group to give write permission to %s (e.g. 'management,workers'): " % genre)
+    zipfile = ''
+    if genre == 'gallery':
+        zipfile = raw_input("Create zipfile? (y/n): ").lower()
+        if zipfile == '' or zipfile == 'y':
+            zipfile = galleryname + '.zip'
+        else:
+            zipfile = 'n'
     return (desc, tags, zipfile, users_r, users_w, group_r, group_w)
-
-
-def get_user_zip(galleryname):
-    zipfile = raw_input("Include images in zipfile? Hit enter to use galleryname as zip name, 'n' for no zip, or anything else as custom name (incl '.zip'): ").lower()
-    if zipfile == '':
-        zipfile = galleryname + '.zip'
-    return zipfile
 
 
 def get_defpath(defpath):
@@ -313,16 +354,33 @@ def get_defpath(defpath):
     if userpath == '':
         userpath = defpath
     return userpath
+    
+
+def add_to_zip(zipfile, zippath, files):
+    if zipfile == 'n' or zipfile == '':
+        return False
+    zippath = os.path.normpath(zippath) + '/'
+    if os.path.isdir(zippath):
+        print "Adding to zipfile:"
+        z = subprocess.call(['zip', '-0', zippath + zipfile] + files)
+        if z != 0:
+            print "zip returned", z
+            return False
+    else:
+        print "Could not create zip. Not a valid directory:", zippath
+        return False
+    return True
 
 
-def new_gallery(galleryname, desc, defpath, tags, zipfile, ur, uw, gr, gw, dbfile):
+def new_gallery(galleryname, defpath, desc, tags, zipfile, ur, uw, gr, gw, dbfile):
     """ Create a new gallery """
-    new_table('galleryindex', dbfile, 'gallery_db_schema.sql') # Create gallery index table if not there
-    if add_gallery(galleryname, desc, defpath, tags, zipfile, ur, uw, gr, gw, 'galleryindex', dbfile): # Add gallery to gallery index table
-        if new_table(galleryname, dbfile, 'image_db_schema.sql'): # Create image gallery table if not there
-            print "Successfully added gallery", galleryname, "to galleryindex table"
+    new_table('galleryindex', dbfile, 'gallery_db_schema.sql') # Create gallery index table if not existing
+    if add_gallery(galleryname, defpath, desc, tags, zipfile, ur, uw, gr, gw, 'galleryindex', dbfile): # Add gallery to gallery index table
+        print "Added gallery", galleryname, "to galleryindex table"
+        new_table(galleryname, dbfile, 'image_db_schema.sql') # Create empty image gallery table if not existing
+            
 
-#subprocess.call(['zip', '-0', zipfile, images])
+
 if __name__ == '__main__':
     
     """ This main function handles all the shell commands for
@@ -338,6 +396,9 @@ if __name__ == '__main__':
     parser_printtable = subparsers.add_parser('printtable', help='print table to stdout')
     parser_printtable.add_argument('table', help='name of the table to print') 
     
+    parser_findtable = subparsers.add_parser('findtable', help='find table')
+    parser_findtable.add_argument('table', help='name of table to find')
+    
     parser_newutable = subparsers.add_parser('newutable', help='create new user table')
     parser_newutable.add_argument('table', help='name of the table to create')
     
@@ -351,8 +412,12 @@ if __name__ == '__main__':
     parser_deltable = subparsers.add_parser('deltable', help='delete table')
     parser_deltable.add_argument('table', help='name of table to delete')
     
-    parser_findtable = subparsers.add_parser('findtable', help='find table')
-    parser_findtable.add_argument('table', help='name of table to find')
+    parser_delgallery = subparsers.add_parser('delgallery', help='delete gallery')
+    parser_delgallery.add_argument('galleryname', help='name of gallery to delete')
+    
+    parser_delimage = subparsers.add_parser('delimage', help='delete one or more images from gallery')
+    parser_delimage.add_argument('galleryname', help='name of gallery from which to delete images (table rows)')
+    parser_delimage.add_argument('images', nargs='*', help='image file name(s) to delete')  # Fix so it can't be none ??? --------------------
     
     parser_adduser = subparsers.add_parser('adduser', help='add new user to user table')
     parser_adduser.add_argument('username', help='username of the new user')
@@ -360,12 +425,12 @@ if __name__ == '__main__':
     
     parser_newgallery = subparsers.add_parser('newgallery', help='create new gallery (add row to gallery index table, and create image gallery table)')
     parser_newgallery.add_argument('galleryname', help='name of gallery to add to table')
-    #parser_newgallery.add_argument('--defpath', '-p', nargs='*', default='.', help='base path for gallery (where images are located by default)')
     
     parser_addimages = subparsers.add_parser('addimages', help='add images to image gallery table')
     parser_addimages.add_argument('galleryname', help='name of image gallery table to record images in') # galleryname is also recorded (on a row) in gallery index table
-    parser_addimages.add_argument('images', nargs='*', help='image files to add')
-    #parser_newgallery.add_argument('--defpath', '-p', nargs='*', default='.', help='base path for images (where they are located by default)')
+    parser_addimages.add_argument('images', nargs='*', help='image file(s) to add')
+    
+    parser_test = subparsers.add_parser('test', help='for testing')
     
     args = parser.parse_args()
     
@@ -400,10 +465,6 @@ if __name__ == '__main__':
             print "Created new image gallery table", args.table, "in file", args.dbfile
     
     
-    # Need "delete row" etc.
-    # mydata = c.execute("DELETE FROM Zoznam WHERE Name=?", (data3,))
-    
-    
     # User operations
     
     if args.subparser_name == 'adduser':
@@ -430,21 +491,43 @@ if __name__ == '__main__':
     # Image gallery operations
     
     if args.subparser_name == 'newgallery':
-        desc, tags, ur, uw, gr, gw = get_user_input('gallery')
-        zipfile = get_user_zip(args.galleryname)
-        new_gallery(args.galleryname, desc, os.getcwd(), tags, zipfile, ur, uw, gr, gw, args.dbfile)
+        desc, tags, zipfile, ur, uw, gr, gw = get_user_input('gallery', args.galleryname)
+        new_gallery(args.galleryname, os.getcwd(), desc, tags, zipfile, ur, uw, gr, gw, args.dbfile)
+        
+    if args.subparser_name == 'delgallery':
+        if args.galleryname == 'galleryindex':
+            print "Can't delete galleryindex table. Use deltable command if you really want to do that."
+        elif raw_input('Proceed with delete gallery? (y/n) ') in 'Yy':
+            if find_table(args.galleryname, args.dbfile): # First try to delete the image table
+                if delete_table(args.galleryname, args.dbfile):
+                    print "Deleted image gallery table '" + args.galleryname + "'"
+            else:
+                print "Could not find image gallery table '" + args.galleryname + "'"
+            if get_column('gallery_name', args.galleryname, 'gallery_id', 'galleryindex', args.dbfile): # Then the row in galleryindex
+                if delete_row('gallery_name', args.galleryname, 'galleryindex', args.dbfile) > 0:
+                    print "Deleted row '" + args.galleryname + "' in galleryindex table"
+            else:
+                print "Gallery '" + args.galleryname + "' not found in galleryindex table."
 
+    if args.subparser_name == 'delimage':
+        if raw_input('Really delete image(s)? (y/n): ') in 'Yy':
+            for img in args.images:
+                if delete_row('imagefile', img, args.galleryname, args.dbfile):
+                    print "Deleted image", img, "from gallery", args.galleryname
+            
     if args.subparser_name == 'addimages':
         if not find_table(args.galleryname, args.dbfile): # Gallery doesn't exist yet
             print "Creating gallery", args.galleryname
-            desc, tags, ur, uw, gr, gw = get_user_input('gallery')
+            desc, tags, zipfile, ur, uw, gr, gw = get_user_input('gallery', args.galleryname)
             defpath = get_defpath(os.path.dirname(os.path.realpath(args.images[0]))) # Directory of first image is default defpath
-            zipfile = get_user_zip(args.galleryname)
-            new_gallery(args.galleryname, desc, defpath, tags, zipfile, ur, uw, gr, gw, args.dbfile)
+            new_gallery(args.galleryname, defpath, desc, tags, zipfile, ur, uw, gr, gw, args.dbfile)
         else:
             print "Found gallery", args.galleryname
-            desc, tags, ur, uw, gr, gw = get_user_input('images')
+            desc, tags, zipfile, ur, uw, gr, gw = get_user_input('images', args.galleryname) # (zipfile not used on this row)
             zipfile = get_column('galleryname', args.galleryname, 'zipfile', 'galleryindex', args.dbfile)
-        if add_images(args.images, desc, tags, ur, uw, gr, gw, args.galleryname, args.dbfile): # Finally, add images
-            print "Successfully added images to gallery", args.galleryname
-            # Remember to add images to zip!
+            defpath = os.path.normpath(get_column('galleryname', args.galleryname, 'defpath', 'galleryindex', args.dbfile))
+        add_images(args.images, desc, tags, ur, uw, gr, gw, args.galleryname, args.dbfile) # Finally, add images
+        add_to_zip(zipfile, defpath, args.images)
+        
+    if args.subparser_name == 'test':
+        print get_column('gallery_name', 'runor', 'gallery_id', 'galleryindex', args.dbfile)

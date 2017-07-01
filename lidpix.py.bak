@@ -30,11 +30,13 @@ app.config.from_envvar('LIDPIX_SETTINGS', silent=True)
 
 # Make a list of the PIXDIRS config variable
 pixdirs = [os.path.abspath(x) 
-           for x in app.config['PIXDIRS'].split(';')]
+           for x in string.split(app.config['PIXDIRS'], ';')]
            
 # Remove folder names in pixdirs which are (redundant) subdirs of other folders in pixdirs
 # Example: '/abc/def;/abc;/hey/ho' --> '/abc;/hey/ho'
-pixdirs = [d for d in pixdirs if not any(d.startswith(x) and not d == x for x in pixdirs)]
+pixdirs = filter(lambda d: 
+                 not any(d.startswith(x) and not d == x for x in pixdirs), 
+                 pixdirs)
 
 # After this, we will use this config variable instead of PIXDIRS
 app.config['PIXDIRSLIST'] = pixdirs

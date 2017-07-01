@@ -4,6 +4,7 @@ __pycache__/
 *.py[cod]
 *.db
 venv/
+venv3.6/
 *.scssc
 *.map
 jquery*.js

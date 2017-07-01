@@ -1,6 +1,6 @@
-gallery_id INTEGER PRIMARY KEY,
+id INTEGER PRIMARY KEY,
 gallery_name TEXT,
-defpath TEXT,
+gpath TEXT,
 description TEXT,
 tags TEXT,
 time_added INTEGER,

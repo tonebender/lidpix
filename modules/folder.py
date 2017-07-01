@@ -40,11 +40,11 @@ class Imagefile:
         'filetype': self.filetype}
         
 class Gallery:
-    def __init__(self, gallery_id, gallery_name, defpath, desc, tags, 
+    def __init__(self, gallery_id, gallery_name, gpath, desc, tags, 
     time_added, zipfile, users_r, users_w, groups_r, groups_w):
         self.gallery_id = gallery_id
         self.gallery_name = gallery_name
-        self.defpath = defpath
+        self.gpath = gpath
         self.desc = desc
         self.tags = tags
         self.time_added = time_added
@@ -57,7 +57,7 @@ class Gallery:
         
     def to_dict(self):
         return {'gallery_id': self.gallery_id, 'gallery_name': self.gallery_name,
-        'defpath': self.defpath, 'desc': self.desc, 'tags': self.tags,
+        'gpath': self.gpath, 'desc': self.desc, 'tags': self.tags,
         'time_added': self.time_added, 'zipfile': self.zipfile,
         'users_r': self.users_r, 'users_w': self.users_w, 'groups_r':
         self.groups_r, 'groups_w': self.groups_w, 'images': [i.to_dict() for i in self.images]}
@@ -80,7 +80,7 @@ def allowed_file(filename):
 
 def prep_thumbs(imgdir, thumbdir, thumbsize):
     
-    """ This wrapper for make_thumbs() runs that function as its
+    """ A wrapper for make_thumbs() that runs that function as its
     own thread in the background so the webpage won't be held up (too much),
     then looks for created thumbs and returns them as a list.
     
@@ -397,8 +397,15 @@ def gallery_view(galleryname):
     
     gallery_row = lidpix_db.get_row('gallery_name', galleryname, 'galleryindex', 'lidpix.db')
     gallery = Gallery(*gallery_row) # Make one Gallery object from galleryindex database row
+
+    if not authz.current_user.username in gallery.users_r:
+        if 'gallery_json' in request.path:
+            abort(403) # Maybe change to something jsonish that JS can interpret
+        else:
+            flash('Sorry. User does not have read access to this gallery.')
+            return redirect(url_for('/'))
     
-    image_rows = lidpix_db.get_all_rows(galleryname, 'lidpix.db') # Get list with one tuple for every row from image db
+    image_rows = lidpix_db.get_all_rows(galleryname, 'lidpix.db') # Get list with one tuple for every row in image db
     for i in image_rows:
         gallery.images.append(Imagefile(*i)) # Make Imagefile object of every tuple
     

@@ -1,4 +1,4 @@
-image_id INTEGER PRIMARY KEY,
+id INTEGER PRIMARY KEY,
 imagefile TEXT,
 description TEXT,
 tags TEXT,

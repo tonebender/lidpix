@@ -94,7 +94,7 @@ class UserDB(UserMixin):
 def load_user(username):
     """Find username i database and return it.
     
-    username is a string to be searched for in the db.
+    username is a string to be searched for in the lidpix user db.
     Returns an instance of UserDB with found user data; None if user not found.
     """
     connection = sqlite3.connect(current_app.config['USERDB'])

@@ -1,6 +1,6 @@
-user_nr INTEGER PRIMARY KEY,
+id INTEGER PRIMARY KEY,
 username TEXT,
-password BLOB,
+password TEXT,
 fullname TEXT,
 groups TEXT,
 joining TEXT,

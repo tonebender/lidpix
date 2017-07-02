@@ -50,16 +50,16 @@ class LoginForm(Form):
 
 class UserDB(UserMixin):
     """The user class with login-related states and personal data"""
-    def __init__(self, id, username, password, fname, lname, joined, 
-                 active=True, confirmdelete=True, viewmode=10, theme='default'):
+    def __init__(self, id, username, password, fullname, joined, groups,
+                 active=1, confirmdelete=1, viewmode=10, theme='default'):
         self.id = id
         self.username = username
         self.password = password
-        self.fname = fname
-        self.lname = lname
+        self.fullname = fullname
         self.joined = joined
-        self.active = active
-        self.confirmdelete = confirmdelete
+        self.groups = groups
+        self.active = False if active == 0 else True
+        self.confirmdelete = False if confirmdelete == 0 else True
         self.viewmode = viewmode
         self.theme = theme
         
@@ -81,13 +81,22 @@ class UserDB(UserMixin):
         # Return settings in json style dict
         return {'id': self.id,
                 'username': self.username,
-                'fname': self.fname,
-                'lname': self.lname,
+                'fullname': self.fullname,
                 'joined': self.joined,
+                'groups': self.groups,
                 'active': self.active,
                 'confirmdelete': self.confirmdelete,
                 'viewmode': self.viewmode,
                 'theme': self.theme}
+    
+
+def user_has_access(gallery):
+    """ Check if current logged in user has access to gallery
+    
+    gallery is a Gallery object (see folder.py) containing variables
+    users_r, users_w, groups_r and groups_w """
+    
+    return False
     
 
 @login_manager.user_loader
@@ -97,9 +106,9 @@ def load_user(username):
     username is a string to be searched for in the lidpix user db.
     Returns an instance of UserDB with found user data; None if user not found.
     """
-    connection = sqlite3.connect(current_app.config['USERDB'])
+    connection = sqlite3.connect(current_app.config['DATABASE'])
     c = connection.cursor()
-    command = 'SELECT * FROM flaskusers WHERE username =?'
+    command = 'SELECT * FROM lidpixusers WHERE username =?'
     c.execute(command, (username,))
     row = c.fetchone()
     connection.close()
@@ -136,7 +145,7 @@ def login():
             user = load_user(myform.username.data)
             if user:
                 if user.password == bcrypt.hashpw(myform.password
-                .data.encode('utf-8'), user.password.encode('utf-8')):
+                .data.encode('utf-8'), user.password):  # Remove encode on 2nd arg for python 3.6 / blob in db
                     if login_user(user, remember=myform.remember.data):
                         return redirect(request.args.get("next") or url_for("folder.folder_view"))
                     else:

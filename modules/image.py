@@ -26,8 +26,7 @@ def prep_thumbs(imgdir, thumbdir, thumbsize):
     
     # Get a list of available thumbnails
     try:
-        thumbs = sorted(os.listdir((os.path.abspath(imgdir) + '/' + 
-                        thumbdir).decode('utf-8')))
+        thumbs = sorted(os.listdir(os.path.abspath(imgdir) + '/' + thumbdir))
     except OSError:
         thumbs = []
         

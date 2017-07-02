@@ -105,18 +105,14 @@ if args.subparser_name == 'newitable':
 # User operations
 
 if args.subparser_name == 'adduser':
-    pw = str(input("Please give " + args.username + " a password: "), 'utf-8')
-    #pa = unicode(raw_input("Repeat password: "), 'utf-8')
-    #if pw != pa:
-    #    print "Passwords don't match"
-    #    sys.exit(0)
+    pw = input("Please give " + args.username + " a password: ")
     hashed_pw = bcrypt.hashpw(pw.encode('utf-8'), bcrypt.gensalt())
-    f = input("User's full name (first and last with space between): ")
-    gr = input("The groups user is member of (e.g. 'friends,relatives'): ").lower()
-    j = time.asctime(time.localtime(time.time()))
+    fname = input("User's full name (first and last with space between): ")
+    groups = input("The groups user is member of (e.g. 'friends,relatives'): ").lower()
+    joined = time.asctime(time.localtime(time.time()))
     
     new_table(args.table, args.dbfile, 'user_db_schema.sql') # In case it doesn't exist
-    if add_user(args.username, hashed_pw, f, j, gr, args.table, args.dbfile):
+    if add_user(args.username, hashed_pw, fname, joined, groups, 1, 1, 10, 'default', args.table, args.dbfile):
         print("Successfully added user %s to table %s in file %s" \
         % (args.username, args.table, args.dbfile))
 

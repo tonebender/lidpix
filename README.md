@@ -62,7 +62,7 @@ En standardmapp med bilder per galleri - kan köras över med bildsökväg
 
 Databasfil.db
 |
-|  Databas med gallerier: galleries
+|  Databas med gallerier: galleryindex
 |
 |  ID    Gallerinamn  Beskrivning            Tid skapad        Användare R   Användare W   Grupp R   Grupp W
 |  ---------------------------------------------------------------------------------------------------------

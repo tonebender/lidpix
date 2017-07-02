@@ -216,19 +216,16 @@ def add_images(imagefiles, description, tags, users_r,
         return True
 
     
-def add_user(username, password, fullname, joined, groups, table, db_file):
+def add_user(username, password, fullname, joined, groups, active, confirmdelete, viewmode, theme, table, db_file):
     
     """ Add a lidpix user to the users table """
     
     try:
         conn, c = connect_to_db(db_file)
         sqlcmd = """INSERT INTO {t} (id, username, password,
-        fullname, groups, joining, active, confirmdelete, viewmode, theme)
-        VALUES (NULL, ?, ?, ?, ?, ?, 1, 1, 10, "default");""".format(t=safe(table))
-        #sql_command = format_str.format(table=safe(table), username=username, password=password, \
-        #fullname=fullname, joined=joined, groups=groups)
-        print(type(password))
-        c.execute(sqlcmd, (username, password, fullname, joined, groups,))
+        fullname, joined, groups, active, confirmdelete, viewmode, theme)
+        VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?);""".format(t=safe(table))
+        c.execute(sqlcmd, (username, password, fullname, joined, groups, active, confirmdelete, viewmode, theme,))
         conn.commit()
         conn.close()
     except Exception as e:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import os, string, threading, time, imghdr
+import os, string, threading, time, imghdr, sys
 from flask import Flask, request, session, redirect, url_for, abort, \
   render_template, flash, make_response, Blueprint, current_app, json
 from werkzeug.utils import secure_filename
@@ -106,7 +106,7 @@ def get_breadcrumbs(pathname, rootdir):
     return pathnames
 
 
-def create_img_objects(imagedir):
+def dir_to_img_objects(imagedir):
     
     """ Create Imagefile objects of all the files in imagedir and return
     them in a list.
@@ -118,7 +118,7 @@ def create_img_objects(imagedir):
     try:
         files = []
         i = 0
-        for n in sorted(os.listdir(imagedir.decode('utf-8'))):
+        for n in sorted(os.listdir(imagedir)):
             if n[0] != '.':
                 if os.path.isdir(imagedir + '/' + n):
                     filetype = 'DIR'
@@ -126,20 +126,27 @@ def create_img_objects(imagedir):
                     filetype = 'MNT'
                 else:
                     filetype = os.path.splitext(n)[1][1:] # Get file extension
-                exif = get_image_info(imagedir + '/' + n)
-                datetime = exif.get('DateTimeOriginal', '(no time)')
+                if filetype in 'jpg jpeg png gif tiff pcx bmp':
+                    datetime = get_image_info(imagedir + '/' + n).get('DateTimeOriginal', '(no time)')
+                else:
+                    datetime = '(no time)'
                 files.append(Imagefile(i, n, '', '', datetime, '', '', 
                 '', '', '', filetype))
                 i += 1
     except OSError:
         pass
-    except UnicodeError:
+    except UnicodeError:  # This is from the python 2.7 period ... probably obsolete now
         flash('Unicode error. Directory reading aborted. Encoding: ' + 
               err.encoding + '. Reason: ' + err.reason + '. Object: ' + 
               err.object + '.')
     return files
               
 
+@folder.route('/defaultimagedir')
+def default_imagedir():
+    return json.dumps({'imagedir': current_app.config['PIXDIRSLIST'][0]})
+    
+    
 @folder.route('/serveimage')
 def serveimage():
     
@@ -207,7 +214,10 @@ def folder_view():
     
         # Get url keywords
         thumbsize = request.args.get('thumbsize', default='200x')
-        imagedir = os.path.abspath(request.args.get('imagedir', default=pixdirs[0]))
+        imagedir = request.args.get('imagedir', default=pixdirs[0])
+        if imagedir == 'null': # Can be null when JS is getting json and lacks url keyword
+            imagedir = pixdirs[0]
+        imagedir = os.path.abspath(imagedir)
         
         # Find the root dir of the image dir, abort if it's not valid
         rootdir = get_rootdir(imagedir, pixdirs)
@@ -216,7 +226,7 @@ def folder_view():
             return redirect(url_for('.folder_view', imagedir = pixdirs[0]))
         
         # Create a list of Imagefile objects from all the files in imagedir
-        files = create_img_objects(imagedir)
+        files = dir_to_img_objects(imagedir)
         
         if 'folder_json' in request.path: # Supply JSON
             json_files = json.dumps([f.to_dict() for f in files])
@@ -253,6 +263,8 @@ def gallery_view(galleryname):
     
     gallery_row = get_row('gallery_name', galleryname, 'galleryindex', 'lidpix.db')
     gallery = Gallery(*gallery_row) # Make one Gallery object from galleryindex database row
+    
+    print(authz.current_user.username)
 
     if not authz.current_user.username in gallery.users_r:
         if 'gallery_json' in request.path:
@@ -266,7 +278,7 @@ def gallery_view(galleryname):
         gallery.images.append(Imagefile(*i)) # Make Imagefile object of every tuple
     
     if 'gallery_json' in request.path: # Supply JSON
-            print(json.dumps(gallery.to_dict()))
+            #print(json.dumps(gallery.to_dict()))
             return json.dumps(gallery.to_dict())
     return "Done."
 

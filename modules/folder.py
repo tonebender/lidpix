@@ -142,10 +142,19 @@ def dir_to_img_objects(imagedir):
     return files
               
 
-@folder.route('/defaultimagedir')
-def default_imagedir():
-    return json.dumps({'imagedir': current_app.config['PIXDIRSLIST'][0]})
+# How much to expose? (Security risk?)
+@folder.route('/get_app_settings', methods=['GET'])
+def get_app_settings():
     
+    """ Supply this app's settings via json for the javascript """
+    
+    appsettings = {'tumbdirbase': current_app.config['THUMBDIR_BASE'],
+                   'imageext': list(current_app.config['IMAGE_EXT']),
+                   'viewmode': current_app.config['VIEWMODE']}
+    if authz.current_user.is_authenticated:
+        appsettings.update({'pixdirs': current_app.config['PIXDIRSLIST']})
+    return json.dumps(appsettings)
+
     
 @folder.route('/serveimage')
 def serveimage():
@@ -182,8 +191,8 @@ def servethumb():
         abort(404)
 
 
-@folder.route('/folder', methods=['GET', 'POST'])
 @folder.route('/folder_json', methods=['GET'])
+@folder.route('/folder', methods=['GET', 'POST'])
 @login_required
 def folder_view():
     
@@ -214,9 +223,14 @@ def folder_view():
     
         # Get url keywords
         thumbsize = request.args.get('thumbsize', default='200x')
-        imagedir = request.args.get('imagedir', default=pixdirs[0])
+        imagedir = request.args.get('imagedir') #, default=pixdirs[0])
+        
+        if not imagedir:  # Need to reload page if no imagedir, because JS needs proper URL keyword
+            return redirect(url_for('.folder_view', imagedir=pixdirs[0], thumbsize=thumbsize))
+        
         if imagedir == 'null': # Can be null when JS is getting json and lacks url keyword
             imagedir = pixdirs[0]
+        
         imagedir = os.path.abspath(imagedir)
         
         # Find the root dir of the image dir, abort if it's not valid

@@ -77,7 +77,7 @@ class UserDB(UserMixin):
         except AttributeError:
             raise NotImplementedError('No `id` attribute - override `get_id`')
             
-    def get_settings(self):
+    def get_as_dict(self):
         # Return settings in json style dict
         return {'id': self.id,
                 'username': self.username,
@@ -145,7 +145,7 @@ def login():
             user = load_user(myform.username.data)
             if user:
                 if user.password == bcrypt.hashpw(myform.password
-                .data.encode('utf-8'), user.password):  # Remove encode on 2nd arg for python 3.6 / blob in db
+                .data.encode('utf-8'), user.password):
                     if login_user(user, remember=myform.remember.data):
                         return redirect(request.args.get("next") or url_for("folder.folder_view"))
                     else:
@@ -176,15 +176,15 @@ def get_username():
     return 'None'
 
 
-@authz.route('/getsettings')
-def get_settings():
+@authz.route('/get_user_settings')
+def get_user_settings():
     """Get settings from logged in user object and return as json"""
     if current_user.is_authenticated:
-        return json.dumps(current_user.get_settings())
+        return json.dumps(current_user.get_as_dict())
     return 'None'
 
 
-@authz.route('/setsettings')
-def set_settings():
+@authz.route('/set_user_settings')
+def set_user_settings():
     """Save settings posted as keywords to logged in user"""
     return 'None'

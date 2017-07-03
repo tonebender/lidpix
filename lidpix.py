@@ -18,11 +18,11 @@ app.config.update(dict(
     PIXDIRS='/home/lidbjork/Bilder/Foton;/home/lidbjork/public_html/photos',
     THUMBDIR_BASE='.lidpixthumbs',
     DATABASE='/home/lidbjork/Develop/python/lidpix/lidpix.db',  # Previously users_example.db
-    UPLOAD_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'gifv', 'tif', 'tiff', 'bmp', 'xcf', 'psd', 'pcx']),
+    IMAGE_EXT = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'gifv', 'tif', 'tiff', 'bmp', 'xcf', 'psd', 'pcx']),
     SECRET_KEY='development key',
     USERNAME='admin',
     PASSWORD='default',
-    VIEWLAYOUT=1
+    VIEWMODE=1
 ))
 app.config.from_object('conf.DevelopmentConfig')
 app.config.from_envvar('LIDPIX_SETTINGS', silent=True)

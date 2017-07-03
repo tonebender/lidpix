@@ -234,7 +234,6 @@ $(document).ready(function() {
         
         var file_id = 0;
         
-        console.log("Getting " + imagedir);
         $('#status_field').html('Loading directory ...');
         
         $.getJSON({
@@ -278,10 +277,10 @@ $(document).ready(function() {
     
     
     /**
-     * Get settings via json
+     * Get user settings via json
      */
     function get_settings() {
-        $.getJSON('http://localhost:5080/getsettings',
+        $.getJSON('http://localhost:5080/get_user_settings',
              function(feed) {
                  app.settings = feed;
                  console.log(app.settings);
@@ -390,7 +389,7 @@ $(document).ready(function() {
         $('#directory_form').css('visibility', 'hidden');  // If JS is disabled, it will remain shown
                                                            // (which is absurd since the whole app requires JS...)        
         
-        var imagedir = urlParam('imagedir', '/home/lidbjork/Bilder/Foton');  // Need to figure out better way of handling default imagedir! Maybe learn asynchronos shit!
+        var imagedir = urlParam('imagedir', null);  // Should figure out better way of handling default imagedir! Maybe learn asynchronos shit!
         var thumbsize = urlParam('thumbsize', '200x');
         
         get_dir(imagedir, thumbsize);

@@ -142,7 +142,6 @@ def dir_to_img_objects(imagedir):
     return files
               
 
-# How much to expose? (Security risk?)
 @folder.route('/get_app_settings', methods=['GET'])
 def get_app_settings():
     
@@ -228,8 +227,8 @@ def folder_view():
         if not imagedir:  # Need to reload page if no imagedir, because JS needs proper URL keyword
             return redirect(url_for('.folder_view', imagedir=pixdirs[0], thumbsize=thumbsize))
         
-        if imagedir == 'null': # Can be null when JS is getting json and lacks url keyword
-            imagedir = pixdirs[0]
+        if imagedir == 'null':    # Can be null when JS is getting json and lacks url keyword
+            imagedir = pixdirs[0] # (shouldn't really happen if the redirect above works)
         
         imagedir = os.path.abspath(imagedir)
         
@@ -292,8 +291,7 @@ def gallery_view(galleryname):
         gallery.images.append(Imagefile(*i)) # Make Imagefile object of every tuple
     
     if 'gallery_json' in request.path: # Supply JSON
-            #print(json.dumps(gallery.to_dict()))
-            return json.dumps(gallery.to_dict())
+        return json.dumps(gallery.to_dict())
     return "Done."
 
 

@@ -5,11 +5,13 @@ $(document).ready(function() {
     var base_url = 'http://localhost:5080';
     var serveimage_url = base_url + '/serveimage?image=';
     var servethumb_url = base_url + '/servethumb?image=';
-    var user_settings; // Object with user's settings
     
     var app = {
-        fobs: {},      // Array that will hold all file objects
-        settings: {}   // Object with user's settings
+        fobs: {}, // Array that will hold all file objects
+        settings: {},
+        user_settings: {},   
+        imagedir: '',
+        thumbsize: '200x'
     };
     
     // Facebook crap
@@ -211,6 +213,7 @@ $(document).ready(function() {
     /**
      * Get the default image directory from the backend via json
      */
+     // Ditch this! Have get app settings now
     function get_default_imagedir() {
         var defaultimagedir = '';
         $.getJSON('http://localhost:5080/defaultimagedir',
@@ -222,39 +225,6 @@ $(document).ready(function() {
         )
         console.log("def dir is " + defaultimagedir);
         return defaultimagedir;
-    }
-    
-    /**
-     * Get ajax/json content and add to the page (thumbs and whatnot)
-     * 
-     * @param imagedir (string) The path for the files
-     * @param thumbsize (string) Geometry for thumbnails (e.g. "200x")
-     */
-    function get_dir(imagedir, thumbsize) {
-        
-        var file_id = 0;
-        
-        $('#status_field').html('Loading directory ...');
-        
-        $.getJSON({
-            type: 'GET',
-            url: 'http://localhost:5080/folder_json',
-            data: 'imagedir=' + imagedir,
-            success:function(feed) {
-                var real_file_url = '';
-                app.fobs = feed; // Save all file objects to global var (!)
-                feed.forEach(function(entry) {  // Put thumbs on page
-                    if (is_image(entry.filetype)) {              // Thumb
-                        $('#thumbs_area').append(render_thumb(imagedir, file_id, thumbsize));
-                        $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
-                    } else {                                     // or Icon
-                        $('#thumbs_area').append(render_icon(imagedir, file_id));
-                    }
-                    file_id++;
-                });
-                $('#status_field').html(''); // Remove "loading" message
-            },
-        });
     }
     
     
@@ -277,30 +247,95 @@ $(document).ready(function() {
     
     
     /**
+    function get_app_settings(callback) {
+        $.getJSON(base_url + '/get_app_settings', callback);
+    }
+    */
+    
+    // Promises version:
+    // https://www.pluralsight.com/guides/front-end-javascript/introduction-to-asynchronous-javascript
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise#Creating_a_Promise
+    // https://davidwalsh.name/promises
+    
+    /**
+     * Get app settings via json
+     */
+    function get_app_settings() {
+        return new Promise((resolve, reject) => {
+            $.getJSON(base_url + '/get_app_settings', (feed) => {
+                app.settings = feed;
+                console.log('got app settings');
+                resolve();
+            }).fail(() => { reject(new Error("Ajax request failed when trying to get app settings")); });
+        });
+    }
+    
+    
+    /**
      * Get user settings via json
      */
-    function get_settings() {
-        $.getJSON('http://localhost:5080/get_user_settings',
-             function(feed) {
-                 app.settings = feed;
-                 console.log(app.settings);
-             }
-        )
-        .fail(function() {
-            $('#status_field').html('Failed to read user settings');
-        })
-        .done(function() {
-            if (app.settings.confirmdelete)
-                $('#settingsconfirmdelete').prop('checked', true);
-            else
-                $('#settingsconfirmdelete').prop('checked', false);
-            $('#settingsusername').html(app.settings.username);
-            /*
-            if (app.settings.username == 'None' || app.settings.username == undefined)
-                $('#settingsuserinfo').html('Saving settings as browser cookies.');
-            else
-                $('#settingsuserinfo').html('Settings will be saved in ' + app.settings.username + '\'s profile.');
-            */
+    function get_user_settings() {
+        return new Promise((resolve, reject) => {
+            $.getJSON(base_url + '/get_user_settings', (feed) => {
+                     app.user_settings = feed;
+            })
+            .fail(() => {
+                $('#status_field').html('Failed to read user settings');
+                reject(new Error("Ajax request failed when trying to get user settings"))
+            })
+            .done(() => {
+                if (app.user_settings.confirmdelete)
+                    $('#settingsconfirmdelete').prop('checked', true);
+                else
+                    $('#settingsconfirmdelete').prop('checked', false);
+                $('#settingsusername').html(app.user_settings.username);
+                console.log('got user settings');
+                resolve();
+                /*
+                if (app.user_settings.username == 'None' || app.user_settings.username == undefined)
+                    $('#settingsuserinfo').html('Saving settings as browser cookies.');
+                else
+                    $('#settingsuserinfo').html('Settings will be saved in ' + app.user_settings.username + '\'s profile.');
+                */
+            });
+        });
+    }
+    
+    
+    /**
+     * Get file/image objects via ajax and add to the page (thumbs and whatnot)
+     * 
+     * @param imagedir (string) The path for the files
+     * @param thumbsize (string) Geometry for thumbnails (e.g. "200x")
+     */
+     // Maybe rewrite so only gets data, and let other (callback) function add to DOM
+    function get_dir(imagedir, thumbsize) {
+        return new Promise((resolve, reject) => {
+            var file_id = 0;
+            
+            $('#status_field').html('Loading directory ...');
+            
+            $.getJSON({
+                type: 'GET',
+                url: base_url + '/folder_json',
+                data: 'imagedir=' + imagedir,
+                success: function(feed) {
+                    var real_file_url = '';
+                    app.fobs = feed; // Save all file objects to app object
+                    feed.forEach(function(entry) {  // Put thumbs on page
+                        if (is_image(entry.filetype)) {              // Thumb
+                            $('#thumbs_area').append(render_thumb(imagedir, file_id, thumbsize));
+                            $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
+                        } else {                                     // or Icon
+                            $('#thumbs_area').append(render_icon(imagedir, file_id));
+                        }
+                        file_id++;
+                    });
+                    $('#status_field').html(''); // Remove "loading" message
+                    console.log('got dir');
+                    resolve();
+                }
+            }).fail(() => { reject(new Error("Ajax request failed when trying to fetch thumbs")); });
         });
     }
     
@@ -326,7 +361,7 @@ $(document).ready(function() {
      * Initialize the app: retrieve settings, add click events, etc.
      */
     (function init() {
-        // When the "terminal" button right of breadcrumbs is clicked, 
+        // When the "terminal" button right of breadcrumbs is clicked,  < REMOVE THIS, RIGHT?
         // show the directory field
         $('#terminal_button').click(function() {
             if ($('#directory_form').css('visibility') == 'hidden') {
@@ -389,12 +424,12 @@ $(document).ready(function() {
         $('#directory_form').css('visibility', 'hidden');  // If JS is disabled, it will remain shown
                                                            // (which is absurd since the whole app requires JS...)        
         
-        var imagedir = urlParam('imagedir', null);  // Should figure out better way of handling default imagedir! Maybe learn asynchronos shit!
-        var thumbsize = urlParam('thumbsize', '200x');
+        app.imagedir = urlParam('imagedir', null);  // Should figure out better way of handling default imagedir! Maybe learn asynchronos shit!
+        app.thumbsize = urlParam('thumbsize', '200x');
         
-        get_dir(imagedir, thumbsize);
-        
-        get_settings();
+        get_app_settings()
+        .then(get_user_settings())
+        .then(get_dir(app.imagedir, app.thumbsize));
         
         
         // Add click event to menu buttons on all thumbs

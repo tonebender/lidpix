@@ -13,6 +13,37 @@ import argparse, sys, os, time, bcrypt
 from modules.lidpix_db import *
 
 
+def get_user_input(genre, galleryname):
+    
+    """ Get input from user and return as a tuple, to use when adding 
+    gallery, images, etc.
+        
+    genre: String to use in message, e.g. 'gallery' or 'images' """
+    
+    desc = input("Enter description of %s (single line): " % genre)
+    tags = input("Enter comma-separated tags describing %s (e.g. 'pets,dogs,cats'): " % genre)
+    users_r = input("Users to give read permission to %s (e.g. 'silvio,vladimir'): " % genre)
+    users_w = input("Users to give write permission to %s (e.g. 'barack,angela'): " % genre)
+    group_r = input("Group to give read permission to %s (e.g. 'colleagues,friends'): " % genre)
+    group_w = input("Group to give write permission to %s (e.g. 'management,workers'): " % genre)
+    zipfile = ''
+    if genre == 'gallery':
+        zipfile = input("Create zipfile? (y/n): ").lower()
+        if zipfile == '' or zipfile == 'y':
+            zipfile = galleryname + '.zip'
+        else:
+            zipfile = 'n'
+    return (desc, tags, zipfile, users_r, users_w, group_r, group_w)
+
+
+def get_gpath(gpath):
+    """ Let user specify default path for images in gallery """
+    userpath = input("Base path for images [%s]: " % gpath)
+    if userpath == '':
+        userpath = gpath
+    return userpath
+
+
 """ This main function handles all the shell commands for
 administering the lidpix database"""
 
@@ -73,7 +104,7 @@ args = parser.parse_args()
 # DELETE some of these, as they're never used by the user anyway
 
 if args.subparser_name == 'printtable':
-    print_table(args.table, args.dbfile)
+    print(print_table(args.table, args.dbfile))
     
 if args.subparser_name == 'deltable':
     if find_table(args.table, args.dbfile):

@@ -258,56 +258,33 @@ def delete_user(username, table, db_file):
 
 def print_table(table, db_file):
     
-    """ Print the table called table in file db_file """
+    """ Return string with the whole table 'table' in file db_file """
     
     try:
         conn, c = connect_to_db(db_file)
         rows = c.execute('SELECT * FROM {t}'.format(t=safe(table))).fetchall()
         cols = c.execute("PRAGMA table_info({t})".format(t=safe(table))).fetchall()
         conn.close()
-        print('\nTABLE           ', table, '\n')
+        pstring = '\nTABLE            ' + table + '\n'
         r = 1
         for row in rows:
-            print("ROW", r)
+            pstring += '\nROW ' + str(r)
             for i in range(len(cols)):
-                print(' ', cols[i][1].ljust(16), (str(row[i]) if isinstance(row[i],int) else row[i]))
-            print('')
+                pstring += '\n  ' + cols[i][1].ljust(16) + ' '
+                if isinstance(row[i], int):
+                    pstring += str(row[i])
+                elif isinstance(row[i], bytes):
+                    pstring += row[i].decode('utf-8')
+                else:
+                    pstring += row[i]
+            pstring += '\n'
             r += 1
+        return pstring
     except Exception as e:
         print("Error when trying to print table", table)
         print(e)
         
 
-def get_user_input(genre, galleryname):
-    
-    """ Get input from user and return as a tuple, to use when adding 
-    gallery, images, etc.
-        
-    genre: String to use in message, e.g. 'gallery' or 'images' """
-    
-    desc = input("Enter description of %s (single line): " % genre)
-    tags = input("Enter comma-separated tags describing %s (e.g. 'pets,dogs,cats'): " % genre)
-    users_r = input("Users to give read permission to %s (e.g. 'silvio,vladimir'): " % genre)
-    users_w = input("Users to give write permission to %s (e.g. 'barack,angela'): " % genre)
-    group_r = input("Group to give read permission to %s (e.g. 'colleagues,friends'): " % genre)
-    group_w = input("Group to give write permission to %s (e.g. 'management,workers'): " % genre)
-    zipfile = ''
-    if genre == 'gallery':
-        zipfile = input("Create zipfile? (y/n): ").lower()
-        if zipfile == '' or zipfile == 'y':
-            zipfile = galleryname + '.zip'
-        else:
-            zipfile = 'n'
-    return (desc, tags, zipfile, users_r, users_w, group_r, group_w)
-
-
-def get_gpath(gpath):
-    """ Let user specify default path for images in gallery """
-    userpath = input("Base path for images [%s]: " % gpath)
-    if userpath == '':
-        userpath = gpath
-    return userpath
-    
 
 def add_to_zip(zipfile, zippath, files):
     if zipfile == 'n' or zipfile == '':

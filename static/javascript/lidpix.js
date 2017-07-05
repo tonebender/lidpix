@@ -51,11 +51,26 @@ $(document).ready(function() {
      * @param defaultvalue This is returned if no value is found
      */
     function urlParam(name, defaultvalue) {
-        var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+        var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href); // [^&#] is a set with anything except & and #
         if (results == null) {
            return defaultvalue;
         } else {
            return results[1] || 0;
+        }
+    }
+    
+    /**
+     * Get the "base directory" of the URL, e.g. 'gallery' in http://localhost/gallery?name=stones
+     * 
+     * @param name The name of the directory
+     * @param defaultvalue Returned if no value is found
+     */
+    function urlDir(defaultvalue) {
+        var results = /\/([a-z]+)\?/.exec(window.location.href);
+        if (results == null) {
+            return defaultvalue;
+        } else {
+            return results[1] || 0;
         }
     }
 
@@ -210,23 +225,6 @@ $(document).ready(function() {
                '</div>';
     }
     
-    /**
-     * Get the default image directory from the backend via json
-     */
-     // Ditch this! Have get app settings now
-    function get_default_imagedir() {
-        var defaultimagedir = '';
-        $.getJSON('http://localhost:5080/defaultimagedir',
-             function(feed) {
-                 defaultimagedir = feed;
-                 
-             }
-             
-        )
-        console.log("def dir is " + defaultimagedir);
-        return defaultimagedir;
-    }
-    
     
     /**
      * Change the src attribute of the img tags inside #thumbs_area so they
@@ -306,39 +304,47 @@ $(document).ready(function() {
      * Get file/image objects via ajax and add to the page (thumbs and whatnot)
      * 
      * @param imagedir (string) The path for the files
-     * @param thumbsize (string) Geometry for thumbnails (e.g. "200x")
      */
-     // Maybe rewrite so only gets data, and let other (callback) function add to DOM
-    function get_dir(imagedir, thumbsize) {
+     // Rewrite so it gets either folder or gallery!
+    function get_image_objects(mode, name) {
         return new Promise((resolve, reject) => {
-            var file_id = 0;
-            
             $('#status_field').html('Loading directory ...');
-            
-            $.getJSON({
-                type: 'GET',
-                url: base_url + '/folder_json',
-                data: 'imagedir=' + imagedir,
-                success: function(feed) {
-                    var real_file_url = '';
-                    app.fobs = feed; // Save all file objects to app object
-                    feed.forEach(function(entry) {  // Put thumbs on page
-                        if (is_image(entry.filetype)) {              // Thumb
-                            $('#thumbs_area').append(render_thumb(imagedir, file_id, thumbsize));
-                            $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
-                        } else {                                     // or Icon
-                            $('#thumbs_area').append(render_icon(imagedir, file_id));
-                        }
-                        file_id++;
-                    });
-                    $('#status_field').html(''); // Remove "loading" message
-                    console.log('got dir');
-                    resolve();
-                }
+            if (mode == 'folder') {
+                var get_url = '/folder_json?imagedir=';
+            } else if (mode == 'gallery') {
+                var get_url = '/gallery_json?name=';
+            } else {
+                reject(new Error('No mode (gallery or folder) found when trying to get image data'));
+            }
+            $.getJSON(base_url + get_url + name, function(feed) {
+                app.fobs = feed; // Save all file objects to app object
+                console.log("Just set app.fobs");
+                place_content();
+                resolve();
             }).fail(() => { reject(new Error("Ajax request failed when trying to fetch thumbs")); });
         });
     }
     
+    /**
+     * Place content (image thumbs/icons) from fobs object array on page     
+     */
+    function place_content() {
+        var file_id = 0;
+        a = app.fobs;
+        console.log("fobs:");
+        console.log(app.fobs);
+        a.forEach(function(entry) {
+            if (is_image(entry.filetype)) {              // Thumb
+                $('#thumbs_area').append(render_thumb(app.imagedir, file_id, app.thumbsize));
+                $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
+            } else {                                     // or Icon
+                $('#thumbs_area').append(render_icon(imagedir, file_id));
+            }
+            file_id++;
+        });
+        $('#status_field').html(''); // Remove "loading" message
+    }
+       
         
     /**
      * Show the file upload dialog
@@ -424,13 +430,13 @@ $(document).ready(function() {
         $('#directory_form').css('visibility', 'hidden');  // If JS is disabled, it will remain shown
                                                            // (which is absurd since the whole app requires JS...)        
         
-        app.imagedir = urlParam('imagedir', null);  // Should figure out better way of handling default imagedir! Maybe learn asynchronos shit!
-        app.thumbsize = urlParam('thumbsize', '200x');
+        app.imagedir = urlParam('imagedir', null);  // Always be valid (backend should've redirected if invalid)
+        app.mode = urlDir(null); // Should only be 'folder' or 'gallery'
         
         get_app_settings()
         .then(get_user_settings())
-        .then(get_dir(app.imagedir, app.thumbsize));
-        
+        .then(get_image_objects(app.mode, app.imagedir));
+        //.then(place_content());
         
         // Add click event to menu buttons on all thumbs
         $(document).on('click', '.menubutton', function() {
@@ -454,6 +460,6 @@ $(document).ready(function() {
         $(document).on('click', '.menuitem, .delete', function() {
             delete_file($(this).parent().prop('id'));
         });
+        
     })();
-    
 });

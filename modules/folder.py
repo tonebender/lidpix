@@ -219,20 +219,15 @@ def folder_view():
     if request.method == 'GET':
         
         pixdirs = current_app.config['PIXDIRSLIST']
-    
-        # Get url keywords
-        thumbsize = request.args.get('thumbsize', default='200x')
-        imagedir = request.args.get('imagedir') #, default=pixdirs[0])
-        
+        imagedir = request.args.get('imagedir') # URL keyword
+        #thumbsize = request.args.get('thumbsize', default='200x')   # Only used for noscript
         if not imagedir:  # Need to reload page if no imagedir, because JS needs proper URL keyword
             return redirect(url_for('.folder_view', imagedir=pixdirs[0], thumbsize=thumbsize))
-        
         if imagedir == 'null':    # Can be null when JS is getting json and lacks url keyword
             imagedir = pixdirs[0] # (shouldn't really happen if the redirect above works)
-        
         imagedir = os.path.abspath(imagedir)
         
-        # Find the root dir of the image dir, abort if it's not valid
+        # Find the root dir of the image dir, abort if it's not authorized (in pixdirs)
         rootdir = get_rootdir(imagedir, pixdirs)
         if not rootdir:
             flash('Forbidden. Directory not setup for access to lidpix.')
@@ -246,44 +241,42 @@ def folder_view():
             return json_files
         else:                  # Supply folder view
             dirs = get_breadcrumbs(imagedir, rootdir)
-            settingsform = SettingsForm(request.form)            
+            settingsform = SettingsForm(request.form)
             return render_template('folder.html', username=authz.current_user.username,
                                     files = files,
                                     imagedir = imagedir,
                                     dirs = dirs,
-                                    thumbsize = thumbsize,
                                     settingsform = settingsform)
 
 
-@folder.route('/gallery/<galleryname>', methods=['GET'])
-@folder.route('/gallery_json/<galleryname>', methods=['GET'])
+@folder.route('/gallery', methods=['GET'])
+@folder.route('/gallery_json', methods=['GET'])
 @login_required
-def gallery_view(galleryname):
+def gallery_view():
     
     """Show a gallery with thumbnails/images found through database
     
     GET: Get gallery name from URL keyword and look it up in the db, und zo weiter
     """
     
-    #galleryname = request.args.get('gallery', default='defaultgallery')
+    galleryname = request.args.get('name', default='defaultgallery')
         
-    # Find database
-    # Check user permissions
-    # Find image dir
-    # Prep thumbs
-    # Read information, comments, settings, etc.
-    # Show page
-    
+    if not galleryname:  # Need to reload page if no imagedir, because JS needs proper URL keyword
+        return redirect(url_for('.gallery', name='defaultgallery'))
+        
+    if galleryname == 'null':    # Can be null when JS is getting json and lacks url keyword
+        galleryname = 'defaultgallery' # (shouldn't really happen if the redirect above works)
+        
     gallery_row = get_row('gallery_name', galleryname, 'galleryindex', 'lidpix.db')
     gallery = Gallery(*gallery_row) # Make one Gallery object from galleryindex database row
     
-    print(authz.current_user.username)
+    print(authz.user_access(gallery))
 
-    if not authz.current_user.username in gallery.users_r:
+    if not authz.user_access(gallery):
         if 'gallery_json' in request.path:
             abort(403) # Maybe change to something jsonish that JS can interpret
         else:
-            flash('Sorry. User does not have read access to this gallery.')
+            flash('Sorry. User ' + current_user.username + ' does not have read access to this gallery.')
             return redirect(url_for('/'))
     
     image_rows = get_all_rows(galleryname, 'lidpix.db') # Get list with one tuple for every row in image db

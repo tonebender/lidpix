@@ -90,13 +90,28 @@ class UserDB(UserMixin):
                 'theme': self.theme}
     
 
-def user_has_access(gallery):
-    """ Check if current logged in user has access to gallery
+def user_access(gallery):
+    """ Check if current logged in user has access to gallery.
     
     gallery is a Gallery object (see folder.py) containing variables
-    users_r, users_w, groups_r and groups_w """
+    users_r, users_w, groups_r and groups_w.
+    Return a string 'r', 'w', 'rw' or '', showing what access user has
+    to gallery.
+    """
     
-    return False
+    acc = ''
+    if not current_user.is_authenticated:
+        return ''
+    if current_user.username in gallery.users_r.split(','):
+        acc += 'r' if 'r' not in acc else ''
+    if current_user.username in gallery.users_w.split(','):
+        acc += 'w' if 'w' not in acc else ''
+    for g in current_user.groups.split(','):
+        if g in gallery.groups_r.split(','):
+            acc += 'r' if 'r' not in acc else ''
+        if g in gallery.groups_w.split(','):
+            acc += 'w' if 'w' not in acc else ''
+    return acc
     
 
 @login_manager.user_loader

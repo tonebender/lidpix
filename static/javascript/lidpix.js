@@ -7,12 +7,14 @@ $(document).ready(function() {
     var servethumb_url = base_url + '/servethumb?image=';
     
     var app = {
+        mode: 'gallery',
+        name: 'defaultgallery',
         fobs: {}, // Array that will hold all file objects
         settings: {},
-        user_settings: {},   
-        imagedir: '',
+        user_settings: {},
         thumbsize: '200x'
     };
+    
     
     // Facebook crap
     $.ajaxSetup({ cache: true });
@@ -42,6 +44,16 @@ $(document).ready(function() {
         js.src = "//connect.facebook.net/en_US/sdk.js";
         fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
+    
+    
+    /**
+     * Custom error message. Gives the message on the console
+     * and in the Lidpix status field.
+     */
+    function lpxError(message) {
+        console.log(message);
+        $('#status_field').html(message);
+    }
     
     
     /**
@@ -258,12 +270,12 @@ $(document).ready(function() {
     /**
      * Get app settings via json
      */
-    function get_app_settings() {
-        return new Promise((resolve, reject) => {
+    function get_app_settings(appo) {
+        return new Promise(function(resolve, reject) {
             $.getJSON(base_url + '/get_app_settings', (feed) => {
-                app.settings = feed;
-                console.log('got app settings');
-                resolve();
+                appo.settings = feed;
+                console.log('1. get_app_settings(): got app settings');
+                resolve(appo);
             }).fail(() => { reject(new Error("Ajax request failed when trying to get app settings")); });
         });
     }
@@ -272,23 +284,25 @@ $(document).ready(function() {
     /**
      * Get user settings via json
      */
-    function get_user_settings() {
+    function get_user_settings(appo) {
         return new Promise((resolve, reject) => {
+            console.log('get_user_settings(): yes');
             $.getJSON(base_url + '/get_user_settings', (feed) => {
-                     app.user_settings = feed;
+                     appo.user_settings = feed;
             })
             .fail(() => {
                 $('#status_field').html('Failed to read user settings');
                 reject(new Error("Ajax request failed when trying to get user settings"))
             })
             .done(() => {
-                if (app.user_settings.confirmdelete)
+                if (appo.user_settings.confirmdelete)
                     $('#settingsconfirmdelete').prop('checked', true);
                 else
                     $('#settingsconfirmdelete').prop('checked', false);
-                $('#settingsusername').html(app.user_settings.username);
-                console.log('got user settings');
-                resolve();
+                $('#settingsusername').html(appo.user_settings.username);
+                console.log('2. get_user_settings(): got user settings');
+                console.log('appo.user_settings.username: ' + appo.user_settings.username);
+                resolve(appo);
                 /*
                 if (app.user_settings.username == 'None' || app.user_settings.username == undefined)
                     $('#settingsuserinfo').html('Saving settings as browser cookies.');
@@ -301,26 +315,27 @@ $(document).ready(function() {
     
     
     /**
-     * Get file/image objects via ajax and add to the page (thumbs and whatnot)
+     * Get file/image objects via ajax and add to the page
      * 
-     * @param imagedir (string) The path for the files
+     * @param appo (object) The app object, containing 
      */
      // Rewrite so it gets either folder or gallery!
-    function get_image_objects(mode, name) {
+    function get_image_objects(appo) {
         return new Promise((resolve, reject) => {
             $('#status_field').html('Loading directory ...');
-            if (mode == 'folder') {
-                var get_url = '/folder_json?imagedir=';
-            } else if (mode == 'gallery') {
+            if (appo.mode == 'folder') {
+                var get_url = '/folder_json?name=';
+            } else if (appo.mode == 'gallery') {
                 var get_url = '/gallery_json?name=';
             } else {
                 reject(new Error('No mode (gallery or folder) found when trying to get image data'));
             }
-            $.getJSON(base_url + get_url + name, function(feed) {
-                app.fobs = feed; // Save all file objects to app object
-                console.log("Just set app.fobs");
-                place_content();
-                resolve();
+            console.log(base_url + get_url + appo.name);
+            $.getJSON(base_url + get_url + appo.name, function(feed) {
+                appo.fobs = feed; // Save all file objects to app object
+                console.log("3. get_image_objects(): Just set app.fobs");
+                //place_content();
+                resolve(appo);
             }).fail(() => { reject(new Error("Ajax request failed when trying to fetch thumbs")); });
         });
     }
@@ -328,21 +343,23 @@ $(document).ready(function() {
     /**
      * Place content (image thumbs/icons) from fobs object array on page     
      */
-    function place_content() {
-        var file_id = 0;
-        a = app.fobs;
-        console.log("fobs:");
-        console.log(app.fobs);
-        a.forEach(function(entry) {
-            if (is_image(entry.filetype)) {              // Thumb
-                $('#thumbs_area').append(render_thumb(app.imagedir, file_id, app.thumbsize));
-                $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
-            } else {                                     // or Icon
-                $('#thumbs_area').append(render_icon(imagedir, file_id));
-            }
-            file_id++;
+    function place_content(appo) {
+        return new Promise((resolve, reject) => {
+            var file_id = 0;
+            console.log("4. place_content(): fobs:");
+            console.log(appo.fobs);
+            appo.fobs.images.forEach(function(entry) {
+                if (is_image(entry.filetype)) {              // Thumb
+                    $('#thumbs_area').append(render_thumb(appo.name, file_id, appo.thumbsize));
+                    $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
+                } else {                                     // or Icon
+                    $('#thumbs_area').append(render_icon(appo.name, file_id));
+                }
+                file_id++;
+            });
+            $('#status_field').html(''); // Remove "loading" message
+            resolve(appo);
         });
-        $('#status_field').html(''); // Remove "loading" message
     }
        
         
@@ -430,13 +447,15 @@ $(document).ready(function() {
         $('#directory_form').css('visibility', 'hidden');  // If JS is disabled, it will remain shown
                                                            // (which is absurd since the whole app requires JS...)        
         
-        app.imagedir = urlParam('imagedir', null);  // Always be valid (backend should've redirected if invalid)
+        app.name = urlParam('name', null);  // Should always be valid (backend should've redirected if not)
         app.mode = urlDir(null); // Should only be 'folder' or 'gallery'
         
-        get_app_settings()
-        .then(get_user_settings())
-        .then(get_image_objects(app.mode, app.imagedir));
-        //.then(place_content());
+        get_app_settings(app)
+        .then(get_user_settings)
+        .then(get_image_objects)
+        .then(place_content)
+        .then(function(appo){app = appo})
+        .catch(lpxError);
         
         // Add click event to menu buttons on all thumbs
         $(document).on('click', '.menubutton', function() {

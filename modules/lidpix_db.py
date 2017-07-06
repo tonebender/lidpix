@@ -202,7 +202,7 @@ def add_images(imagefiles, description, tags, users_r,
         for img in imagefiles:
             if img[-4:].lower() == '.zip': # Don't include our own zip
                 continue
-            time_photo = folder.get_image_info(img).get('DateTimeOriginal', '(no time)')
+            time_photo = get_image_info(img).get('DateTimeOriginal', '(no time)')
             c.execute(sql_cmd, (os.path.basename(img), description, tags, time_photo,
                   time_added, users_r, users_w, groups_r, groups_w,))
             print(img)

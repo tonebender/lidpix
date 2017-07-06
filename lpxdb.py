@@ -9,7 +9,7 @@
 # and the gallery index table which lists all galleries
 
 
-import argparse, sys, os, time, bcrypt
+import argparse, sys, os, time, bcrypt, imghdr
 from modules.lidpix_db import *
 
 
@@ -43,9 +43,6 @@ def get_gpath(gpath):
         userpath = gpath
     return userpath
 
-
-""" This main function handles all the shell commands for
-administering the lidpix database"""
 
 parser = argparse.ArgumentParser(description='Lidpix database editor')
 
@@ -180,6 +177,16 @@ if args.subparser_name == 'delimage':
                 print("Deleted image", img, "from gallery", args.galleryname)
         
 if args.subparser_name == 'addimages':
+    try:
+        imz = list(filter(lambda x: imghdr.what(x) == None, args.images))
+    except: # If imghdr.what gives an error, something is not even a file.
+        if input("One or more specified files is non existant or not valid images. Continue? (y/n) ") in 'Nn':
+            sys.exit(0)
+    else:
+        if len(imz) > 0:  # If the list has elements, those are non-images according to imghdr.what
+            print("These files don't appear to be valid images:", imz)
+            if input("Continue? (y/n) ") in 'Nn':
+                sys.exit(0)
     if not find_table(args.galleryname, args.dbfile): # Gallery doesn't exist yet
         print("Creating gallery", args.galleryname)
         desc, tags, zipfile, ur, uw, gr, gw = get_user_input('gallery', args.galleryname)

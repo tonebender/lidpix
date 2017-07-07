@@ -222,7 +222,7 @@ def folder_view():
         imagedir = request.args.get('name') # URL keyword
         #thumbsize = request.args.get('thumbsize', default='200x')   # Only used for noscript
         if not imagedir:  # Need to reload page if no imagedir, because JS needs proper URL keyword
-            return redirect(url_for('.folder_view', imagedir=pixdirs[0], thumbsize=thumbsize))
+            return redirect(url_for('.folder_view', imagedir=pixdirs[0]))
         if imagedir == 'null':    # Can be null when JS is getting json and lacks url keyword
             imagedir = pixdirs[0] # (shouldn't really happen if the redirect above works)
         imagedir = os.path.abspath(imagedir)
@@ -251,7 +251,6 @@ def folder_view():
 
 @folder.route('/gallery', methods=['GET'])
 @folder.route('/gallery_json', methods=['GET'])
-@login_required
 def gallery_view():
     
     """Show a gallery with thumbnails/images found through database
@@ -272,8 +271,8 @@ def gallery_view():
         if 'gallery_json' in request.path:
             abort(403) # Maybe change to something jsonish that JS can interpret
         else:
-            flash('Sorry. User ' + current_user.username + ' does not have read access to this gallery.')
-            return redirect(url_for('/', name='defaultgallery'))
+            flash('Sorry. You don\'t have read access to this gallery.')
+            return redirect(url_for('/gallery', name='defaultgallery'))
     
     image_rows = get_all_rows(galleryname, 'lidpix.db') # Get list with one tuple for every row in image db
     for i in image_rows:
@@ -283,7 +282,9 @@ def gallery_view():
         return json.dumps(gallery.to_dict())
     else:
         settingsform = SettingsForm(request.form)
-        return render_template('folder.html', username=authz.current_user.username,
+        return render_template('folder.html',
+                                username=authz.current_user.username,
+                                galleryname=galleryname,
                                 files=[],
                                 imagedir='',
                                 dirs=[],

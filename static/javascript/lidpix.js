@@ -348,15 +348,21 @@ $(document).ready(function() {
             var file_id = 0;
             console.log("4. place_content(): fobs:");
             console.log(appo.fobs);
-            appo.fobs.images.forEach(function(entry) {
-                if (is_image(entry.filetype)) {              // Thumb
-                    $('#thumbs_area').append(render_thumb(appo.name, file_id, appo.thumbsize));
-                    $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
-                } else {                                     // or Icon
-                    $('#thumbs_area').append(render_icon(appo.name, file_id));
-                }
-                file_id++;
-            });
+            if (appo.mode == 'folder') {
+                appo.fobs.forEach(function(entry) {
+                    if (is_image(entry.filetype)) {  // Thumb
+                        $('#thumbs_area').append(render_thumb(entry.name, file_id, entry.thumbsize));
+                        $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
+                    } else {                         // or Icon
+                        $('#thumbs_area').append(render_icon(entry.name, file_id));
+                    }
+                    file_id++;
+                });
+            } else if (appo.mode == 'gallery') {
+                appo.fobs.images.forEach(function(entry) {
+                    $('#thumbs_area').append('<li><p>'+entry.name+'</p></li>'); // Expand on this..............
+                });
+            }
             $('#status_field').html(''); // Remove "loading" message
             resolve(appo);
         });

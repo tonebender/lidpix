@@ -9,7 +9,7 @@ $(document).ready(function() {
     var app = {
         mode: 'gallery',
         name: 'defaultgallery',
-        fobs: {}, // Array that will hold all file objects
+        files: null, // Will hold all folder/gallery data
         settings: {},
         user_settings: {},
         thumbsize: '200x'
@@ -177,27 +177,28 @@ $(document).ready(function() {
      */
     function is_image(extension) {
         return ('jpeg jpg gif gifv png tiff bmp xcf psd pcx'.
-                indexOf(extension.toLowerCase()) > -1);
+                indexOf(extension.toLowerCase()) > -1);  // Somewhat speculative list ... get from app config instead
     }
     
     /**
      * Return HTML for a thumbnail, based on a bunch of variables ...
      */
-    function render_thumb(imagedir, id, thumbsize) {
-        var real_file_url = serveimage_url + imagedir + '/' + app.fobs[id].name;
+     // Maybe ditch this function and move its content to place_content()
+    function render_thumb(imagedir, filename, filetype, id, thumbsize) {
+        var real_file_url = serveimage_url + imagedir + '/' + filename; //app.files[id].name;
         return '<li id="' + id + '">' +
                     '<div class="imgcontainer">' +
-                        '<img src="' + servethumb_url + imagedir + '/' + app.fobs[id].name + 
+                        '<img src="' + servethumb_url + imagedir + '/' + filename + 
                             '&thumbsize=' + thumbsize + '">' +
                         '<div class="overlay">' +
                             '<div class="menubutton">' +
-                                '<a href="' + real_file_url + '"><p>' + app.fobs[id].name + '</p></a>' +
+                                '<a href="' + real_file_url + '"><p>' + filename + '</p></a>' +
                                 '<a href="#"><span class="fa fa-bars"></span></a>' +  // Or '<span class="fa fa-angle-double-down"></span>' +
                             '</div>' +
                         '</div>' +
                         /* Menu to be inserted here */
                         '<div class="icon">' +                 // Icon is only used when image is hidden
-                            '<span class="' + fa_icon(app.fobs[id].filetype) +'"></span>' +
+                            '<span class="' + fa_icon(filetype) +'"></span>' +
                         '</div>' +
                     '</div>' +
                '</li>';
@@ -207,18 +208,19 @@ $(document).ready(function() {
      * Return HTML for an icon, based on a bunch of variables ...
      * This is used for files (non-images) that don't have thumbnails
      */
-    function render_icon(imagedir, id) {
+     // Maybe ditch this function and move its content to place_content()
+    function render_icon(imagedir, filename, filetype, id) {
         var real_file_url = '#';
-        if (app.fobs[id].filetype == 'DIR') {
-            real_file_url = base_url + '/folder?imagedir=' + imagedir + '/' + app.fobs[id].name;
+        if (filetype == 'DIR') {
+            real_file_url = base_url + '/folder?imagedir=' + imagedir + '/' + filename;
         }
         return '<li class="icon" id="' + id + '">' +
                     '<a href="' + real_file_url + '">' +
                         '<div>' +
-                            '<span class="' + fa_icon(app.fobs[id].filetype) +'"></span>' +
+                            '<span class="' + fa_icon(filetype) +'"></span>' +
                         '</div>' +
                     '</a>' +
-                    '<p>' + app.fobs[id].name + '</p>' +
+                    '<p>' + filename + '</p>' +
                 '</li>';
     }
 
@@ -286,7 +288,6 @@ $(document).ready(function() {
      */
     function get_user_settings(appo) {
         return new Promise((resolve, reject) => {
-            console.log('get_user_settings(): yes');
             $.getJSON(base_url + '/get_user_settings', (feed) => {
                      appo.user_settings = feed;
             })
@@ -301,7 +302,6 @@ $(document).ready(function() {
                     $('#settingsconfirmdelete').prop('checked', false);
                 $('#settingsusername').html(appo.user_settings.username);
                 console.log('2. get_user_settings(): got user settings');
-                console.log('appo.user_settings.username: ' + appo.user_settings.username);
                 resolve(appo);
                 /*
                 if (app.user_settings.username == 'None' || app.user_settings.username == undefined)
@@ -332,35 +332,38 @@ $(document).ready(function() {
             }
             console.log(base_url + get_url + appo.name);
             $.getJSON(base_url + get_url + appo.name, function(feed) {
-                appo.fobs = feed; // Save all file objects to app object
-                console.log("3. get_image_objects(): Just set app.fobs");
-                //place_content();
+                appo.files = feed; // Save folder/gallery file objects to app object
+                console.log("3. get_image_objects(): Just set app.files");
                 resolve(appo);
             }).fail(() => { reject(new Error("Ajax request failed when trying to fetch thumbs")); });
         });
     }
     
     /**
-     * Place content (image thumbs/icons) from fobs object array on page     
+     * Place content (image thumbs/icons) from files object array on page     
      */
     function place_content(appo) {
         return new Promise((resolve, reject) => {
             var file_id = 0;
-            console.log("4. place_content(): fobs:");
-            console.log(appo.fobs);
+            console.log("4. place_content(): files:");
+            console.log(appo.files);
             if (appo.mode == 'folder') {
-                appo.fobs.forEach(function(entry) {
+                appo.files.forEach(function(entry) {
                     if (is_image(entry.filetype)) {  // Thumb
-                        $('#thumbs_area').append(render_thumb(entry.name, file_id, entry.thumbsize));
+                        $('#thumbs_area').append(render_thumb(appo.name, entry.name, entry.filetype, file_id, '200x'));
                         $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
                     } else {                         // or Icon
-                        $('#thumbs_area').append(render_icon(entry.name, file_id));
+                        $('#thumbs_area').append(render_icon(appo.name, entry.name, entry.filetype, file_id));
                     }
                     file_id++;
                 });
             } else if (appo.mode == 'gallery') {
-                appo.fobs.images.forEach(function(entry) {
-                    $('#thumbs_area').append('<li><p>'+entry.name+'</p></li>'); // Expand on this..............
+                appo.files.images.forEach(function(entry) {
+                    console.log('entry:');
+                    console.log(entry);
+                    $('#thumbs_area').append(render_thumb(appo.files.gpath, entry.name, entry.filetype, file_id, '200x'));
+                    $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
+                    //$('#thumbs_area').append('<li><p>'+entry.name+'</p></li>'); // Expand on this..............
                 });
             }
             $('#status_field').html(''); // Remove "loading" message
@@ -378,7 +381,7 @@ $(document).ready(function() {
     
     
     function upload_to_facebook(id) {
-        console.log(app.fobs[id].name);
+        console.log(app.files[id].name);
     }
     
     function delete_file(id) {

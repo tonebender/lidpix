@@ -160,7 +160,7 @@ def serveimage():
     
     """ Get image path & file from url keyword and get the image
         from nginx server via X-Accel-Redirect response header """
-        
+    
     image = request.args.get('image', default=None) or abort(404)
     response = make_response('')
     response.headers['X-Accel-Redirect'] = image
@@ -176,15 +176,18 @@ def servethumb():
     Takes two url keys: image (required), thumbsize
     'image' key should have full /path/with/imagefilename """
     
+    # ADD CHECKING OF DIRECTORY PERMISSIONS!
+    # Maybe add login_required and check username, etc.
+    
     image = request.args.get('image', default=None) or abort(404)
     (imgdir, imagefile) = os.path.split(image)
     thumbsize = request.args.get('thumbsize', default='200x')
         
     # thumbdir is based on config and thumbsize, e.g. '.lidpixthumbs_200x'
-    thumbdir = current_app.config['THUMBDIR_BASE']
-    (imgdir, thumbdir) = prep_thumbdir(imgdir, thumbdir + '_' + thumbsize)
+    thumbdir = current_app.config['THUMBDIR_BASE'] + '_' + thumbsize
+    (imgdir, thumbdir) = prep_thumbdir(imgdir, thumbdir)
     
-    if create_thumb(imgdir, thumbdir, imagefile, thumbsize):
+    if create_thumb(imgdir + '/', thumbdir + '/', imagefile, thumbsize):
         return redirect(url_for('.serveimage', image=thumbdir+'/'+imagefile))
     else:
         abort(404)

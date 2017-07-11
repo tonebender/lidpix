@@ -73,12 +73,14 @@ def prep_thumbdir(imgdir, thumbdir):
        thumbdir if successful, or (None, None) if unsuccessful."""
     
     try:
-        imgdir = os.path.normpath(imgdir) + '/'
-        thumbdir = os.path.normpath(imgdir + thumbdir) + '/'
+        imgdir = os.path.normpath(imgdir)
+        thumbdir = os.path.normpath(imgdir + '/' + thumbdir)
         if not os.path.exists(thumbdir):
             os.mkdir(thumbdir)
-    except OSError:
+    except OSError as e:
+        print(e)
         return (None, None)
+    print("THUMBDIRRRR", thumbdir)
     return (imgdir, thumbdir)
 
 
@@ -128,6 +130,7 @@ def create_thumb(imgdir, thumbdir, imagefile, thumbsize):
                     os.symlink(imgdir + imagefile, thumbdir + imagefile)
             return 1
         except Exception:
+            print("EXCEPT")
             pass
     return 0       # If we got this far, thumb creation failed
 

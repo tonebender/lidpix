@@ -10,8 +10,8 @@ from .image import get_image_info
 
 
 def safe(s):
-    """ Sanitize string s. Only allow a-z, A-Z, 0-9 and _ """
-    return ("".join(c for c in s if c.isalnum() or c == '_').rstrip())
+    """ Sanitize string s. Only allow a-z, A-Z, 0-9 and _- """
+    return ("".join(c for c in s if c.isalnum() or c == '_' or c == '-').rstrip())
 
     
 def connect_to_db(db_file):
@@ -127,16 +127,16 @@ def get_column(col_to_search, value_to_match, col_to_get, table, db_file):
         return None
 
 
-def get_row(column_to_search, value_to_match, table, db_file):
+def get_rows(column_to_search, value_to_match, table, db_file):
 
-    """ Get contents of all columns in the first row that match a certain value in 1 column.
-    Return as a tuple. """
+    """ Get all rows that match a certain value in 1 column.
+    Return a list with a tuple for each row. """
     
     try:
         conn, c = connect_to_db(db_file)    
         c.execute('SELECT * FROM {t} WHERE {col}="{value}"'.format(t=safe(table), 
-                  col=safe(column_to_search), value=safe(value_to_match)))
-        row = c.fetchone()
+                  col=safe(column_to_search), value=value_to_match))
+        row = c.fetchall()
         conn.close()
         return row
     except Exception as e:
@@ -144,6 +144,24 @@ def get_row(column_to_search, value_to_match, table, db_file):
         print(e)
         return None
 
+
+def edit_column(col_to_search, value_to_match, col_to_edit, new_value, table, db_file):
+    
+    """ On the row(s) where col_to_search has value_to_match, set col_to_edit to new_value. """
+    
+    try:
+        conn, c = connect_to_db(db_file)
+        c.execute('UPDATE {t} SET {ce}="{newval}" WHERE {cs}="{vm}"'.format(t=safe(table), 
+                  ce=col_to_edit, newval=new_value, cs=col_to_search, vm=value_to_match))
+        conn.commit()
+        conn.close()
+        return c.rowcount
+    except Exception as e:
+        print("Error when trying to edit row in table", table, "in database file", db_file)
+        print(e)
+        return 0
+    return 0
+   
 
 def get_all_rows(table, db_file):
 
@@ -287,11 +305,15 @@ def print_table(table, db_file):
 
 
 def add_to_zip(zipfile, zippath, files):
+    
+    """ Add files to zipfile in zippath. If zipfile exists, and if
+    applicable, its contents will be updated. The standard unix
+    application zip is used. """
+    
     if zipfile == 'n' or zipfile == '':
         return False
     zippath = os.path.normpath(zippath) + '/'
     if os.path.isdir(zippath):
-        print("Adding to zipfile:")
         z = subprocess.call(['zip', '-0', zippath + zipfile] + files)
         if z != 0:
             print("zip returned", z)
@@ -303,9 +325,10 @@ def add_to_zip(zipfile, zippath, files):
 
 
 def create_gallery(galleryname, gpath, desc, tags, zipfile, ur, uw, gr, gw, dbfile):
-    """ Create a new gallery """
+    
+    """ Create a new (empty) gallery """
+    
     new_table('galleryindex', dbfile, 'gallery_db_schema.sql') # Create gallery index table if not existing
     if add_gallery(galleryname, gpath, desc, tags, zipfile, ur, uw, gr, gw, 'galleryindex', dbfile): # Add gallery to gallery index table
-        print("Added gallery", galleryname, "to galleryindex table")
         new_table(galleryname, dbfile, 'image_db_schema.sql') # Create empty image gallery table if not existing
             

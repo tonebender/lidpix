@@ -9,7 +9,8 @@ $(document).ready(function() {
     var app = {
         mode: 'gallery',
         name: 'defaultgallery',
-        files: null, // Will hold all folder/gallery data
+        files: null, // Will hold all folder/gallery images
+        gallery: {},  // Will hold all gallery info
         settings: {},
         user_settings: {},
         thumbsize: '200x'
@@ -319,7 +320,6 @@ $(document).ready(function() {
      * 
      * @param appo (object) The app object, containing 
      */
-     // Rewrite so it gets either folder or gallery!
     function get_image_objects(appo) {
         return new Promise((resolve, reject) => {
             $('#status_field').html('Loading directory ...');
@@ -332,7 +332,13 @@ $(document).ready(function() {
             }
             console.log(base_url + get_url + appo.name);
             $.getJSON(base_url + get_url + appo.name, function(feed) {
-                appo.files = feed; // Save folder/gallery file objects to app object
+                if (appo.mode == 'gallery') { // Gallery - files holds images, gallery holds gallery info
+                    appo.files = feed.images;
+                    feed.images = null; // Remove images object before saving feed (gallery info) to gallery
+                    appo.gallery = feed;
+                } else { // Folder - only files, so save them to files object
+                    appo.files = feed;
+                }
                 console.log("3. get_image_objects(): Just set app.files");
                 resolve(appo);
             }).fail(() => { reject(new Error("Ajax request failed when trying to fetch thumbs")); });
@@ -348,24 +354,58 @@ $(document).ready(function() {
             console.log("4. place_content(): files:");
             console.log(appo.files);
             if (appo.mode == 'folder') {
-                appo.files.forEach(function(entry) {
-                    if (is_image(entry.filetype)) {  // Thumb
-                        $('#thumbs_area').append(render_thumb(appo.name, entry.name, entry.filetype, file_id, '200x'));
-                        $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
-                    } else {                         // or Icon
-                        $('#thumbs_area').append(render_icon(appo.name, entry.name, entry.filetype, file_id));
-                    }
-                    file_id++;
-                });
-            } else if (appo.mode == 'gallery') {
-                appo.files.images.forEach(function(entry) {
-                    console.log('entry:');
-                    console.log(entry);
-                    $('#thumbs_area').append(render_thumb(appo.files.gpath, entry.name, entry.filetype, file_id, '200x'));
-                    $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
-                    //$('#thumbs_area').append('<li><p>'+entry.name+'</p></li>'); // Expand on this..............
-                });
+                var dirname = appo.name;
+            } else {
+                var dirname = appo.gallery.gpath;
             }
+            appo.files.forEach(function(file) {
+                if (is_image(file.filetype) || appo.mode == 'gallery') {  // Thumb
+                    //$('#thumbs_area').append(render_thumb(appo.name, file.name, file.filetype, file_id, '200x'));
+                    $('#thumbs_area').append(
+                    '<li id="' + file_id + '">' +
+                        '<div class="imgcontainer">' +
+                            '<img src="' + servethumb_url + dirname + '/' + file.name + '&thumbsize=200x">' +
+                            '<div class="overlay">' +
+                                '<div class="menubutton">' +
+                                    '<a href="' + serveimage_url + dirname + '/' + file.name + '"><p>' + file.name + '</p></a>' +
+                                    '<a href="#"><span class="fa fa-bars"></span></a>' +  // Or '<span class="fa fa-angle-double-down"></span>' +
+                                '</div>' +
+                            '</div>' +
+                            /* Menu to be inserted here */
+                            '<div class="icon">' +                 // Icon is only used when image is hidden
+                                '<span class="' + fa_icon(file.filetype) +'"></span>' +
+                            '</div>' +
+                        '</div>' +
+                   '</li>');
+                    $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
+                } else {                         // or Icon
+                    //$('#thumbs_area').append(render_icon(appo.name, file.name, file.filetype, file_id));
+                    if (file.filetype == 'DIR') {
+                        var real_file_url = base_url + '/folder?imagedir=' + dirname + '/' + file.name;
+                    } else {
+                        var real_file_url = '#';
+                    }
+                    $('#thumbs_area').append(
+                    '<li class="icon" id="' + file_id + '">' +
+                        '<a href="' + real_file_url + '">' +
+                            '<div>' +
+                                '<span class="' + fa_icon(filetype) +'"></span>' +
+                            '</div>' +
+                        '</a>' +
+                        '<p>' + file.name + '</p>' +
+                    '</li>');
+                }
+                file_id++;
+            });
+            /*} else if (appo.mode == 'gallery') {
+                appo.files.images.forEach(function(file) {
+                    console.log('file:');
+                    console.log(file);
+                    $('#thumbs_area').append(render_thumb(appo.files.gpath, file.name, file.filetype, file_id, '200x'));
+                    $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
+                    //$('#thumbs_area').append('<li><p>'+file.name+'</p></li>'); // Expand on this..............
+                });
+            } */
             $('#status_field').html(''); // Remove "loading" message
             resolve(appo);
         });
@@ -463,8 +503,9 @@ $(document).ready(function() {
         .then(get_user_settings)
         .then(get_image_objects)
         .then(place_content)
-        .then(function(appo){app = appo})
+        .then(function(appo){app = appo;})
         .catch(lpxError);
+        
         
         // Add click event to menu buttons on all thumbs
         $(document).on('click', '.menubutton', function() {

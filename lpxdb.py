@@ -57,18 +57,20 @@ parser_printtable.add_argument('table', help='name of the table to print')
 parser_findtable = subparsers.add_parser('findtable', help='find table')
 parser_findtable.add_argument('table', help='name of table to find')
 
-parser_newutable = subparsers.add_parser('newutable', help='create new user table')
-parser_newutable.add_argument('table', help='name of the table to create')
-
-parser_newgtable = subparsers.add_parser('newgtable', help='create new gallery index table')
-#parser_newgtable.add_argument('table', help='name of the table to create')
-
-# maybe remove this command and let it be done through other commands below
-parser_newitable = subparsers.add_parser('newitable', help='create new image gallery table')
-parser_newitable.add_argument('table', help='name of the table to create')
-
 parser_deltable = subparsers.add_parser('deltable', help='delete table')
 parser_deltable.add_argument('table', help='name of table to delete')
+
+parser_search = subparsers.add_parser('search', help='search field in table')
+parser_search.add_argument('table', help='name of table to search')
+parser_search.add_argument('key', help='name of column to search')
+parser_search.add_argument('value', help='column value to find')
+
+parser_edit = subparsers.add_parser('edit', help='edit field in table')
+parser_edit.add_argument('table', help='name of table to edit')
+parser_edit.add_argument('find_column', help='column(s) that you want to find')
+parser_edit.add_argument('find_value', help='value in column(s) to find')
+parser_edit.add_argument('edit_column', help='column(s) to edit')
+parser_edit.add_argument('edit_value', help='value to insert')
 
 parser_delgallery = subparsers.add_parser('delgallery', help='delete gallery')
 parser_delgallery.add_argument('galleryname', help='name of gallery to delete')
@@ -98,7 +100,6 @@ args = parser.parse_args()
 
 
 # "Low level" table operations
-# DELETE some of these, as they're never used by the user anyway
 
 if args.subparser_name == 'printtable':
     print(print_table(args.table, args.dbfile))
@@ -116,19 +117,27 @@ if args.subparser_name == 'findtable':
         print("Table", args.table, "exists")
     else:
         print("Table", args.table, "not found")
-    
-if args.subparser_name == 'newutable':
-    if new_table(args.table, args.dbfile, 'user_db_schema.sql'):
-        print("Created new user table", args.table, "in file", args.dbfile)
-        
-if args.subparser_name == 'newgtable':
-    if new_table('galleryindex', args.dbfile, 'gallery_db_schema.sql'):
-        print("Created new gallery index table 'galleryindex' in file", args.dbfile)
-        
-if args.subparser_name == 'newitable':
-    if new_table(args.table, args.dbfile, 'image_db_schema.sql'):
-        print("Created new image gallery table", args.table, "in file", args.dbfile)
 
+if args.subparser_name == 'search':
+    rows = get_rows(args.key, args.value, args.table, args.dbfile)
+    if rows:
+        print(len(rows), "results:")
+        print(rows)
+    else:
+        print("Nothing found")
+        
+if args.subparser_name == 'edit':
+    rows = get_rows(args.find_column, args.find_value, args.table, args.dbfile)
+    if rows:
+        if input("Found " + str(len(rows)) + " matching rows. Insert '" + \
+           args.edit_value + "' in column " + args.edit_column + \
+           " in all those rows? (y/n) ") in "yY":
+            e = edit_column(args.find_column, args.find_value, \
+            args.edit_column, args.edit_value, args.table, args.dbfile)
+            if e:
+                print("Successfully did", e, "edit(s)")
+            else:
+                print("Nothing edited")
 
 # User operations
 
@@ -204,6 +213,7 @@ if args.subparser_name == 'addimages':
         zipfile = get_column('gallery_name', args.galleryname, 'zipfile', 'galleryindex', args.dbfile)[0]
         gpath = os.path.normpath(get_column('gallery_name', args.galleryname, 'gpath', 'galleryindex', args.dbfile)[0])
     add_images(args.images, desc, tags, ur, uw, gr, gw, args.galleryname, args.dbfile) # Finally, add images
+    print("Adding to zipfile:")
     add_to_zip(zipfile, gpath, args.images)
     
 if args.subparser_name == 'test':

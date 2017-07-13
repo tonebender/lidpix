@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from flask_login import login_required
 from wtforms import Form, StringField, BooleanField, validators
 from .image import *
-from .lidpix_db import get_row, get_all_rows
+from .lidpix_db import get_rows, get_all_rows
 from . import authz
 
 
@@ -267,7 +267,7 @@ def gallery_view():
     if galleryname == 'null':    # Can be null when JS is getting json and lacks url keyword
         galleryname = 'defaultgallery' # (shouldn't really happen if the redirect above works)
         
-    gallery_row = get_row('gallery_name', galleryname, 'galleryindex', 'lidpix.db')
+    gallery_row = get_rows('gallery_name', galleryname, 'galleryindex', 'lidpix.db')[0]
     gallery = Gallery(*gallery_row) # Make one Gallery object from galleryindex database row
     
     if not authz.user_access(gallery):

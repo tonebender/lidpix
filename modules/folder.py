@@ -76,15 +76,15 @@ def allowed_file(filename):
            current_app.config['UPLOAD_EXTENSIONS']
     
 
-def get_rootdir(imagedir, pixdirs):
+def get_rootdir(imagedir, rootdirs):
     
-    """ Find which path in pixdirs is the parent of imagedir, return it.
+    """ Find which path in rootdirs is the parent of imagedir, return it.
     
     imagedir: the path to where the images are
-    pixdirs: list of paths
+    rootdirs: list of paths
     Return: a string containing the rootdir, or None if none was found """
     
-    rootdir = [d for d in pixdirs if imagedir.startswith(d)]
+    rootdir = [d for d in rootdirs if imagedir.startswith(d)]
     return(rootdir[0] if rootdir else None)
     
     
@@ -156,19 +156,30 @@ def get_app_settings():
 
     
 @folder.route('/serveimage')
+@login_required
 def serveimage():
     
     """ Get image path & file from url keyword and get the image
-        from nginx server via X-Accel-Redirect response header """
+        from nginx server via X-Accel-Redirect response header.
+        To prevent unallowed viewing, only do it for users that have 
+        the image folder in its folders list. """
     
     image = request.args.get('image', default=None) or abort(404)
-    response = make_response('')
-    response.headers['X-Accel-Redirect'] = image
-    del response.headers['Content-Type'] # Webserver decides type later
+    (imgdir, imagefile) = os.path.split(image)
+    print(authz.current_user.folders.split(';'))
+    # GOTTA FIX BECAUSE USER MIGHT HAVE 'default' as folders
+    # PERHAPS CHANGE 'default' to pixdirs as soon as user logs in
+    if get_rootdir(imgdir, authz.current_user.folders.split(';')):
+        response = make_response('')
+        response.headers['X-Accel-Redirect'] = image
+        del response.headers['Content-Type'] # Webserver decides type later
+    else:
+        abort(403)
     return response
 
 
 @folder.route('/servethumb')
+@login_required
 def servethumb():
     
     """ Create & serve thumbnail on the fly!
@@ -204,11 +215,11 @@ def folder_view():
     (Some of the stuff in the non-json case is just for 
     non-javascript users.)
     
-    GET: Get image directory and thumbsize from URL keyword; 
+    GET: Get image directory from URL keyword; 
          prep thumbnails;
-           show folder.html
-           or
-           send json object with thumbnails
+         show folder.html
+         or
+         send json object with thumbnails
              
     POST: Get new image directory from form and call this again
     """
@@ -264,7 +275,7 @@ def gallery_view():
     galleryname = request.args.get('name') #, default='defaultgallery')
     if not galleryname:  # Need to reload page if no name, because JS needs proper URL keyword
         return redirect(url_for('.gallery', name='defaultgallery'))
-    if galleryname == 'null':    # Can be null when JS is getting json and lacks url keyword
+    if galleryname == 'null':          # Can be null when JS is getting json and lacks url keyword
         galleryname = 'defaultgallery' # (shouldn't really happen if the redirect above works)
         
     gallery_row = get_rows('gallery_name', galleryname, 'galleryindex', 'lidpix.db')[0]
@@ -278,8 +289,8 @@ def gallery_view():
             return redirect(url_for('/gallery', name='defaultgallery'))
     
     image_rows = get_all_rows(galleryname, 'lidpix.db') # Get list with one tuple for every row in image db
-    for i in image_rows:
-        gallery.images.append(Imagefile(*i)) # Make Imagefile object of every tuple
+    for t in image_rows:
+        gallery.images.append(Imagefile(*t)) # Make Imagefile object of every tuple
     
     if 'gallery_json' in request.path: # Supply JSON
         return json.dumps(gallery.to_dict())

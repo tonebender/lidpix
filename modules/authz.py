@@ -51,13 +51,14 @@ class LoginForm(Form):
 class UserDB(UserMixin):
     """The user class with login-related states and personal data"""
     def __init__(self, id, username, password, fullname, joined, groups,
-                 active=1, confirmdelete=1, viewmode=10, theme='default'):
+                 folders='default', active=1, confirmdelete=1, viewmode=10, theme='default'):
         self.id = id
         self.username = username
         self.password = password
         self.fullname = fullname
         self.joined = joined
         self.groups = groups
+        self.folders = folders
         self.active = False if active == 0 else True
         self.confirmdelete = False if confirmdelete == 0 else True
         self.viewmode = viewmode
@@ -84,6 +85,7 @@ class UserDB(UserMixin):
                 'fullname': self.fullname,
                 'joined': self.joined,
                 'groups': self.groups,
+                'folders': self.folders,
                 'active': self.active,
                 'confirmdelete': self.confirmdelete,
                 'viewmode': self.viewmode,

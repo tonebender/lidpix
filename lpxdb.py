@@ -83,6 +83,11 @@ parser_adduser = subparsers.add_parser('adduser', help='add new user to user tab
 parser_adduser.add_argument('username', help='username of the new user')
 parser_adduser.add_argument('--table', '-t', nargs='?', const='lidpixusers', default='lidpixusers', help='table to add user to')
 
+parser_adduser = subparsers.add_parser('deluser', help='delete user from user table')
+parser_adduser.add_argument('username', help='username of the user to delete')
+parser_adduser.add_argument('--table', '-t', nargs='?', const='lidpixusers', default='lidpixusers', help='table to delete user from')
+
+
 parser_newgallery = subparsers.add_parser('newgallery', help='create new gallery (add row to gallery index table, and create image gallery table)')
 parser_newgallery.add_argument('galleryname', help='name of gallery to add to table')
 
@@ -146,16 +151,17 @@ if args.subparser_name == 'adduser':
     hashed_pw = bcrypt.hashpw(pw.encode('utf-8'), bcrypt.gensalt())
     fname = input("User's full name (first and last with space between): ")
     groups = input("The groups user is member of (e.g. 'friends,relatives'): ").lower()
+    folders = input("The folders the user should have access to, e.g. '/home/a/b;/home/c/d' (leave blank for lidpix's standard folders):") or 'default'
     joined = time.asctime(time.localtime(time.time()))
     
     new_table(args.table, args.dbfile, 'user_db_schema.sql') # In case it doesn't exist
-    if add_user(args.username, hashed_pw, fname, joined, groups, 1, 1, 10, 'default', args.table, args.dbfile):
+    if add_user(args.username, hashed_pw, fname, joined, groups, folders, 1, 1, 10, 'default', args.table, args.dbfile):
         print("Successfully added user %s to table %s in file %s" \
         % (args.username, args.table, args.dbfile))
 
-if args.subparser_name == 'deleteuser':
+if args.subparser_name == 'deluser':  # Add checking if user exists + prompt!
     if delete_user(args.username, args.table, args.dbfile):
-        print("Deleted user %s from table %s in file %s" % (args.name, args.table, args.dbfile))
+        print("Deleted user %s from table %s in file %s" % (args.username, args.table, args.dbfile))
         
 
 # Image gallery operations

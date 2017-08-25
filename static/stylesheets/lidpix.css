@@ -141,8 +141,9 @@ div#status_field {
   color: #4b0; }
 
 div#settingsdialog {
+  position: absolute;
   display: none;
-  z-index: 1;
+  z-index: 5;
   float: right;
   margin-right: 1em;
   padding: 1em;

@@ -188,8 +188,9 @@ div#status_field {
 
 
 div#settingsdialog {
+  position: absolute;
   display: none;
-  z-index: 1;
+  z-index: 5;
   float: right;  
   margin-right: 1em;
   padding: 1em;
@@ -301,14 +302,15 @@ ul.rig {
       padding: 10px;
       border: 1px dashed $dark_color;
     }
-    
   }
+  
   li.icon { /* This is used for non-images, which are always icons */
     background-color: $bright_color;
     padding: 10px;
     border: 1px solid $dark_color;
   }
 }
+
 ul.columns-10 li {width: 7.5%;}  /* This + li margin 2.5% is 10% of space */
 ul.columns-4 li {width: 22.5%;}  /* This + li margin 2.5% is 25% of space */
 ul.columns-1 li {width: 97.5%;}  /* This + li margin 2.5% is 100% of space */

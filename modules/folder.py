@@ -156,52 +156,31 @@ def get_app_settings():
 
     
 @folder.route('/serveimage')
+@folder.route('/servethumb')
 @login_required
 def serveimage():
     
-    """ Get image path & file from url keyword and get the image
-        from nginx server via X-Accel-Redirect response header.
+    """ Serve images that are requested by the website.
+        If /servethumb was used, create the thumbdir and thumbnail first.
+        Then get the image from nginx server via X-Accel-Redirect response header.
         To prevent unallowed viewing, only do it for users that have 
         the image folder in its folders list. """
     
     image = request.args.get('image', default=None) or abort(404)
     (imgdir, imagefile) = os.path.split(image)
-    print(authz.current_user.folders.split(';'))
-    # GOTTA FIX BECAUSE USER MIGHT HAVE 'default' as folders
-    # PERHAPS CHANGE 'default' to pixdirs as soon as user logs in
-    if get_rootdir(imgdir, authz.current_user.folders.split(';')):
-        response = make_response('')
-        response.headers['X-Accel-Redirect'] = image
-        del response.headers['Content-Type'] # Webserver decides type later
-    else:
-        abort(403)
+    if not get_rootdir(imgdir, authz.current_user.folders): # Bail out if image is
+        abort(403)                                          # not in allowed dir
+    if 'servethumb' in request.path:
+        thumbsize = request.args.get('thumbsize', default='200x')
+        thumbdir = current_app.config['THUMBDIR_BASE'] + '_' + thumbsize
+        (imgdir, thumbdir) = prep_thumbdir(imgdir, thumbdir)
+        if not create_thumb(imgdir + '/', thumbdir + '/', imagefile, thumbsize):
+            abort(404)
+        image = thumbdir + '/' + imagefile
+    response = make_response('')
+    response.headers['X-Accel-Redirect'] = image
+    del response.headers['Content-Type'] # Webserver decides type later
     return response
-
-
-@folder.route('/servethumb')
-@login_required
-def servethumb():
-    
-    """ Create & serve thumbnail on the fly!
-    
-    Takes two url keys: image (required), thumbsize
-    'image' key should have full /path/with/imagefilename """
-    
-    # ADD CHECKING OF DIRECTORY PERMISSIONS!
-    # Maybe add login_required and check username, etc.
-    
-    image = request.args.get('image', default=None) or abort(404)
-    (imgdir, imagefile) = os.path.split(image)
-    thumbsize = request.args.get('thumbsize', default='200x')
-        
-    # thumbdir is based on config and thumbsize, e.g. '.lidpixthumbs_200x'
-    thumbdir = current_app.config['THUMBDIR_BASE'] + '_' + thumbsize
-    (imgdir, thumbdir) = prep_thumbdir(imgdir, thumbdir)
-    
-    if create_thumb(imgdir + '/', thumbdir + '/', imagefile, thumbsize):
-        return redirect(url_for('.serveimage', image=thumbdir+'/'+imagefile))
-    else:
-        abort(404)
 
 
 @folder.route('/folder_json', methods=['GET'])

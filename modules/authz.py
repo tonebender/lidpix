@@ -58,7 +58,10 @@ class UserDB(UserMixin):
         self.fullname = fullname
         self.joined = joined
         self.groups = groups
-        self.folders = folders
+        if folders == 'default':
+            self.folders = current_app.config['PIXDIRSLIST']
+        else:
+            self.folders = folders.split(';')
         self.active = False if active == 0 else True
         self.confirmdelete = False if confirmdelete == 0 else True
         self.viewmode = viewmode

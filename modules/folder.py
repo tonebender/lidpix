@@ -213,6 +213,7 @@ def folder_view():
         
         pixdirs = current_app.config['PIXDIRSLIST']
         imagedir = request.args.get('name') # URL keyword
+        print("IMAGEDIR:", imagedir)
         #thumbsize = request.args.get('thumbsize', default='200x')   # Only used for noscript
         if not imagedir:  # Need to reload page if no imagedir, because JS needs proper URL keyword
             return redirect(url_for('.folder_view', imagedir=pixdirs[0]))

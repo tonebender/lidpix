@@ -181,49 +181,6 @@ $(document).ready(function() {
                 indexOf(extension.toLowerCase()) > -1);  // Somewhat speculative list ... get from app config instead
     }
     
-    /**
-     * Return HTML for a thumbnail, based on a bunch of variables ...
-     */
-     // Maybe ditch this function and move its content to place_content()
-    function render_thumb(imagedir, filename, filetype, id, thumbsize) {
-        var real_file_url = serveimage_url + imagedir + '/' + filename; //app.files[id].name;
-        return '<li id="' + id + '">' +
-                    '<div class="imgcontainer">' +
-                        '<img src="' + servethumb_url + imagedir + '/' + filename + 
-                            '&thumbsize=' + thumbsize + '">' +
-                        '<div class="overlay">' +
-                            '<div class="menubutton">' +
-                                '<a href="' + real_file_url + '"><p>' + filename + '</p></a>' +
-                                '<a href="#"><span class="fa fa-bars"></span></a>' +  // Or '<span class="fa fa-angle-double-down"></span>' +
-                            '</div>' +
-                        '</div>' +
-                        /* Menu to be inserted here */
-                        '<div class="icon">' +                 // Icon is only used when image is hidden
-                            '<span class="' + fa_icon(filetype) +'"></span>' +
-                        '</div>' +
-                    '</div>' +
-               '</li>';
-    }
-    
-    /**
-     * Return HTML for an icon, based on a bunch of variables ...
-     * This is used for files (non-images) that don't have thumbnails
-     */
-     // Maybe ditch this function and move its content to place_content()
-    function render_icon(imagedir, filename, filetype, id) {
-        var real_file_url = '#';
-        if (filetype == 'DIR') {
-            real_file_url = base_url + '/folder?imagedir=' + imagedir + '/' + filename;
-        }
-        return '<li class="icon" id="' + id + '">' +
-                    '<a href="' + real_file_url + '">' +
-                        '<div>' +
-                            '<span class="' + fa_icon(filetype) +'"></span>' +
-                        '</div>' +
-                    '</a>' +
-                    '<p>' + filename + '</p>' +
-                '</li>';
-    }
 
     /**
      * Return HTML for a file menu
@@ -259,19 +216,13 @@ $(document).ready(function() {
     }
     
     
-    /**
-    function get_app_settings(callback) {
-        $.getJSON(base_url + '/get_app_settings', callback);
-    }
-    */
-    
     // Promises version:
     // https://www.pluralsight.com/guides/front-end-javascript/introduction-to-asynchronous-javascript
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise#Creating_a_Promise
     // https://davidwalsh.name/promises
     
     /**
-     * Get app settings via json
+     * Get app settings (via json)
      */
     function get_app_settings(appo) {
         return new Promise(function(resolve, reject) {
@@ -285,7 +236,7 @@ $(document).ready(function() {
     
     
     /**
-     * Get user settings via json
+     * Get user settings (via json)
      */
     function get_user_settings(appo) {
         return new Promise((resolve, reject) => {
@@ -360,26 +311,28 @@ $(document).ready(function() {
             }
             appo.files.forEach(function(file) {
                 if (is_image(file.filetype) || appo.mode == 'gallery') {  // Thumb
-                    //$('#thumbs_area').append(render_thumb(appo.name, file.name, file.filetype, file_id, '200x'));
                     $('#thumbs_area').append(
                     '<li id="' + file_id + '">' +
                         '<div class="imgcontainer">' +
-                            '<img src="' + servethumb_url + dirname + '/' + file.name + '&thumbsize=200x">' +
-                            '<div class="overlay">' +
+                            '<a href="' + serveimage_url + dirname + '/' + file.name + '">' +
+                                '<img src="' + servethumb_url + dirname + '/' + file.name + '&thumbsize=200x">' +
+                            '</a>' +
+                            /* '<div class="overlay">' +
                                 '<div class="menubutton">' +
                                     '<a href="' + serveimage_url + dirname + '/' + file.name + '"><p>' + file.name + '</p></a>' +
                                     '<a href="#"><span class="fa fa-bars"></span></a>' +  // Or '<span class="fa fa-angle-double-down"></span>' +
                                 '</div>' +
-                            '</div>' +
+                            '</div>' + */
+                            '<a class="imgname" href="#"><p>' + file.name + '</p></a>' +
+                            //'<a class="imgmenubutton" href="#"><span class="fa fa-bars"></span></a>' +  // Or '<span class="fa fa-angle-double-down"></span>' +
                             /* Menu to be inserted here */
                             '<div class="icon">' +                 // Icon is only used when image is hidden
                                 '<span class="' + fa_icon(file.filetype) +'"></span>' +
                             '</div>' +
                         '</div>' +
                    '</li>');
-                    $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
+                    $('#thumbs_area li').last().find('.imgname').after(render_menu(file_id)); // Add menu 
                 } else {                         // or Icon
-                    //$('#thumbs_area').append(render_icon(appo.name, file.name, file.filetype, file_id));
                     if (file.filetype == 'DIR') {
                         var real_file_url = base_url + '/folder?imagedir=' + dirname + '/' + file.name;
                     } else {
@@ -397,15 +350,6 @@ $(document).ready(function() {
                 }
                 file_id++;
             });
-            /*} else if (appo.mode == 'gallery') {
-                appo.files.images.forEach(function(file) {
-                    console.log('file:');
-                    console.log(file);
-                    $('#thumbs_area').append(render_thumb(appo.files.gpath, file.name, file.filetype, file_id, '200x'));
-                    $('#thumbs_area li').last().find('.overlay').after(render_menu(file_id)); // Add menu
-                    //$('#thumbs_area').append('<li><p>'+file.name+'</p></li>'); // Expand on this..............
-                });
-            } */
             $('#status_field').html(''); // Remove "loading" message
             resolve(appo);
         });
@@ -507,15 +451,15 @@ $(document).ready(function() {
         .catch(lpxError);
         
         
-        // Add click event to menu buttons on all thumbs
-        $(document).on('click', '.menubutton', function() {
+        // Add click event to image name (previously .menubutton) on all thumbs
+        $(document).on('click', '.imgname', function() {
             $('.menu').hide();
             $(this).closest('.imgcontainer').find('.menu').toggle();
         });
         
         // Add click event that removes menus on outside click
         $(document).click(function(event) {
-            if(!$(event.target).closest('.menubutton').length) { // If not clicked on the menu button
+            if(!$(event.target).closest('.imgname').length) { // If not clicked on the image name
                 $('.menu').hide();
             }
         });

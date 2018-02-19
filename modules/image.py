@@ -114,23 +114,27 @@ def create_thumb(imgdir, thumbdir, imagefile, thumbsize):
     
     if os.path.isfile(imgdir + imagefile): # Image exists?
         if os.path.isfile(thumbdir + imagefile): # Thumb already exists?
-            if (os.stat(thumbdir + imagefile).st_mtime > # Thumb newer than img?
+            if (os.stat(thumbdir + imagefile).st_mtime >= # Is thumb newer than (or same as) img?
                 os.stat(imgdir + imagefile).st_mtime):
-                return 1                                 # No need to create
+                return 1                               # Yes - no need to create
+            else:
+                os.remove(thumbdir + imagefile) # Remove old before proceeding
         w, h = thumbsize.split('x')
+        w = int(w) if w else 9999
+        h = int(h) if h else 9999
         try:
             if thumbsize == '' or thumbsize == '1': # Full-size thumb = symlink
                 os.symlink(imgdir + imagefile, thumbdir + imagefile)
                 return 1
             with Image(filename = imgdir + imagefile) as img:  # Create thumb
-                if int(img.width) > int(w) or int(img.height) > int(h):    # If requested size is 
+                if w < int(img.width) or h < int(img.height):  # If requested size is 
                     img.transform(resize = thumbsize)  # smaller than original
                     img.save(filename = thumbdir + imagefile)
                 else:                                # Otherwise, make symlink
                     os.symlink(imgdir + imagefile, thumbdir + imagefile)
             return 1
-        except Exception:
-            print("EXCEPT")
+        except Exception as err:
+            print("Error when trying to create thumbnail:", err)
             pass
     return 0       # If we got this far, thumb creation failed
 

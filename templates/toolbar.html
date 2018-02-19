@@ -48,7 +48,7 @@
   {% endif %}
     
   {% if request.path == '/gallery' %} {# Gallery mode - no dir field, just a title #}
-    <div id="dir_field">Photo Gallery</div>
+      <div id="dir_field">Gallery: {{ galleryname }}</div>
   {% endif %}
     
   <!-- Buttons for controlling grid layout -->

@@ -201,6 +201,7 @@ ul.rig {
     /* end .imgcontainer */ }
     ul.rig li .imgcontainer {
       position: relative;
+      overflow: hidden;
       /* border: 1px red solid; */
       /* end .overlay */ }
       ul.rig li .imgcontainer .overlay {

@@ -14,8 +14,8 @@ Uppladdning av foton
   inkl filnamnsfix
   
 Vising av mapp
-  tumnaglar
-    toggla tumnaglar/ikoner
+  tumnaglar X
+    toggla tumnaglar/ikoner X
   visa mer när man scrollar
   bildinfo
   visa mappnamn X

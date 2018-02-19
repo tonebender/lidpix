@@ -256,9 +256,10 @@ ul.rig {
     
     .imgcontainer {
       position: relative;
+      overflow: hidden;
       /* border: 1px red solid; */
       
-      .overlay {
+      .overlay {  // overlay is not used a.t.m.
         position: absolute;
         left: 0;
         top: 0;
